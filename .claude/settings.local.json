@@ -355,7 +355,11 @@
       "Bash(chmod +x \"f:/code/portfolio/scripts/snapshot.sh\" \"f:/code/portfolio/scripts/rollback.sh\")",
       "Bash(curl -s http://localhost:3000/api/auth/check)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" http://localhost:3000/)",
-      "Bash(bash scripts/snapshot.sh \"修复编辑器：block.id、deleted_block_ids、data-index、allow_preview\")"
+      "Bash(bash scripts/snapshot.sh \"修复编辑器：block.id、deleted_block_ids、data-index、allow_preview\")",
+      "Bash(node -e \"require\\('fs'\\).readFileSync\\('public/js/components.js','utf8'\\).split\\('\\\\n'\\).forEach\\(function\\(l,i\\){try{Function\\(l\\)}catch\\(e\\){}}\\)\")",
+      "Bash(node -c \"public/js/components.js\")",
+      "Bash(curl -s http://localhost:3000/api/admin/reports -b \"connect.sid=test\")",
+      "Bash(bash scripts/snapshot.sh \"举报管理：显示类型标签+举报者头像，可跳转目标用户/帖子\")"
     ]
   }
 }

@@ -394,6 +394,11 @@ const API = {
   getLevelConfig() {
     return this.request('GET', '/admin/levels/config');
   },
+  getAdminUsers(page = 1, limit = 20, search = '') {
+    let url = `/admin/users?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    return this.request('GET', url);
+  },
   updateLevelConfig(configs) {
     return this.request('PUT', '/admin/levels/config', { configs });
   },

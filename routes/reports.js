@@ -52,12 +52,13 @@ router.get('/admin/reports', requireAdmin, (req, res) => {
 
     const total = get(`SELECT COUNT(*) as count FROM reports r ${where}`, params);
     const reports = all(
-      `SELECT r.*, ru.username as reporter_name,
+      `SELECT r.*, ru.username as reporter_name, COALESCE(up.avatar_url, '') as reporter_avatar,
               CASE WHEN r.target_type = 'post' THEN (SELECT p.title FROM posts p WHERE p.id = r.target_id)
                    WHEN r.target_type = 'user' THEN (SELECT u2.username FROM users u2 WHERE u2.id = r.target_id)
               END as target_name
        FROM reports r
        JOIN users ru ON r.reporter_id = ru.id
+       LEFT JOIN user_profiles up ON up.user_id = ru.id
        ${where}
        ORDER BY r.created_at DESC
        LIMIT ? OFFSET ?`,

@@ -2,7 +2,7 @@ const Components = {
   currentPage: 1, hasMore: false, isLoading: false, currentPost: null,
   editorBlocks: [], editorMode: null, editorPostId: null, _editorCategory: 'work', _deletedBlockIds: [],
   _avatarState: null, _highlightCommentId: null, allPosts: [],
-  _searchQuery: '', _activeTag: null, _sortMode: 'latest', _currentCategory: null,
+  _searchQuery: '', _activeTag: null, _sortMode: 'latest', _currentCategory: null, _reportStatus: 'pending',
   _commentPage: 1, _commentPageSize: 30, _tagCategory: 'all',
   currentReports: [], _musicTab: 'songs', _currentBookmarkColId: null,
   _levelConfigCache: null, _levelConfigMap: {},
@@ -507,16 +507,17 @@ const Components = {
   },
 
   _renderEditorBlockContent(b, i) {
+    var previewCb = '<label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;margin-top:6px;"><input type="checkbox" class="editor-allow-preview" data-index="' + i + '"' + (b.allow_preview ? ' checked' : '') + '> 允许普通用户预览</label>';
     if (b.type === 'text') {
-      return '<textarea class="form-textarea editor-block-input" data-index="' + i + '" rows="4" placeholder="输入文本内容..." style="font-family:inherit;">' + escapeHtml(b.value || '') + '</textarea>';
+      return '<textarea class="form-textarea editor-block-input" data-index="' + i + '" rows="4" placeholder="输入文本内容..." style="font-family:inherit;">' + escapeHtml(b.value || '') + '</textarea>' + previewCb;
     } else if (b.type === 'image') {
       var preview = b.file_url ? '<div style="margin-bottom:8px;"><img src="' + b.file_url + '" style="max-width:200px;max-height:150px;border-radius:6px;object-fit:cover;"></div>' : '';
-      return '<div>' + preview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择图片</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入图片URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;"><label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;"><input type="checkbox" class="editor-allow-preview" data-index="' + i + '"' + (b.allow_preview ? ' checked' : '') + '> 允许预览</label></div></div>';
+      return '<div>' + preview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择图片</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入图片URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;">' + previewCb + '</div></div>';
     } else if (b.type === 'video') {
       var vPreview = b.file_url ? '<div style="margin-bottom:8px;"><video controls style="max-width:300px;max-height:150px;"><source src="' + b.file_url + '"></video></div>' : '';
-      return '<div>' + vPreview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择视频</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="video/mp4,video/webm,video/ogg" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入视频URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;"></div></div>';
+      return '<div>' + vPreview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择视频</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="video/mp4,video/webm,video/ogg" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入视频URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;"></div>' + previewCb + '</div>';
     } else if (b.type === 'code') {
-      return '<div class="form-group" style="margin-bottom:4px;"><select class="form-input editor-code-lang" data-index="' + i + '" style="width:150px;font-size:13px;"><option value="">自动检测</option><option value="javascript"' + (b.language === 'javascript' ? ' selected' : '') + '>JavaScript</option><option value="python"' + (b.language === 'python' ? ' selected' : '') + '>Python</option><option value="html"' + (b.language === 'html' ? ' selected' : '') + '>HTML</option><option value="css"' + (b.language === 'css' ? ' selected' : '') + '>CSS</option><option value="json"' + (b.language === 'json' ? ' selected' : '') + '>JSON</option><option value="bash"' + (b.language === 'bash' ? ' selected' : '') + '>Bash</option></select></div><textarea class="form-textarea editor-block-input code-input" data-index="' + i + '" rows="6" placeholder="输入代码..." style="font-family:monospace;">' + escapeHtml(b.value || '') + '</textarea>';
+      return '<div><div class="form-group" style="margin-bottom:4px;"><select class="form-input editor-code-lang" data-index="' + i + '" style="width:150px;font-size:13px;"><option value="">自动检测</option><option value="javascript"' + (b.language === 'javascript' ? ' selected' : '') + '>JavaScript</option><option value="python"' + (b.language === 'python' ? ' selected' : '') + '>Python</option><option value="html"' + (b.language === 'html' ? ' selected' : '') + '>HTML</option><option value="css"' + (b.language === 'css' ? ' selected' : '') + '>CSS</option><option value="json"' + (b.language === 'json' ? ' selected' : '') + '>JSON</option><option value="bash"' + (b.language === 'bash' ? ' selected' : '') + '>Bash</option></select></div><textarea class="form-textarea editor-block-input code-input" data-index="' + i + '" rows="6" placeholder="输入代码..." style="font-family:monospace;">' + escapeHtml(b.value || '') + '</textarea>' + previewCb + '</div>';
     }
     return '';
   },
@@ -705,5 +706,129 @@ const Components = {
       document.getElementById('send-msg-btn').addEventListener('click', async function() { var input = document.getElementById('chat-input'), c = input.value.trim(); if (!c) return; var btn = this; btn.disabled = true; btn.textContent = '发送中...'; try { var sendResult = await API.sendMessage(friendId, c); if (sendResult && sendResult.id) Components._chatLastMsgId = sendResult.id; input.value = ''; var container = document.getElementById('chat-messages'); if (container) { var emptyP = container.querySelector('p'); if (emptyP) emptyP.remove(); var el = document.createElement('div'); el.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:10px;'; el.innerHTML = '<div style="max-width:70%;padding:8px 14px;border-radius:12px;background:var(--primary);color:#fff;border:1px solid var(--border);"><div style="font-size:13px;line-height:1.4;">' + escapeHtml(c) + '</div><div style="font-size:10px;margin-top:4px;opacity:0.6;text-align:right;">刚刚</div></div>'; container.appendChild(el); container.scrollTop = container.scrollHeight; } } catch(err) { showToast(err.message, 'error'); } finally { btn.disabled = false; btn.textContent = '发送'; } });
       document.getElementById('chat-input').addEventListener('keydown', function(e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); document.getElementById('send-msg-btn').click(); } });
     } catch (err) { showToast(err.message, 'error'); Router.navigate('#/friends'); }
+  },
+
+  async renderAdminStats() {
+    this.renderLoading();
+    try {
+      var d = await API.getAdminStats(), zones = d.zones || [];
+      var totalUsers = d.total_users || 0, pendingReports = d.pending_reports || 0;
+      var maxPosts = Math.max(1, ...zones.map(function(z) { return z.posts; }));
+      var maxReplies = Math.max(1, ...zones.map(function(z) { return z.replies; }));
+      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page">' +
+        '<div class="settings-card"><h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">📊 区域统计</h2>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px;">' +
+        '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:32px;margin-bottom:4px;">👥</div><div style="font-size:28px;font-weight:700;">' + totalUsers + '</div><div style="font-size:13px;color:var(--text-secondary);">总用户数</div></div>' +
+        '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:32px;margin-bottom:4px;">🚩</div><div style="font-size:28px;font-weight:700;' + (pendingReports > 0 ? 'color:var(--error);' : '') + '">' + pendingReports + '</div><div style="font-size:13px;color:var(--text-secondary);">待处理举报</div></div>' +
+        '</div>' +
+        zones.map(function(z) {
+          var postPct = Math.round(z.posts / maxPosts * 100);
+          var replyPct = Math.round(z.replies / maxReplies * 100);
+          return '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px;"><h3 style="font-size:18px;font-weight:700;margin-bottom:12px;">' + (z.zone === 'works' ? '📂' : '💬') + ' ' + escapeHtml(z.label) + '</h3>' +
+            '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px;"><span>帖子数</span><span style="font-weight:600;">' + z.posts + '</span></div><div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + postPct + '%;background:var(--primary);border-radius:4px;transition:width 0.3s;"></div></div></div>' +
+            '<div><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px;"><span>回复数</span><span style="font-weight:600;">' + z.replies + '</span></div><div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + replyPct + '%;background:var(--accent, #8b5cf6);border-radius:4px;transition:width 0.3s;"></div></div></div></div>';
+        }).join('') +
+        '<div style="text-align:center;margin-top:20px;"><button class="btn btn-outline" id="refresh-stats-btn">🔄 刷新数据</button></div>' +
+        '</div></div>';
+      document.getElementById('refresh-stats-btn').addEventListener('click', function() { Components.renderAdminStats(); });
+    } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
+  },
+
+  async renderAdminReports() {
+    this.renderLoading();
+    try {
+      var status = this._reportStatus || 'pending';
+      var d = await API.getAdminReports(1, 20, status), reports = d.reports || [], pag = d.pagination || {};
+      var tabs = [{ id: 'pending', label: '待处理' }, { id: 'resolved', label: '已处理' }, { id: 'dismissed', label: '已驳回' }];
+      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card"><h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">🚩 举报管理</h2><div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">' + tabs.map(function(t) { return '<button class="btn btn-sm ' + (t.id === status ? 'btn-primary' : 'btn-outline') + ' report-tab-btn" data-status="' + t.id + '">' + t.label + '</button>'; }).join('') + '</div>' +
+        (reports.length === 0 ? '<p style="color:var(--text-secondary);padding:20px;text-align:center;">暂无举报</p>' :
+        '<div style="overflow-x:auto;">' + reports.map(function(r) {
+          var dateStr = formatDate(r.created_at);
+          return '<div class="report-item" style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;"><div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span class="report-type-badge" style="font-size:11px;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--text-secondary);flex-shrink:0;">' + (r.target_type === 'post' ? '📄帖子' : '👤用户') + '</span><span class="report-target-link" data-type="' + r.target_type + '" data-id="' + r.target_id + '" style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(r.target_name || '未知') + '</span></div><div style="font-size:12px;color:var(--text-secondary);margin-top:4px;display:flex;align-items:center;gap:6px;"><span class="report-reporter-link" data-id="' + r.reporter_id + '" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:var(--primary);">' + (r.reporter_avatar ? '<img src="' + r.reporter_avatar + '" style="width:18px;height:18px;border-radius:50%;object-fit:cover;">' : '<span style="display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--primary);color:#fff;align-items:center;justify-content:center;font-size:10px;font-weight:600;">' + escapeHtml((r.reporter_name || '?').charAt(0).toUpperCase()) + '</span>') + escapeHtml(r.reporter_name) + '</span> · ' + dateStr + '</div><div style="font-size:13px;margin-top:4px;padding:4px 8px;background:var(--bg);border-radius:4px;">' + escapeHtml(r.reason) + '</div></div>' + (r.status === 'pending' ? '<div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-sm btn-primary resolve-report-btn" data-id="' + r.id + '">✅ 处理</button><button class="btn btn-sm btn-outline dismiss-report-btn" data-id="' + r.id + '" style="color:var(--error);">❌ 驳回</button></div>' : '<span style="font-size:12px;color:var(--text-secondary);padding:4px 8px;background:var(--bg);border-radius:4px;">' + (r.status === 'resolved' ? '✅ 已处理' : '❌ 已驳回') + '</span>') + '</div></div>';
+        }).join('') + '</div>') +
+        (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;gap:6px;padding:12px 0;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" data-rp="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>上一页</button><span style="padding:4px 8px;font-size:13px;color:var(--text-secondary);">' + pag.page + '/' + pag.totalPages + '</span><button class="btn btn-sm btn-outline" data-rp="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页</button></div>' : '') +
+        '</div></div></div>';
+      document.querySelectorAll('.report-tab-btn').forEach(function(b) { b.addEventListener('click', function() { Components._reportStatus = this.dataset.status; Components.renderAdminReports(); }); });
+      document.querySelectorAll('.resolve-report-btn').forEach(function(b) { b.addEventListener('click', async function() { var id = parseInt(this.dataset.id); try { await API.resolveReport(id, 'resolved'); showToast('已处理', 'success'); Components.renderAdminReports(); } catch(err) { showToast(err.message, 'error'); } }); });
+      document.querySelectorAll('.dismiss-report-btn').forEach(function(b) { b.addEventListener('click', async function() { var id = parseInt(this.dataset.id); try { await API.resolveReport(id, 'dismissed'); showToast('已驳回', 'success'); Components.renderAdminReports(); } catch(err) { showToast(err.message, 'error'); } }); });
+      document.querySelectorAll('.report-target-link').forEach(function(el) { el.addEventListener('click', function() { playClickSound(); var t = this.dataset.type, id = parseInt(this.dataset.id); if (t === 'user') Router.navigate('#/users/' + id); else if (t === 'post') Router.navigate('#/posts/' + id); }); });
+      document.querySelectorAll('.report-reporter-link').forEach(function(el) { el.addEventListener('click', function() { playClickSound(); Router.navigate('#/users/' + parseInt(this.dataset.id)); }); });
+    } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
+  },
+
+  async renderAdminUsers() {
+    this.renderLoading();
+    try {
+      var page = 1, search = '';
+      var render = async function(p, s) {
+        var d = await API.getAdminUsers(p, 20, s), users = d.users || [], pag = d.pagination || {};
+        document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card"><h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">👥 用户管理</h2><div class="search-bar" style="margin-bottom:12px;"><input class="search-input" id="admin-user-search" type="text" placeholder="搜索用户名..." value="' + escapeHtml(s) + '"></div>' +
+          (users.length === 0 ? '<p style="color:var(--text-secondary);padding:20px;text-align:center;">暂无用户</p>' :
+          '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--bg);"><th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">用户名</th><th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">角色</th><th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">等级</th><th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">状态</th><th style="padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);">操作</th></tr></thead><tbody>' + users.map(function(u) {
+            return '<tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 10px;">' + escapeHtml(u.username) + '</td><td style="padding:8px 10px;">' + (u.role === 'admin' ? '管理员' : '用户') + '</td><td style="padding:8px 10px;">' + (u.level || 1) + '</td><td style="padding:8px 10px;">' + (u.is_banned ? '<span style="color:var(--error);">🚫 已禁言</span>' : '<span style="color:var(--success);">正常</span>') + '</td><td style="padding:8px 10px;">' + (u.username !== 'admin' ? '<button class="btn btn-sm ' + (u.is_banned ? 'btn-outline' : 'btn-outline') + ' admin-ban-btn" data-id="' + u.id + '" data-banned="' + u.is_banned + '" data-username="' + escapeHtml(u.username) + '" style="' + (u.is_banned ? 'color:var(--success);' : 'color:var(--error);') + '">' + (u.is_banned ? '解除禁言' : '禁言') + '</button>' : '') + '</td></tr>';
+          }).join('') + '</tbody></table></div>') +
+          (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;gap:6px;padding:12px 0;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" data-up="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>上一页</button><span style="padding:4px 8px;font-size:13px;color:var(--text-secondary);">' + pag.page + '/' + pag.totalPages + '</span><button class="btn btn-sm btn-outline" data-up="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页</button></div>' : '') +
+          '</div></div></div>';
+        document.getElementById('admin-user-search').addEventListener('input', function() { var v = this.value.trim(); if (Components._userSearchTimer) clearTimeout(Components._userSearchTimer); Components._userSearchTimer = setTimeout(function() { page = 1; render(1, v); }, 300); });
+        document.querySelectorAll('[data-up]').forEach(function(b) { b.addEventListener('click', function() { var dir = this.dataset.up; if (dir === 'prev' && pag.page > 1) page = pag.page - 1; else if (dir === 'next' && pag.page < pag.totalPages) page = pag.page + 1; else return; render(page, s); }); });
+        document.querySelectorAll('.admin-ban-btn').forEach(function(b) { b.addEventListener('click', async function() { var uid = parseInt(this.dataset.id), banned = this.dataset.banned === 'true'; if (banned) { try { await API.adminBanUser(uid, false); showToast('已解除禁言', 'success'); render(page, s); } catch(err) { showToast(err.message, 'error'); } } else { var reason = await showPrompt('禁言原因（可选）：', '', ''); var duration = await showPrompt('禁言时长（小时，留空=永久）：', '', ''); try { await API.adminBanUser(uid, true, duration ? parseInt(duration) : null, reason || ''); showToast('已禁言', 'success'); render(page, s); } catch(err) { showToast(err.message, 'error'); } } }); });
+      };
+      render(page, search);
+    } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
+  },
+
+  async renderAdminLevels() {
+    this.renderLoading();
+    try {
+      var configs = (await API.getLevelConfig()).configs || [];
+      var usersD = await API.getLevelUsers(), users = usersD.users || [], maxLevel = usersD.max_level || 20, pag = usersD.pagination || {};
+      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card"><h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">🏆 等级管理</h2>' +
+        '<div style="margin-bottom:20px;"><h3 style="font-size:16px;font-weight:600;margin-bottom:8px;">等级配置</h3>' +
+        '<div id="level-config-list">' + configs.map(function(c, i) {
+          var zones = []; try { zones = JSON.parse(c.zones || '[]'); } catch(e) {}
+          return '<div class="level-config-item" data-index="' + i + '" style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><span style="font-weight:600;font-size:14px;min-width:50px;">Lv.' + c.level + '</span><input class="form-input lvl-cfg-name" data-index="' + i + '" value="' + escapeHtml(c.name || '') + '" placeholder="头衔" style="flex:1;min-width:80px;font-size:13px;"><input class="form-input lvl-cfg-xp" data-index="' + i + '" type="number" value="' + (c.xp_required || 0) + '" style="width:80px;font-size:13px;" title="所需XP"><label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;"><input type="checkbox" class="lvl-cfg-music" data-index="' + i + '"' + (zones.includes('music') ? ' checked' : '') + '> 🎵音乐</label></div><div style="display:flex;gap:8px;margin-top:6px;align-items:center;"><span style="font-size:12px;color:var(--text-secondary);">图标:</span><button class="btn btn-sm btn-outline lvl-cfg-icon-btn" data-index="' + i + '">' + (c.title_icon ? '📷 更换' : '📷 上传') + '</button>' + (c.title_icon ? '<img src="' + c.title_icon + '" style="width:24px;height:24px;border-radius:4px;object-fit:cover;">' : '') + '</div></div>';
+        }).join('') + '</div>' +
+        '<button class="btn btn-primary" id="save-level-config-btn" style="margin-top:8px;">💾 保存等级配置</button></div>' +
+        '<div class="settings-card" style="margin-top:16px;"><h3 style="font-size:16px;font-weight:600;margin-bottom:8px;">用户等级</h3>' +
+        (users.length === 0 ? '<p style="color:var(--text-secondary);">暂无用户</p>' :
+        '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--bg);"><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);">用户</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);">等级</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);">XP</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);">积分</th><th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);">操作</th></tr></thead><tbody>' + users.map(function(u) {
+          return '<tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 8px;">' + escapeHtml(u.username) + '</td><td style="padding:6px 8px;"><input class="form-input user-lvl-level" data-uid="' + u.id + '" type="number" value="' + (u.level || 1) + '" style="width:50px;font-size:13px;padding:2px 4px;"></td><td style="padding:6px 8px;"><input class="form-input user-lvl-xp" data-uid="' + u.id + '" type="number" value="' + (u.xp || 0) + '" style="width:70px;font-size:13px;padding:2px 4px;"></td><td style="padding:6px 8px;"><input class="form-input user-lvl-points" data-uid="' + u.id + '" type="number" value="' + (u.points || 0) + '" style="width:70px;font-size:13px;padding:2px 4px;"></td><td style="padding:6px 8px;"><button class="btn btn-sm btn-outline save-user-level-btn" data-uid="' + u.id + '">保存</button></td></tr>';
+        }).join('') + '</tbody></table></div>') +
+        (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;gap:6px;padding:12px 0;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" data-lp="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>上一页</button><span style="padding:4px 8px;font-size:13px;color:var(--text-secondary);">' + pag.page + '/' + pag.totalPages + '</span><button class="btn btn-sm btn-outline" data-lp="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页</button></div>' : '') +
+        '</div></div></div>';
+      document.getElementById('save-level-config-btn').addEventListener('click', async function() {
+        var newConfigs = []; document.querySelectorAll('.level-config-item').forEach(function(item) {
+          var idx = parseInt(item.dataset.index), cfg = configs[idx]; if (!cfg) return;
+          var name = item.querySelector('.lvl-cfg-name').value.trim();
+          var xp = parseInt(item.querySelector('.lvl-cfg-xp').value) || 0;
+          var zones = ['work', 'chat']; if (item.querySelector('.lvl-cfg-music').checked) zones.push('music');
+          newConfigs.push({ level: cfg.level, xp_required: xp, name: name, zones: zones, title_icon: cfg.title_icon || '', bg_image: cfg.bg_image || '' });
+        });
+        try { await API.updateLevelConfig(newConfigs); showToast('等级配置已保存', 'success'); Components.renderAdminLevels(); } catch(err) { showToast(err.message, 'error'); }
+      });
+      document.querySelectorAll('.save-user-level-btn').forEach(function(b) { b.addEventListener('click', async function() {
+        var uid = parseInt(this.dataset.uid), row = this.closest('tr');
+        var level = parseInt(row.querySelector('.user-lvl-level').value) || 1;
+        var xp = parseInt(row.querySelector('.user-lvl-xp').value) || 0;
+        var points = parseInt(row.querySelector('.user-lvl-points').value) || 0;
+        try { await API.updateUserLevel(uid, { level: level, xp: xp, points: points }); showToast('已更新', 'success'); Components.renderAdminLevels(); } catch(err) { showToast(err.message, 'error'); }
+      }); });
+      document.querySelectorAll('[data-lp]').forEach(function(b) { b.addEventListener('click', function() { var dir = this.dataset.lp; var np = dir === 'prev' ? Math.max(1, pag.page - 1) : Math.min(pag.totalPages, pag.page + 1); API.getLevelUsers(np).then(function() { Components.renderAdminLevels(); }); }); });
+      document.querySelectorAll('.lvl-cfg-icon-btn').forEach(function(b) { b.addEventListener('click', function() {
+        var idx = parseInt(this.dataset.index);
+        var fi = document.createElement('input'); fi.type = 'file'; fi.accept = '.jpg,.jpeg,.png,.gif,.webp';
+        fi.addEventListener('change', async function() {
+          if (!fi.files || !fi.files[0]) return;
+          try {
+            var cropped = await openCropModal(fi.files[0], 1);
+            if (!cropped) return;
+            var r = await API.uploadFile(new File([cropped], 'icon.jpg', { type: 'image/jpeg' }));
+            configs[idx].title_icon = r.file.url;
+            Components.renderAdminLevels();
+          } catch(err) { showToast(err.message, 'error'); }
+        });
+        fi.click();
+      }); });
+    } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
   },
 };
