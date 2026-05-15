@@ -1,6 +1,6 @@
 const Components = {
   currentPage: 1, hasMore: false, isLoading: false, currentPost: null,
-  editorBlocks: [], editorMode: null, editorPostId: null, _editorCategory: 'work',
+  editorBlocks: [], editorMode: null, editorPostId: null, _editorCategory: 'work', _deletedBlockIds: [],
   _avatarState: null, _highlightCommentId: null, allPosts: [],
   _searchQuery: '', _activeTag: null, _sortMode: 'latest', _currentCategory: null,
   _commentPage: 1, _commentPageSize: 30, _tagCategory: 'all',
@@ -177,7 +177,7 @@ const Components = {
   _detectCodeLang(code) { if (!code) return ''; const t = code.trim(); if (/^</.test(t)) return 'html'; if (/^{/.test(t) || /^}$/.test(t)) return 'json'; if (/^(import |export |const |let |var |function |=>)/.test(t)) return 'javascript'; if (/^(def |import |from |class )/.test(t)) return 'python'; if (/^(@|body |.class|#id|<!DOCTYPE)/.test(t)) return 'css'; return ''; },
 
   renderCreatePost(category) { this.editorMode = 'create'; this.editorPostId = null; this.editorBlocks = []; this._editorCategory = category === 'chat' ? 'chat' : 'work'; this._renderEditor(category === 'chat' ? '发布帖子' : '发布新作品', null, this._editorCategory); },
-  async renderEditPost(postId) { this.editorMode = 'edit'; this.editorPostId = postId; this.renderLoading(); try { const d = await API.getPost(postId); this.editorBlocks = (d.blocks || []).map(b => ({ _id: b.id, type: b.type, value: b.value || '', file_id: b.file_id || null, file_url: b.file_url || null, allow_preview: !!b.allow_preview, _tempId: Date.now() + '_' + Math.random().toString(36).substr(2, 5) })); this._renderEditor('编辑作品', d.post); } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); } },
+  async renderEditPost(postId) { this.editorMode = 'edit'; this.editorPostId = postId; this._deletedBlockIds = []; this.renderLoading(); try { const d = await API.getPost(postId); this.editorBlocks = (d.blocks || []).map(b => ({ _id: b.id, type: b.type, value: b.value || '', file_id: b.file_id || null, file_url: b.file_url || null, allow_preview: !!b.allow_preview, _tempId: Date.now() + '_' + Math.random().toString(36).substr(2, 5) })); this._renderEditor('编辑作品', d.post); } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); } },
 
   async renderMyProfile() {
     this.renderLoading();
@@ -467,6 +467,221 @@ const Components = {
       var updateOnlineDots = async function() { try { var od = await API.getFriendOnlineStatus(); document.querySelectorAll('.friend-online-dot').forEach(function(dot) { var uid = parseInt(dot.dataset.uid); dot.style.background = (od.online && od.online[uid]) ? '#22c55e' : '#94a3b8'; }); } catch(e) {} };
       if (friends.length > 0) { if (Components._onlinePollTimer) clearInterval(Components._onlinePollTimer); Components._onlinePollTimer = setInterval(updateOnlineDots, 30000); }
     } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
+  },
+
+  _renderEditor(title, post, category) {
+    var isEdit = !!post, self = this;
+    var cat = category || (post ? post.category : 'work');
+    var editorHtml = '<div class="page-fade-in"><div class="post-editor" style="max-width:800px;margin:0 auto;padding:20px 16px;">' +
+      '<h2 style="font-size:22px;font-weight:700;margin-bottom:20px;">' + escapeHtml(title) + '</h2>' +
+      '<div class="form-group"><label class="form-label">标题 <span style="color:var(--error);">*</span></label><input class="form-input" id="editor-title" value="' + escapeHtml(post ? post.title : '') + '" placeholder="请输入标题"></div>' +
+      '<div class="form-group"><label class="form-label">简介</label><textarea class="form-textarea" id="editor-desc" rows="2" placeholder="简要描述">' + escapeHtml(post ? (post.description || '') : '') + '</textarea></div>' +
+      '<div class="form-group"><label class="form-label">标签（逗号分隔）</label><input class="form-input" id="editor-tags" value="' + escapeHtml(post ? (post.tags || '') : '') + '" placeholder="例如: javascript,nodejs"></div>' +
+      '<div class="form-group"><label class="form-label">封面图片</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" id="editor-upload-cover-btn">📁 选择图片</button><input type="file" id="editor-cover-file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><span id="editor-cover-name" style="font-size:13px;color:var(--text-secondary);">' + (post && post.cover_url ? '已有封面' : '未选择') + '</span><button class="btn btn-sm btn-outline" id="editor-remove-cover-btn"' + (post && post.cover_url ? '' : ' style="display:none;"') + '>✕ 移除</button></div></div>' +
+      '<div class="form-group" id="editor-cover-preview"' + (post && post.cover_url ? '' : ' style="display:none;"') + '>' + (post && post.cover_url ? '<img src="' + post.cover_url + '" style="max-width:200px;max-height:120px;border-radius:8px;object-fit:cover;">' : '') + '</div>' +
+      '<div class="form-group" style="' + (cat === 'chat' ? '' : 'display:none;') + '"><label class="form-label">分类</label><select class="form-input" id="editor-category"><option value="work"' + (cat === 'work' ? ' selected' : '') + '>📂 作品区</option><option value="chat"' + (cat === 'chat' ? ' selected' : '') + '>💬 聊天区</option></select></div>' +
+      '<div style="margin:20px 0;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h3 style="font-size:16px;font-weight:600;">📝 内容块</h3><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline add-block-btn" data-type="text">➕ 文本</button><button class="btn btn-sm btn-outline add-block-btn" data-type="image">🖼 图片</button><button class="btn btn-sm btn-outline add-block-btn" data-type="video">🎬 视频</button><button class="btn btn-sm btn-outline add-block-btn" data-type="code">💻 代码</button></div></div>' +
+      '<div id="editor-blocks-list">' + self._renderEditorBlocks() + '</div></div>' +
+      '<div style="display:flex;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);"><button class="btn btn-primary" id="editor-save-btn">💾 ' + (isEdit ? '保存修改' : '发布') + '</button><button class="btn btn-outline" id="editor-cancel-btn">取消</button></div></div></div>';
+    document.getElementById('app').innerHTML = editorHtml;
+    this._bindEditorEvents(isEdit, post);
+  },
+
+  _renderEditorBlocks() {
+    if (!this.editorBlocks || this.editorBlocks.length === 0) {
+      return '<div class="empty-state" style="padding:20px;"><p style="color:var(--text-light);font-size:14px;">暂无内容，点击上方按钮添加块</p></div>';
+    }
+    var h = '';
+    for (var i = 0; i < this.editorBlocks.length; i++) {
+      var b = this.editorBlocks[i];
+      h += '<div class="editor-block" data-index="' + i + '" style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;background:var(--bg-card);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span class="editor-block-type" style="font-weight:600;font-size:13px;color:var(--text-secondary);">' +
+        (b.type === 'text' ? '📝 文本' : b.type === 'image' ? '🖼 图片' : b.type === 'video' ? '🎬 视频' : '💻 代码') +
+        '</span><div style="display:flex;gap:4px;">' +
+        '<button class="btn btn-sm btn-outline editor-move-up-btn" data-index="' + i + '"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+        '<button class="btn btn-sm btn-outline editor-move-down-btn" data-index="' + i + '"' + (i === this.editorBlocks.length - 1 ? ' disabled' : '') + '>↓</button>' +
+        '<button class="btn btn-sm btn-outline editor-remove-block-btn" data-index="' + i + '" style="color:var(--error);">✕</button></div></div>' +
+        this._renderEditorBlockContent(b, i) + '</div>';
+    }
+    return h;
+  },
+
+  _renderEditorBlockContent(b, i) {
+    if (b.type === 'text') {
+      return '<textarea class="form-textarea editor-block-input" data-index="' + i + '" rows="4" placeholder="输入文本内容..." style="font-family:inherit;">' + escapeHtml(b.value || '') + '</textarea>';
+    } else if (b.type === 'image') {
+      var preview = b.file_url ? '<div style="margin-bottom:8px;"><img src="' + b.file_url + '" style="max-width:200px;max-height:150px;border-radius:6px;object-fit:cover;"></div>' : '';
+      return '<div>' + preview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择图片</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入图片URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;"><label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;"><input type="checkbox" class="editor-allow-preview" data-index="' + i + '"' + (b.allow_preview ? ' checked' : '') + '> 允许预览</label></div></div>';
+    } else if (b.type === 'video') {
+      var vPreview = b.file_url ? '<div style="margin-bottom:8px;"><video controls style="max-width:300px;max-height:150px;"><source src="' + b.file_url + '"></video></div>' : '';
+      return '<div>' + vPreview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择视频</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="video/mp4,video/webm,video/ogg" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入视频URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;"></div></div>';
+    } else if (b.type === 'code') {
+      return '<div class="form-group" style="margin-bottom:4px;"><select class="form-input editor-code-lang" data-index="' + i + '" style="width:150px;font-size:13px;"><option value="">自动检测</option><option value="javascript"' + (b.language === 'javascript' ? ' selected' : '') + '>JavaScript</option><option value="python"' + (b.language === 'python' ? ' selected' : '') + '>Python</option><option value="html"' + (b.language === 'html' ? ' selected' : '') + '>HTML</option><option value="css"' + (b.language === 'css' ? ' selected' : '') + '>CSS</option><option value="json"' + (b.language === 'json' ? ' selected' : '') + '>JSON</option><option value="bash"' + (b.language === 'bash' ? ' selected' : '') + '>Bash</option></select></div><textarea class="form-textarea editor-block-input code-input" data-index="' + i + '" rows="6" placeholder="输入代码..." style="font-family:monospace;">' + escapeHtml(b.value || '') + '</textarea>';
+    }
+    return '';
+  },
+
+  _bindEditorEvents(isEdit, post) {
+    var self = this, coverFileId = post ? (post.cover_file_id || null) : null;
+    // Cancel
+    document.getElementById('editor-cancel-btn').addEventListener('click', function() { Router.navigate(isEdit ? '#/posts/' + post.id : '#/works'); });
+    // Add block
+    document.querySelectorAll('.add-block-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        playClickSound();
+        var type = this.dataset.type;
+        self.editorBlocks.push({ type: type, value: '', file_id: null, file_url: null, allow_preview: true, _tempId: Date.now() + '_' + Math.random().toString(36).substr(2, 5) });
+        document.getElementById('editor-blocks-list').innerHTML = self._renderEditorBlocks();
+        self._reBindEditorBlockEvents();
+      });
+    });
+    this._reBindEditorBlockEvents();
+    // Cover upload
+    document.getElementById('editor-upload-cover-btn').addEventListener('click', function() { document.getElementById('editor-cover-file').click(); });
+    document.getElementById('editor-cover-file').addEventListener('change', async function() {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      try {
+        var cropped = await openCropModal(f, 16/9);
+        if (!cropped) return;
+        var result = await API.uploadFile(new File([cropped], 'cover.jpg', { type: 'image/jpeg' }));
+        coverFileId = result.file.id;
+        var previewDiv = document.getElementById('editor-cover-preview');
+        previewDiv.style.display = 'block';
+        previewDiv.innerHTML = '<img src="' + result.file.url + '" style="max-width:200px;max-height:120px;border-radius:8px;object-fit:cover;">';
+        document.getElementById('editor-cover-name').textContent = '已选择封面';
+        document.getElementById('editor-remove-cover-btn').style.display = '';
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+    document.getElementById('editor-remove-cover-btn').addEventListener('click', function() {
+      coverFileId = null;
+      document.getElementById('editor-cover-preview').style.display = 'none';
+      document.getElementById('editor-cover-preview').innerHTML = '';
+      document.getElementById('editor-cover-name').textContent = '未选择';
+      this.style.display = 'none';
+    });
+    // Save
+    document.getElementById('editor-save-btn').addEventListener('click', async function() {
+      var btn = this;
+      if (self._isButtonDisabled(btn)) return;
+      var title = document.getElementById('editor-title').value.trim();
+      if (!title) { showToast('请输入标题', 'warning'); document.getElementById('editor-title').focus(); return; }
+      var desc = document.getElementById('editor-desc').value.trim();
+      var tags = document.getElementById('editor-tags').value.trim();
+      var category = document.getElementById('editor-category') ? document.getElementById('editor-category').value : (post ? post.category : 'work');
+      self._syncEditorBlocks();
+      if (self.editorBlocks.length === 0) { showToast('请至少添加一个内容块', 'warning'); return; }
+      var blocks = self.editorBlocks.map(function(b) { var ob = { type: b.type, value: b.value || '', file_id: b.file_id || null, allow_preview: !!b.allow_preview }; if (b._id) ob.id = b._id; return ob; });
+      self._disableButton(btn, '发布中...');
+      try {
+        var data = { title: title, description: desc, tags: tags, category: category, blocks: blocks };
+        if (coverFileId) data.cover_file_id = coverFileId;
+        if (isEdit) { data.deleted_block_ids = self._deletedBlockIds; await API.updatePost(post.id, data); showToast('已更新', 'success'); Router.navigate('#/posts/' + post.id); }
+        else { var result = await API.createPost(data); showToast('已发布', 'success'); App.refreshLevel(); Router.navigate('#/posts/' + (result.id || result.post?.id)); }
+      } catch (err) { showToast(err.message, 'error'); }
+      finally { self._enableButton(btn, isEdit ? '💾 保存修改' : '💾 发布'); }
+    });
+  },
+
+  _reBindEditorBlockEvents() {
+    var self = this;
+    // Remove block
+    document.querySelectorAll('.editor-remove-block-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = parseInt(this.dataset.index);
+        if (isNaN(idx)) return;
+        var removed = self.editorBlocks[idx];
+        if (removed && removed._id) self._deletedBlockIds.push(removed._id);
+        self.editorBlocks.splice(idx, 1);
+        document.getElementById('editor-blocks-list').innerHTML = self._renderEditorBlocks();
+        self._reBindEditorBlockEvents();
+      });
+    });
+    // Move up
+    document.querySelectorAll('.editor-move-up-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = parseInt(this.dataset.index);
+        if (idx <= 0) return;
+        var tmp = self.editorBlocks[idx];
+        self.editorBlocks[idx] = self.editorBlocks[idx - 1];
+        self.editorBlocks[idx - 1] = tmp;
+        document.getElementById('editor-blocks-list').innerHTML = self._renderEditorBlocks();
+        self._reBindEditorBlockEvents();
+      });
+    });
+    // Move down
+    document.querySelectorAll('.editor-move-down-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = parseInt(this.dataset.index);
+        if (idx >= self.editorBlocks.length - 1) return;
+        var tmp = self.editorBlocks[idx];
+        self.editorBlocks[idx] = self.editorBlocks[idx + 1];
+        self.editorBlocks[idx + 1] = tmp;
+        document.getElementById('editor-blocks-list').innerHTML = self._renderEditorBlocks();
+        self._reBindEditorBlockEvents();
+      });
+    });
+    // Upload file for image/video blocks
+    document.querySelectorAll('.editor-upload-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var fi = this.nextElementSibling;
+        if (fi && fi.classList.contains('editor-file-input')) fi.click();
+      });
+    });
+    document.querySelectorAll('.editor-file-input').forEach(function(input) {
+      input.addEventListener('change', async function() {
+        var f = this.files && this.files[0];
+        if (!f) return;
+        var idx = parseInt(this.dataset.index);
+        if (isNaN(idx)) return;
+        try {
+          var result = await API.uploadFile(f);
+          self.editorBlocks[idx].file_id = result.file.id;
+          self.editorBlocks[idx].file_url = result.file.url;
+          self.editorBlocks[idx].value = result.file.url;
+          document.getElementById('editor-blocks-list').innerHTML = self._renderEditorBlocks();
+          self._reBindEditorBlockEvents();
+        } catch (err) { showToast(err.message, 'error'); }
+      });
+    });
+    // Block input changes (sync on blur for textareas)
+    document.querySelectorAll('.editor-block-input').forEach(function(textarea) {
+      textarea.addEventListener('input', function() {
+        var idx = parseInt(this.dataset.index);
+        if (!isNaN(idx) && self.editorBlocks[idx]) self.editorBlocks[idx].value = this.value;
+      });
+    });
+    document.querySelectorAll('.editor-block-url').forEach(function(input) {
+      input.addEventListener('input', function() {
+        var idx = parseInt(this.dataset.index);
+        if (!isNaN(idx) && self.editorBlocks[idx]) self.editorBlocks[idx].value = this.value;
+      });
+    });
+    document.querySelectorAll('.editor-code-lang').forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        var idx = parseInt(this.dataset.index);
+        if (!isNaN(idx) && self.editorBlocks[idx]) self.editorBlocks[idx].language = this.value;
+      });
+    });
+    document.querySelectorAll('.editor-allow-preview').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var idx = parseInt(this.dataset.index);
+        if (!isNaN(idx) && self.editorBlocks[idx]) self.editorBlocks[idx].allow_preview = this.checked;
+      });
+    });
+  },
+
+  _syncEditorBlocks() {
+    // Read all current values from the DOM into editorBlocks
+    var self = this;
+    document.querySelectorAll('.editor-block-input').forEach(function(el) {
+      var idx = parseInt(el.dataset.index);
+      if (!isNaN(idx) && self.editorBlocks[idx]) self.editorBlocks[idx].value = el.value;
+    });
+    document.querySelectorAll('.editor-block-url').forEach(function(el) {
+      var idx = parseInt(el.dataset.index);
+      if (!isNaN(idx) && self.editorBlocks[idx]) self.editorBlocks[idx].value = el.value;
+    });
   },
 
   async renderChat(friendId) {
