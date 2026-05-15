@@ -1,0 +1,418 @@
+// ===== Main App Module =====
+const App = {
+  user: null,
+  _theme: 'light',
+
+  async init() {
+    // UI ready
+    document.getElementById('loading-screen').style.display = 'none';
+
+    // Initialize audio on first user interaction
+    document.addEventListener('click', unlockAudio, { once: true });
+
+    // Initialize music player
+    MusicPlayer.init();
+
+    // Load sound settings
+    await loadSoundSettings();
+
+    // Initialize dark mode
+    this._initTheme();
+
+    // Check authentication
+    await this.checkAuth();
+
+
+    // Update navigation
+    this.updateNav();
+
+    // Initialize router
+    Router.init();
+
+    // Mute checkbox from localStorage
+    const muteCheckbox = document.getElementById('mute-checkbox');
+    const savedMute = localStorage.getItem('portfolio_mute');
+    if (savedMute === 'true') muteCheckbox.checked = true;
+    muteCheckbox.addEventListener('change', () => {
+      localStorage.setItem('portfolio_mute', muteCheckbox.checked);
+    });
+  },
+
+  _initTheme() {
+    const saved = localStorage.getItem('portfolio_theme');
+    if (saved === 'dark') {
+      this._theme = 'dark';
+      document.documentElement.dataset.theme = 'dark';
+    }
+  },
+
+  _toggleTheme() {
+    this._theme = this._theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = this._theme;
+    localStorage.setItem('portfolio_theme', this._theme);
+    // Update toggle button icon
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = this._theme === 'dark' ? '☀️' : '🌙';
+  },
+
+  async checkAuth() {
+    try {
+      const data = await API.getMe();
+      if (data.user) {
+        this.user = data.user;
+      } else {
+        this.user = null;
+      }
+    } catch (err) {
+      this.user = null;
+    }
+    this.updateNav();
+  },
+
+  setUser(user) {
+    this.user = user;
+    this.updateNav();
+  },
+
+  async refreshLevel() {
+    try {
+      const data = await API.getMyLevel();
+      if (this.user) {
+        this.user.level = data.level;
+        this.user.xp = data.xp;
+        this.user.points = data.points;
+      }
+      const ld = document.getElementById('nav-level');
+      if (ld) {
+        var lvl = data.level || 1;
+        var lvlName = data.level_name || ('Lv.' + lvl);
+        var badgeContent = data.title_icon
+          ? '<img class="lvl-badge-img" src="' + data.title_icon + '" alt="">'
+          : lvl;
+        var bgStyle = data.bg_image ? ' style="background-image:url(\'' + data.bg_image + '\')"' : '';
+        var progress = data.next_xp_required
+          ? Math.min(100, ((data.xp || 0) / data.next_xp_required) * 100) : 100;
+        var progressHtml = data.next_xp_required
+          ? '<span class="lvl-progress-row">' +
+              '<span class="lvl-progress"><span class="lvl-progress-fill" style="width:' + progress + '%"></span></span>' +
+              '<span class="lvl-progress-label">' + (data.xp || 0) + '/' + data.next_xp_required + '</span>' +
+            '</span>'
+          : '<span class="lvl-progress-row"><span class="lvl-progress-label" style="color:var(--primary);font-size:10px;">MAX</span></span>';
+        ld.innerHTML = '<span class="lvl-badge"' + bgStyle + '>' + badgeContent + '</span>' +
+          '<span class="lvl-details">' +
+            '<span class="lvl-name-row">Lv.' + lvl + ' ' + lvlName + '</span>' +
+            progressHtml +
+            '<span class="lvl-stats-row"><span class="lvl-points">⭐ ' + (data.points || 0) + ' 分</span></span>' +
+          '</span>';
+      }
+    } catch (e) {}
+  },
+
+  updateNav() {
+    const navLinks = document.getElementById('nav-links');
+    const navBrand = document.querySelector('.nav-brand');
+    if (!navLinks) return;
+
+    if (this.user) {
+      const isAdmin = this.user.role === 'admin';
+      navLinks.innerHTML = `
+        <span class="level-display" id="nav-level">
+          <span class="lvl-badge">${this.user.level || 1}</span>
+          <span class="lvl-details">
+            <span class="lvl-name-row">Lv.${this.user.level || 1}</span>
+            <span class="lvl-stats-row"><span class="lvl-points">⭐ ${this.user.points || 0} 分</span></span>
+          </span>
+        </span>
+        <button class="nav-btn" id="nav-friends" style="position:relative;">
+          👥 好友
+          <span class="unread-badge" id="friend-request-badge" style="display:none;">0</span>
+        </button>
+        <button class="nav-btn" id="theme-toggle">${this._theme === 'dark' ? '☀️' : '🌙'}</button>
+        <span class="nav-user" id="nav-user-profile" style="cursor:pointer;">
+          👤 ${escapeHtml(this.user.username)}
+          <span class="role-badge ${isAdmin ? 'admin' : ''}">${isAdmin ? '管理员' : '用户'}</span>
+        </span>
+        <button class="nav-btn" id="nav-notifications" style="position:relative;">
+          🔔 <span class="unread-badge" id="unread-badge" style="display:none;">0</span>
+        </button>
+        <button class="nav-btn primary" id="nav-logout">退出</button>`;
+
+      // Add hamburger button
+      if (!document.getElementById('hamburger-btn')) {
+        const hamburger = document.createElement('button');
+        hamburger.id = 'hamburger-btn';
+        hamburger.className = 'hamburger-btn';
+        hamburger.innerHTML = '☰';
+        hamburger.setAttribute('aria-label', '菜单');
+        const navbar = document.querySelector('.navbar');
+        const navInner = document.querySelector('.nav-inner');
+        navbar.insertBefore(hamburger, navInner);
+      }
+
+
+      // Create side menu and overlay if not exists
+      if (!document.getElementById('side-menu')) {
+        const overlay = document.createElement('div');
+        overlay.className = 'menu-overlay';
+        overlay.id = 'menu-overlay';
+        document.body.appendChild(overlay);
+
+        const menu = document.createElement('div');
+        menu.className = 'side-menu';
+        menu.id = 'side-menu';
+        let menuHtml = `
+          <div class="side-menu-item" data-route="/works" data-label="works" data-zone="work">📂 作品区</div>
+          <div class="side-menu-item" data-route="/chats" data-label="chats" data-zone="chat">💬 聊天区</div>
+          <div class="side-menu-item" data-route="/music" data-label="music" data-zone="music">🎵 我的音乐</div>
+          <div class="side-menu-item" data-route="/bookmarks" data-label="bookmark">🔖 收藏夹</div>`;
+        if (App.user && App.user.role === 'admin') {
+          menuHtml += `
+          <div class="side-menu-item" data-route="/tags" data-label="tags">🏷️ 标签管理</div>
+          <div class="side-menu-item" data-route="/admin/stats" data-label="admin">📊 区域统计</div>
+          <div class="side-menu-item" data-route="/admin/reports" data-label="admin">🚩 举报管理</div>
+          <div class="side-menu-item" data-route="/admin/users" data-label="admin">👥 用户管理</div>
+          <div class="side-menu-item" data-route="/admin/levels" data-label="admin">🏅 等级管理</div>`;
+        }
+        menu.innerHTML = menuHtml;
+        document.body.appendChild(menu);
+
+        this._checkZoneLocks();
+
+        // Bind hamburger toggle
+        document.getElementById('hamburger-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          playClickSound();
+          document.body.classList.toggle('side-menu-open');
+        });
+
+        // Bind overlay close
+        overlay.addEventListener('click', () => {
+          document.body.classList.remove('side-menu-open');
+        });
+
+        // Bind menu item clicks with lock check
+        menu.addEventListener('click', (e) => {
+          const item = e.target.closest('.side-menu-item');
+          if (item) {
+            playClickSound();
+            if (item.dataset.locked === 'true') { showToast('等级不足，无法访问该分区', 'error'); return; }
+            document.body.classList.remove('side-menu-open');
+            Router.navigate(item.dataset.route);
+          }
+        });
+      }
+
+      // Highlight active menu item (runs every nav update, not just menu creation)
+      this._highlightActiveMenuItem();
+
+      document.getElementById('nav-friends').addEventListener('click', () => {
+        playClickSound();
+        Router.navigate('#/friends');
+      });
+
+      document.getElementById('nav-user-profile').addEventListener('click', () => {
+        playClickSound();
+        Router.navigate('#/profile');
+      });
+
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        playClickSound();
+        this._toggleTheme();
+      });
+
+      document.getElementById('nav-logout').addEventListener('click', async () => {
+        playClickSound();
+        try {
+          await API.logout();
+          this.user = null;
+          showToast('已退出登录', 'info');
+          this.updateNav();
+          Router.navigate('#/login');
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+
+      document.getElementById('nav-notifications').addEventListener('click', () => {
+        playClickSound();
+        Router.navigate('#/notifications');
+      });
+
+
+      // Poll for unread count
+      this._startNotifPolling();
+
+      // Show ban banner if user is banned
+      this._updateBanBanner();
+
+      // Show music player
+      const playerContainer = document.getElementById('music-player-container');
+      if (playerContainer) playerContainer.style.display = '';
+      MusicPlayer._renderPlayer();
+      // Check music zone access - hide player if locked
+      API.checkZoneAccess('music').then(function(d) {
+        var mc = document.getElementById('music-player-container');
+        if (mc && !d.accessible) {
+          mc.style.display = 'none';
+          if (MusicPlayer.audio) { MusicPlayer.audio.pause(); MusicPlayer.audio.src = ''; }
+          MusicPlayer.currentSong = null; MusicPlayer.queue = [];
+        }
+      }).catch(function() {});
+    } else {
+      navLinks.innerHTML = '';
+      this._stopNotifPolling();
+
+      // Remove ban banner on logout
+      const banner = document.getElementById('ban-banner');
+      if (banner) banner.remove();
+      if (this._banBannerTimer) {
+        clearInterval(this._banBannerTimer);
+        this._banBannerTimer = null;
+      }
+
+      // Hide & reset music player
+      const playerContainer = document.getElementById('music-player-container');
+      if (playerContainer) {
+        playerContainer.style.display = 'none';
+        if (MusicPlayer.audio) {
+          MusicPlayer.audio.pause();
+          MusicPlayer.audio.src = '';
+        }
+        MusicPlayer.currentSong = null;
+        MusicPlayer.queue = [];
+        MusicPlayer.queueIndex = -1;
+        MusicPlayer.queueLabel = '';
+        MusicPlayer.playing = false;
+      }
+      localStorage.removeItem('music_player_state');
+      // Remove hamburger and side menu
+      const hamburger = document.getElementById('hamburger-btn');
+      if (hamburger) hamburger.remove();
+      const menu = document.getElementById('side-menu');
+      if (menu) menu.remove();
+      const overlay = document.getElementById('menu-overlay');
+      if (overlay) overlay.remove();
+      document.body.classList.remove('side-menu-open');
+    }
+  },
+
+  _highlightActiveMenuItem() {
+    const hash = window.location.hash || '#/works';
+    const cur = hash.split('#')[1] || '/works';
+    document.querySelectorAll('.side-menu-item').forEach(el => {
+      const route = el.dataset.route;
+      el.classList.toggle('active', cur === route || (route && cur.startsWith(route + '/')));
+    });
+  },
+
+  _notifPollTimer: null,
+
+  _stopNotifPolling() {
+    if (this._notifPollTimer) {
+      clearInterval(this._notifPollTimer);
+      this._notifPollTimer = null;
+    }
+  },
+
+  _banBannerTimer: null,
+  _lastUnreadCount: 0,
+
+  _updateBanBanner() {
+    const existing = document.getElementById('ban-banner');
+    if (existing) existing.remove();
+    if (this._banBannerTimer) {
+      clearInterval(this._banBannerTimer);
+      this._banBannerTimer = null;
+    }
+
+    if (!this.user || !this.user.is_banned) return;
+
+    const render = () => {
+      let banner = document.getElementById('ban-banner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'ban-banner';
+        banner.className = 'ban-banner';
+        const navbar = document.querySelector('.navbar');
+        navbar.parentNode.insertBefore(banner, navbar.nextSibling);
+      }
+
+      let timeText = '';
+      if (this.user.banned_until) {
+        const until = new Date(this.user.banned_until.replace(' ', 'T') + 'Z');
+        const remaining = Math.max(0, until.getTime() - Date.now());
+        if (remaining <= 0) {
+          this.checkAuth().then(() => {
+            const b = document.getElementById('ban-banner');
+            if (b) b.remove();
+          });
+          return;
+        }
+        const days = Math.floor(remaining / 86400000);
+        const hours = Math.floor((remaining % 86400000) / 3600000);
+        const minutes = Math.floor((remaining % 3600000) / 60000);
+        timeText = `禁言剩余 ${days > 0 ? days + '天 ' : ''}${hours}小时${minutes}分钟`;
+      } else {
+        timeText = '永久禁言';
+      }
+
+      const reasonText = this.user.ban_reason ? `原因：${escapeHtml(this.user.ban_reason)}` : '';
+      banner.innerHTML = `<span>🚫 ${timeText}</span>${reasonText ? `<span>${reasonText}</span>` : ''}`;
+    };
+
+    render();
+    if (this.user.banned_until) {
+      this._banBannerTimer = setInterval(render, 60000);
+    }
+  },
+
+  _checkZoneLocks() {
+    var self = this;
+    var zones = ['work', 'chat', 'music'];
+    zones.forEach(function(zone) {
+      API.checkZoneAccess(zone).then(function(data) {
+        var item = document.querySelector('.side-menu-item[data-zone="' + zone + '"]');
+        if (!item || data.accessible) return;
+        item.dataset.locked = 'true';
+        var lockSpan = document.createElement('span');
+        lockSpan.className = 'zone-lock-icon';
+        lockSpan.textContent = ' \uD83D\uDD12';
+        item.appendChild(lockSpan);
+      }).catch(function() {});
+    });
+  },
+
+  _startNotifPolling() {
+    this._lastUnreadCount = 0;
+    const self = this;
+    function updateBadge(count) {
+      var badge = document.getElementById("unread-badge");
+      if (!badge) return;
+      if (count > 0) {
+        badge.textContent = count > 99 ? "99+" : count;
+        badge.style.display = "inline";
+      } else {
+        badge.style.display = "none";
+      }
+    };
+    var poll = async function() {
+      try {
+        var data = await API.getUnreadCount();
+        var count = data.count || 0;
+        updateBadge(count);
+        Components._updateFriendRequestBadge();
+        if (count > self._lastUnreadCount && self._lastUnreadCount > 0) {
+          var diff = count - self._lastUnreadCount;
+          showToast("您有 " + diff + " 条新通知", "info");
+        }
+        self._lastUnreadCount = count;
+      } catch (e) { }
+    };
+    poll();
+    if (this._notifPollTimer) clearInterval(this._notifPollTimer);
+    this._notifPollTimer = setInterval(poll, 30000);
+  },
+};
+
+// Bootstrap application
+document.addEventListener('DOMContentLoaded', () => App.init());
