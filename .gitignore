@@ -1,0 +1,8 @@
+node_modules/
+database.db
+server.log
+.env
+uploads/*
+!uploads/.gitkeep
+*.tmp
+test_avatar.png
