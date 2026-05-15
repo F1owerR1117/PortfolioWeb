@@ -110,3 +110,42 @@ post_tags 迁移仅在首次运行时执行（通过 settings 表 `tag_migration
 netstat -ano | grep ":3000 " | grep LISTEN | awk '{print $5}' | while read p; do wmic process where processid=$p delete > /dev/null 2>&1; done
 node server.js
 ```
+
+## 快照备份与回滚
+
+项目自带 git 版本控制，使用快照机制防止代码丢失。
+
+### 创建快照（在操作前执行）
+
+```bash
+# 方式 1: 双击 snapshot.bat (Windows)
+# 方式 2: 命令行
+bash scripts/snapshot.sh
+bash scripts/snapshot.sh "可选的备注信息"
+```
+
+每次创建快照会自动提交所有变更，生成一个可追溯的历史版本。
+
+### 回滚到之前的版本
+
+```bash
+# 交互模式
+bash scripts/rollback.sh
+
+# 查看所有快照
+bash scripts/rollback.sh list
+
+# 回滚到指定版本
+bash scripts/rollback.sh <commit-hash>
+```
+
+支持三种回滚方式:
+- **硬回滚**: 完全恢复到快照状态（会丢失未提交变更）
+- **软回滚**: 保留当前变更，可重新整理后再次提交
+- **单文件恢复**: 只恢复指定文件到快照版本
+
+### 建议工作流
+
+1. 每次让我修改代码前，先运行 `bash scripts/snapshot.sh "修改前的状态"`
+2. 修改完成后，再运行一次 `bash scripts/snapshot.sh "本次修改内容"`
+3. 如果修改有问题，用 `bash scripts/rollback.sh` 回滚到步骤 1 的快照
