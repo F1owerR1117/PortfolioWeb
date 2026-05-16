@@ -3978,6 +3978,7 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .ad-bar-inner {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -4027,17 +4028,24 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .ad-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 0;
+  padding: 4px 0;
+  background: rgba(0,0,0,0.45);
+  border-radius: 0 0 12px 12px;
+  z-index: 1;
 }
 
 .ad-nav-btn {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
   border-radius: 50%;
   width: 22px;
   height: 22px;
@@ -4047,14 +4055,14 @@ button { cursor: pointer; font-family: inherit; }
   justify-content: center;
   cursor: pointer;
   font-size: 10px;
-  color: var(--text-secondary);
+  color: #fff;
   transition: background 0.2s, color 0.2s;
 }
 
 .ad-nav-btn:hover:not(:disabled) {
-  background: var(--primary);
+  background: rgba(255,255,255,0.4);
   color: #fff;
-  border-color: var(--primary);
+  border-color: rgba(255,255,255,0.6);
 }
 
 .ad-nav-btn:disabled {
@@ -4064,7 +4072,7 @@ button { cursor: pointer; font-family: inherit; }
 
 .ad-counter {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.85);
   font-weight: 600;
 }
 
