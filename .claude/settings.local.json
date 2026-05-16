@@ -447,7 +447,8 @@
       "Bash(curl -s -b /tmp/c_new.txt http://localhost:3000/api/posts/41)",
       "Bash(curl -s -b /tmp/c_new.txt http://localhost:3000/api/posts/41/download/78 -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -s -b /tmp/c_new.txt http://localhost:3000/api/levels/me)",
-      "Bash(bash scripts/snapshot.sh \"修复：附件系统使用points而非coins+未解锁隐藏附件信息+作者下载无积分变动\")"
+      "Bash(bash scripts/snapshot.sh \"修复：附件系统使用points而非coins+未解锁隐藏附件信息+作者下载无积分变动\")",
+      "Bash(bash scripts/snapshot.sh \"广告栏功能实现前\")"
     ]
   }
 }

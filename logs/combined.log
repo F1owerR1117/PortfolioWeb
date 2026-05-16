@@ -5505,3 +5505,30 @@
 2026-05-16 15:21:50 [INFO] [API] GET /friend-requests 304 0ms user=2
 2026-05-16 15:22:26 [INFO] [API] GET /notifications/unread-count 304 3ms user=1
 2026-05-16 15:22:26 [INFO] [API] GET /friend-requests 304 0ms user=1
+2026-05-16 15:22:31 [INFO] Portfolio app running at http://localhost:3000
+2026-05-16 15:22:31 [INFO] Default admin account: admin / admin123
+2026-05-16 15:22:41 [INFO] [API] POST /login 200 102ms user=1
+2026-05-16 15:22:41 [INFO] [API] GET /levels/me 200 4ms user=1
+2026-05-16 15:22:42 [INFO] [API] POST /login 200 73ms user=27
+2026-05-16 15:22:42 [INFO] [API] PUT /admin/levels/users/27 200 2ms user=1
+2026-05-16 15:22:42 [INFO] [API] GET /41 200 4ms user=27
+2026-05-16 15:22:42 [ERROR] [Posts] Purchase error:
+2026-05-16 15:22:42 [WARN] [API] POST /41/purchase 400 2ms user=27
+2026-05-16 15:22:42 [INFO] [API] GET /levels/me 200 2ms user=1
+2026-05-16 15:22:42 [INFO] [API] GET /41/download/78 200 4ms user=1
+2026-05-16 15:22:42 [INFO] [API] GET /levels/me 200 2ms user=1
+2026-05-16 15:22:50 [INFO] [API] GET /notifications/unread-count 304 3ms user=2
+2026-05-16 15:22:50 [INFO] [API] GET /friend-requests 304 1ms user=2
+2026-05-16 15:22:53 [INFO] [API] POST /register 200 83ms user=28
+2026-05-16 15:22:53 [INFO] [API] GET /41 200 2ms user=28
+2026-05-16 15:22:53 [WARN] [API] GET /41/download/78 403 1ms user=28
+2026-05-16 15:22:53 [INFO] [API] GET /levels/me 200 1ms user=28
+2026-05-16 15:23:27 [WARN] [API] GET /notifications/unread-count 401 4ms
+2026-05-16 15:23:50 [INFO] [API] GET /notifications/unread-count 304 1ms user=2
+2026-05-16 15:23:50 [INFO] [API] GET /friend-requests 304 0ms user=2
+2026-05-16 15:24:28 [WARN] [API] GET /notifications/unread-count 401 3ms
+2026-05-16 15:24:50 [INFO] [API] GET /notifications/unread-count 304 1ms user=2
+2026-05-16 15:24:50 [INFO] [API] GET /friend-requests 304 0ms user=2
+2026-05-16 15:25:29 [WARN] [API] GET /notifications/unread-count 401 1ms
+2026-05-16 15:25:50 [INFO] [API] GET /notifications/unread-count 304 1ms user=2
+2026-05-16 15:25:50 [INFO] [API] GET /friend-requests 304 1ms user=2
