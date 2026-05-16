@@ -4059,7 +4059,9 @@ button { cursor: pointer; font-family: inherit; }
 
 /* ===== Advertisement Bars ===== */
 .ad-bar {
-  width: 300px;
+  width: calc((100vw - 1240px) / 2);
+  max-width: 400px;
+  min-width: 200px;
   position: fixed;
   top: 80px;
   bottom: 80px;
@@ -4079,11 +4081,12 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .ad-bar-left {
-  left: max(8px, calc(50% - 600px - 310px));
+  left: 10px;
 }
 
 .ad-bar-right {
-  left: min(calc(50% + 600px + 10px), calc(100vw - 308px));
+  right: 10px;
+  left: auto;
 }
 
 .ad-container {
@@ -4156,6 +4159,6 @@ button { cursor: pointer; font-family: inherit; }
   font-weight: 600;
 }
 
-@media (max-width: 1820px) {
+@media (max-width: 1660px) {
   .ad-bar.active { display: none !important; }
 }
