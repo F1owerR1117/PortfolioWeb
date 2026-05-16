@@ -4059,12 +4059,11 @@ button { cursor: pointer; font-family: inherit; }
 
 /* ===== Advertisement Bars ===== */
 .ad-bar {
-  width: 240px;
+  width: 300px;
   position: fixed;
   top: 72px;
   display: none;
   flex-direction: column;
-  padding: 12px 8px;
   z-index: 5;
 }
 
@@ -4073,17 +4072,11 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .ad-bar-left {
-  left: max(8px, calc(50% - 600px - 250px));
+  left: max(8px, calc(50% - 600px - 310px));
 }
 
 .ad-bar-right {
-  left: min(calc(50% + 600px + 10px), calc(100vw - 248px));
-}
-
-.ad-bar-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  left: min(calc(50% + 600px + 10px), calc(100vw - 308px));
 }
 
 .ad-container {
@@ -4111,40 +4104,29 @@ button { cursor: pointer; font-family: inherit; }
   text-decoration: none;
 }
 
-.ad-title {
-  padding: 6px 10px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  border-top: 1px solid var(--border);
-}
-
 .ad-nav {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 6px;
+  padding: 6px 0;
 }
 
 .ad-nav-btn {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 10px;
   color: var(--text-secondary);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .ad-nav-btn:hover:not(:disabled) {
@@ -4154,16 +4136,16 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .ad-nav-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
 .ad-counter {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
   font-weight: 600;
 }
 
-@media (max-width: 1680px) {
+@media (max-width: 1820px) {
   .ad-bar.active { display: none !important; }
 }

@@ -79,10 +79,9 @@ var ComponentsAds = {
     }
 
     var imgHtml = '<img src="' + escapeHtml(ad.image_url) + '" class="ad-image" alt="广告">';
-    var titleHtml = ad.title ? '<div class="ad-title">' + escapeHtml(ad.title) + '</div>' : '';
     var contentHtml = ad.link_url
-      ? '<a href="' + escapeHtml(ad.link_url) + '" class="ad-link" target="_blank" data-ad-id="' + ad.id + '">' + imgHtml + titleHtml + '</a>'
-      : imgHtml + titleHtml;
+      ? '<a href="' + escapeHtml(ad.link_url) + '" class="ad-link" target="_blank" data-ad-id="' + ad.id + '">' + imgHtml + '</a>'
+      : imgHtml;
 
     var isFirst = idx <= 0;
     var isLast = idx >= ads.length - 1;

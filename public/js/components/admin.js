@@ -311,8 +311,8 @@ var ComponentsAdmin = {
       '<div class="form-group"><label class="form-label">位置</label><select class="form-input" id="ad-position"><option value="right"' + (ad && ad.position === 'right' ? ' selected' : '') + '>右侧</option><option value="left"' + (ad && ad.position === 'left' ? ' selected' : '') + '>左侧</option></select></div>' +
       '<div class="form-group"><label class="form-label">排序</label><input class="form-input" id="ad-sort" type="number" value="' + (ad ? ad.sort_order : 0) + '" min="0"></div>' +
       '<div class="form-group"><label class="form-label">跳转链接</label><input class="form-input" id="ad-link" value="' + escapeHtml(ad ? ad.link_url : '') + '" placeholder="例如: #/works 或 https://..."></div>' +
-      '<div class="form-group"><label class="form-label">广告图片</label><div style="display:flex;gap:8px;align-items:center;"><button type="button" class="btn btn-sm btn-outline" id="ad-upload-img">📁 上传图片</button><input type="file" id="ad-img-file" accept="image/*" style="display:none;"><span id="ad-img-name" style="font-size:13px;">' + (previewUrl ? '已选择' : '未选择') + '</span></div>' +
-      '<div id="ad-img-preview" style="margin-top:8px;">' + (previewUrl ? '<img src="' + previewUrl + '" style="max-width:200px;max-height:150px;border-radius:8px;object-fit:cover;">' : '') + '</div></div>' +
+      '<div class="form-group"><label class="form-label">广告图片 <span style="font-size:12px;color:var(--text-light);">（建议竖版图片，宽高比约 3:4）</span></label><div style="display:flex;gap:8px;align-items:center;"><button type="button" class="btn btn-sm btn-outline" id="ad-upload-img">📁 上传图片</button><input type="file" id="ad-img-file" accept="image/*" style="display:none;"><span id="ad-img-name" style="font-size:13px;">' + (previewUrl ? '已选择' : '未选择') + '</span></div>' +
+      '<div id="ad-img-preview" style="margin-top:8px;">' + (previewUrl ? '<div style="width:240px;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><img src="' + previewUrl + '" style="width:100%;display:block;"></div>' : '') + '</div></div>' +
       '<div style="display:flex;gap:12px;margin-top:16px;"><button type="submit" class="btn btn-primary">' + (isEdit ? '保存' : '创建') + '</button><button type="button" class="btn btn-outline" id="ad-cancel-btn">取消</button></div>' +
       '</form></div></div></div>';
     // Bind events
@@ -320,7 +320,7 @@ var ComponentsAdmin = {
     document.getElementById('ad-upload-img').addEventListener('click', function() { document.getElementById('ad-img-file').click(); });
     document.getElementById('ad-img-file').addEventListener('change', async function() {
       var f = this.files && this.files[0]; if (!f) return;
-      try { var cropped = await openCropModal(f, 4/3); if (!cropped) return; var r = await API.uploadFile(new File([cropped], 'ad.jpg', { type: 'image/jpeg' })); imageFileId = r.file.id; document.getElementById('ad-img-preview').innerHTML = '<img src="' + r.file.url + '" style="max-width:200px;max-height:150px;border-radius:8px;object-fit:cover;">'; document.getElementById('ad-img-name').textContent = '已选择'; } catch(err) { showToast(err.message, 'error'); }
+      try { var cropped = await openCropModal(f, 3/4); if (!cropped) return; var r = await API.uploadFile(new File([cropped], 'ad.jpg', { type: 'image/jpeg' })); imageFileId = r.file.id; document.getElementById('ad-img-preview').innerHTML = '<div style="width:240px;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><img src="' + r.file.url + '" style="width:100%;display:block;"></div>'; document.getElementById('ad-img-name').textContent = '已选择'; } catch(err) { showToast(err.message, 'error'); }
     });
     document.getElementById('ad-form').addEventListener('submit', async function(e) {
       e.preventDefault();
