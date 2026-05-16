@@ -484,7 +484,8 @@
       "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"CSS清理前\")",
       "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"CSS清理：移除v1通知死代码+重复音乐样式\")",
       "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"广告导航悬浮层改造前\")",
-      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"广告导航悬浮层：不挤压图片+半透明背景\")"
+      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"广告导航悬浮层：不挤压图片+半透明背景\")",
+      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"侧边菜单折叠改造前\")"
     ]
   }
 }
