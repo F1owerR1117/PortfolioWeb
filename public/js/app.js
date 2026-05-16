@@ -29,8 +29,8 @@ const App = {
     // Initialize router
     Router.init();
 
-    // Initialize advertisement bars
-    ComponentsAds.init();
+    // Prepare ad containers (ads loaded on route change)
+    ComponentsAds._ensureContainers();
 
     // Mute checkbox from localStorage
     const muteCheckbox = document.getElementById('mute-checkbox');

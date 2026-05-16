@@ -277,7 +277,7 @@ var ComponentsAdmin = {
               '<div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px;">' +
               (a.image_file_id ? '<img src="/api/file/' + a.image_file_id + '" style="width:60px;height:40px;object-fit:cover;border-radius:4px;">' : '<div style="width:60px;height:40px;background:var(--bg);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;">🖼</div>') +
               '<div><div style="font-weight:600;">' + escapeHtml(a.title) + '</div>' +
-              '<div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">' + posLabel + ' | 排序:' + a.sort_order + ' | ' + (a.is_active ? '✅ 启用' : '❌ 禁用') + ' | 👁 ' + (a.click_count || 0) + '</div></div></div>' +
+              '<div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">' + posLabel + ' | 排序:' + a.sort_order + ' | ' + (a.is_active ? '✅ 启用' : '❌ 禁用') + ' | 👁 ' + (a.click_count || 0) + ' | 📄 ' + escapeHtml(a.display_pages || 'works,chats') + '</div></div></div>' +
               '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
               '<button class="btn btn-sm btn-outline edit-ad-btn" data-id="' + a.id + '">编辑</button>' +
               '<button class="btn btn-sm ' + (a.is_active ? 'btn-outline' : 'btn-primary') + ' toggle-ad-btn" data-id="' + a.id + '">' + (a.is_active ? '禁用' : '启用') + '</button>' +
@@ -311,6 +311,9 @@ var ComponentsAdmin = {
       '<div class="form-group"><label class="form-label">位置</label><select class="form-input" id="ad-position"><option value="right"' + (ad && ad.position === 'right' ? ' selected' : '') + '>右侧</option><option value="left"' + (ad && ad.position === 'left' ? ' selected' : '') + '>左侧</option></select></div>' +
       '<div class="form-group"><label class="form-label">排序</label><input class="form-input" id="ad-sort" type="number" value="' + (ad ? ad.sort_order : 0) + '" min="0"></div>' +
       '<div class="form-group"><label class="form-label">跳转链接</label><input class="form-input" id="ad-link" value="' + escapeHtml(ad ? ad.link_url : '') + '" placeholder="例如: #/works 或 https://..."></div>' +
+      '<div class="form-group"><label class="form-label">显示页面</label><div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+      '<label class="form-checkbox"><input type="checkbox" class="ad-page-cb" value="works"' + ((ad && (ad.display_pages || '').split(',').indexOf('works') >= 0) || !ad ? ' checked' : '') + '> 📂 作品区</label>' +
+      '<label class="form-checkbox"><input type="checkbox" class="ad-page-cb" value="chats"' + ((ad && (ad.display_pages || '').split(',').indexOf('chats') >= 0) || !ad ? ' checked' : '') + '> 💬 聊天区</label></div></div>' +
       '<div class="form-group"><label class="form-label">广告图片 <span style="font-size:12px;color:var(--text-light);">（建议竖版图片，宽高比约 3:4）</span></label><div style="display:flex;gap:8px;align-items:center;"><button type="button" class="btn btn-sm btn-outline" id="ad-upload-img">📁 上传图片</button><input type="file" id="ad-img-file" accept="image/*" style="display:none;"><span id="ad-img-name" style="font-size:13px;">' + (previewUrl ? '已选择' : '未选择') + '</span></div>' +
       '<div id="ad-img-preview" style="margin-top:8px;">' + (previewUrl ? '<div style="width:240px;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><img src="' + previewUrl + '" style="width:100%;display:block;"></div>' : '') + '</div></div>' +
       '<div style="display:flex;gap:12px;margin-top:16px;"><button type="submit" class="btn btn-primary">' + (isEdit ? '保存' : '创建') + '</button><button type="button" class="btn btn-outline" id="ad-cancel-btn">取消</button></div>' +
@@ -324,12 +327,16 @@ var ComponentsAdmin = {
     });
     document.getElementById('ad-form').addEventListener('submit', async function(e) {
       e.preventDefault();
+      var pageCbs = document.querySelectorAll('.ad-page-cb:checked');
+      var pages = '';
+      for (var ci = 0; ci < pageCbs.length; ci++) { if (pages) pages += ','; pages += pageCbs[ci].value; }
       var data = {
         title: document.getElementById('ad-title').value,
         position: document.getElementById('ad-position').value,
         sort_order: parseInt(document.getElementById('ad-sort').value) || 0,
         link_url: document.getElementById('ad-link').value,
-        image_file_id: imageFileId
+        image_file_id: imageFileId,
+        display_pages: pages || 'works,chats'
       };
       try {
         if (isEdit) { await API.updateAd(adId, data); } else { await API.createAd(data); }

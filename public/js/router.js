@@ -173,5 +173,7 @@ const Router = {
     App.updateNav();
     // Always refresh level display (fetch fresh XP/progress/level name from server)
     App.refreshLevel();
+    // Ad bar: show/hide based on route
+    ComponentsAds.onRouteChange(path);
   }
 };

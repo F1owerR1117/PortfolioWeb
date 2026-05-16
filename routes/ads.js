@@ -8,7 +8,7 @@ const logger = require('../logger');
 router.get('/ads', requireAuth, (req, res) => {
   try {
     const ads = all(
-      `SELECT id, title, image_file_id, link_url, position FROM ads
+      `SELECT id, title, image_file_id, link_url, position, display_pages FROM ads
        WHERE is_active = 1 ORDER BY position, sort_order ASC, created_at DESC`
     );
     const result = { left: [], right: [] };
@@ -17,7 +17,8 @@ router.get('/ads', requireAuth, (req, res) => {
         id: ad.id,
         title: ad.title || '',
         image_url: ad.image_file_id ? `/api/file/${ad.image_file_id}` : null,
-        link_url: ad.link_url || ''
+        link_url: ad.link_url || '',
+        display_pages: ad.display_pages || 'works,chats'
       };
       if (ad.position === 'left') result.left.push(entry);
       else result.right.push(entry);
@@ -70,13 +71,14 @@ router.get('/admin/ads', requireAdmin, (req, res) => {
 // POST /api/admin/ads — create ad
 router.post('/admin/ads', requireAdmin, (req, res) => {
   try {
-    const { title, image_file_id, link_url, position, sort_order } = req.body;
+    const { title, image_file_id, link_url, position, sort_order, display_pages } = req.body;
     if (!title || !title.trim()) return res.status(400).json({ error: '标题不能为空' });
     if (position && !['left', 'right'].includes(position)) return res.status(400).json({ error: '无效的位置' });
+    const pages = display_pages ? (Array.isArray(display_pages) ? display_pages.join(',') : display_pages) : 'works,chats';
     const result = run(
-      `INSERT INTO ads (title, image_file_id, link_url, position, sort_order)
-       VALUES (?, ?, ?, ?, ?)`,
-      [title.trim(), image_file_id || null, link_url || '', position || 'right', parseInt(sort_order) || 0]
+      `INSERT INTO ads (title, image_file_id, link_url, position, sort_order, display_pages)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [title.trim(), image_file_id || null, link_url || '', position || 'right', parseInt(sort_order) || 0, pages]
     );
     res.json({ message: '广告创建成功', id: result.lastID });
   } catch (err) {
@@ -93,7 +95,7 @@ router.put('/admin/ads/:id', requireAdmin, (req, res) => {
     const ad = getFirst('SELECT id FROM ads WHERE id = ?', [id]);
     if (!ad) return res.status(404).json({ error: '广告不存在' });
 
-    const { title, image_file_id, link_url, position, sort_order } = req.body;
+    const { title, image_file_id, link_url, position, sort_order, display_pages } = req.body;
     const fields = [];
     const params = [];
     if (title !== undefined) { fields.push('title = ?'); params.push(title.trim()); }
@@ -104,6 +106,10 @@ router.put('/admin/ads/:id', requireAdmin, (req, res) => {
       fields.push('position = ?'); params.push(position);
     }
     if (sort_order !== undefined) { fields.push('sort_order = ?'); params.push(parseInt(sort_order) || 0); }
+    if (display_pages !== undefined) {
+      const pages = Array.isArray(display_pages) ? display_pages.join(',') : display_pages;
+      fields.push('display_pages = ?'); params.push(pages);
+    }
     if (fields.length === 0) return res.status(400).json({ error: '请指定要更新的字段' });
     fields.push("updated_at = CURRENT_TIMESTAMP");
     params.push(id);

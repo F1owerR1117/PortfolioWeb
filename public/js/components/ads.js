@@ -2,6 +2,33 @@
 var ComponentsAds = {
   _ads: { left: [], right: [] },
   _currentIndex: { left: 0, right: 0 },
+  _currentRoute: '',
+
+  // Route mapping: hash path → page key used in display_pages
+  _routeToPage: function(path) {
+    if (path === '/works') return 'works';
+    if (path === '/chats') return 'chats';
+    return null;
+  },
+
+  // Called on every route change to show/hide ads
+  onRouteChange: function(path) {
+    this._currentRoute = path;
+    var page = this._routeToPage(path);
+    if (page) {
+      this.refresh(page);
+    } else {
+      this.hide();
+    }
+  },
+
+  hide: function() {
+    this._currentIndex = { left: 0, right: 0 };
+    ['left', 'right'].forEach(function(side) {
+      var el = document.getElementById('ad-bar-' + side);
+      if (el) el.classList.remove('active');
+    });
+  },
 
   _ensureContainers() {
     if (!document.getElementById('ad-bar-left')) {
@@ -36,14 +63,21 @@ var ComponentsAds = {
     } catch (e) { /* non-critical */ }
   },
 
-  async refresh() {
+  async refresh(page) {
     if (!App.user) {
       this._removeContainers();
       return;
     }
     try {
       var data = await API.getAds();
-      this._ads = { left: data.left || [], right: data.right || [] };
+      var allLeft = data.left || [];
+      var allRight = data.right || [];
+      // Filter by display_pages if a page is specified
+      if (page) {
+        allLeft = allLeft.filter(function(a) { return (a.display_pages || '').split(',').indexOf(page) >= 0; });
+        allRight = allRight.filter(function(a) { return (a.display_pages || '').split(',').indexOf(page) >= 0; });
+      }
+      this._ads = { left: allLeft, right: allRight };
       ['left', 'right'].forEach(function(side) {
         if (ComponentsAds._currentIndex[side] >= ComponentsAds._ads[side].length) {
           ComponentsAds._currentIndex[side] = 0;

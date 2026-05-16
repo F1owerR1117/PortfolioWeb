@@ -589,10 +589,12 @@ async function initDatabase() {
     sort_order INTEGER DEFAULT 0,
     is_active INTEGER DEFAULT 1,
     click_count INTEGER DEFAULT 0,
+    display_pages TEXT DEFAULT 'works,chats',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (image_file_id) REFERENCES files(id)
   )`);
+  try { db.run("ALTER TABLE ads ADD COLUMN display_pages TEXT DEFAULT 'works,chats'"); } catch (e) {}
 
   // Ensure default settings
   const soundUrlExists = getFirst("SELECT value FROM settings WHERE key = 'sound_url'");
