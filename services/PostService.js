@@ -113,7 +113,6 @@ const PostService = {
           block.attachment_name = '';
           block.attachment_size = 0;
           block._attachment_url = null;
-          block.attachment_file_id = null;
         }
       }
 

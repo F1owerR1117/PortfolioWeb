@@ -487,7 +487,8 @@
       "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"广告导航悬浮层：不挤压图片+半透明背景\")",
       "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"侧边菜单折叠改造前\")",
       "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"侧边菜单：管理员项折叠到后台管理\")",
-      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"修复前：附件不可见+禁言取消bug\")"
+      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"修复前：附件不可见+禁言取消bug\")",
+      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"修复：附件不可见bug+禁言取消bug\")"
     ]
   }
 }
