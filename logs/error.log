@@ -20,3 +20,4 @@
 2026-05-16 15:12:13 [ERROR] [Posts] Purchase error:
 2026-05-16 15:12:13 [ERROR] [Posts] Purchase error:
 2026-05-16 15:22:42 [ERROR] [Posts] Purchase error:
+2026-05-16 23:18:29 [ERROR] Uncaught Exception: listen EADDRINUSE: address already in use :::3000

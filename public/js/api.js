@@ -160,6 +160,10 @@ const API = {
     return this.request('GET', `/users/${userId}/posts?page=${page}&limit=${limit}`);
   },
 
+  getUserStats(userId) {
+    return this.request('GET', `/users/${userId}/stats`);
+  },
+
   // Friends
   sendFriendRequest(toUserId) {
     return this.request('POST', '/friend-request', { to_user_id: toUserId });

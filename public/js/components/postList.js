@@ -62,5 +62,68 @@ var ComponentsPostList = {
     } catch (err) { showToast(err.message, 'error'); }
   },
 
-  _loadMorePosts: async function() { if (this.isLoading || !this.hasMore) return; this.isLoading = true; var b = document.getElementById('load-more-btn'); b.disabled = true; b.textContent = '加载中...'; this.currentPage++; await this._loadPosts(); this.isLoading = false; }
+  _loadMorePosts: async function() { if (this.isLoading || !this.hasMore) return; this.isLoading = true; var b = document.getElementById('load-more-btn'); b.disabled = true; b.textContent = '加载中...'; this.currentPage++; await this._loadPosts(); this.isLoading = false; },
+
+  renderMyPosts: function() {
+    this._initLevelCache();
+    var self = this;
+    this._myPostsPage = 1;
+    this._myPostsList = [];
+    this._myPostsHasMore = false;
+    document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="page-header">' +
+      '<h1 class="page-title">📂 我的作品</h1></div>' +
+      '<div style="margin-bottom:16px;"><button class="btn btn-outline btn-sm" id="my-posts-back-btn">← 返回个人主页</button></div>' +
+      '<div class="post-grid" id="my-posts-grid"></div>' +
+      '<div class="load-more-wrap" id="my-posts-load-wrap" style="display:none;"><button class="btn btn-outline" id="my-posts-load-btn">加载更多</button></div>' +
+      '<div class="empty-state" id="my-posts-empty" style="display:none;"><div class="empty-state-icon">📭</div><p>暂无作品</p></div></div>';
+    document.getElementById('my-posts-back-btn').addEventListener('click', function() { playClickSound(); Router.navigate('#/profile'); });
+    document.getElementById('my-posts-load-btn')?.addEventListener('click', function() { playClickSound(); self._loadMyPosts(false); });
+    this._loadMyPosts(true);
+  },
+
+  _loadMyPosts: async function(reset) {
+    if (reset) { this._myPostsPage = 1; this._myPostsList = []; }
+    try {
+      var data = await API.getUserPosts(App.user.id, this._myPostsPage, 9);
+      var posts = data.posts || [];
+      posts.forEach(function(p) { Components._myPostsList.push(p); });
+      this._myPostsHasMore = data.pagination && data.pagination.hasMore;
+      this._myPostsPage++;
+      this._renderMyPostGrid();
+    } catch (err) { showToast(err.message, 'error'); }
+  },
+
+  _renderMyPostGrid: function() {
+    var grid = document.getElementById('my-posts-grid');
+    var empty = document.getElementById('my-posts-empty');
+    var loadWrap = document.getElementById('my-posts-load-wrap');
+    if (!grid) return;
+    if (this._myPostsList.length === 0) {
+      grid.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+      if (loadWrap) loadWrap.style.display = 'none';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    grid.innerHTML = this._myPostsList.map(function(pt) {
+      var badges = []; if (pt.is_sticky) badges.push('📌'); if (pt.is_featured) badges.push('⭐'); if (pt.is_locked) badges.push('🔒');
+      return '<div class="post-card" data-post-id="' + pt.id + '">' +
+        '<div class="post-card-img" style="' + (pt.cover_url ? "background-image:url('" + pt.cover_url + "');background-size:cover;background-position:center;" : '') + '">' +
+        (pt.cover_url ? '' : '📄') + '</div>' +
+        '<div class="post-card-body">' +
+        '<div class="post-card-title">' + (badges.length ? badges.join(' ') + ' ' : '') + escapeHtml(pt.title) + '</div>' +
+        '<div class="post-card-desc">' + escapeHtml(pt.description || '暂无简介') + '</div>' +
+        '<div class="post-card-footer"><div class="post-card-tags">' + (pt.tags ? pt.tags.split(',').map(function(t) { return '<span class="tag-chip" style="cursor:default;">' + escapeHtml(t.trim()) + '</span>'; }).join('') : '') + '</div>' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0;"><span style="font-size:13px;color:var(--text-light);">👍 ' + (pt.like_count || 0) + '</span><span style="font-size:13px;color:var(--text-light);">👎 ' + (pt.dislike_count || 0) + '</span><span class="post-card-views">👁 ' + (pt.views || 0) + '</span></div></div>' +
+        '<div class="post-card-date">' + formatDate(pt.created_at) + '</div></div></div>';
+    }).join('');
+    grid.querySelectorAll('.post-card').forEach(function(c) {
+      c.addEventListener('click', function() { playClickSound(); Router.navigate('#/posts/' + this.dataset.postId); });
+    });
+    if (loadWrap) {
+      loadWrap.style.display = this._myPostsHasMore ? '' : 'none';
+      var lb = document.getElementById('my-posts-load-btn');
+      if (lb) lb.disabled = false;
+    }
+  }
 };

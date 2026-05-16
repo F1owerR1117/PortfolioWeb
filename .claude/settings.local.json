@@ -497,7 +497,15 @@
       "Bash(node _fix_attach.js)",
       "Bash(node _fix_attach2.js)",
       "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"附件替换/删除功能：后端清理+前端UI\")",
-      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"更新文档：架构/API/用户指南/CLAUDE.md\")"
+      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"更新文档：架构/API/用户指南/CLAUDE.md\")",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(awk '{print $5}')",
+      "Bash(curl -s http://localhost:3000/api/auth/login -X POST -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin123\"}' -c /tmp/cookies.txt)",
+      "Bash(curl -s http://localhost:3000/api/users/1/stats -b /tmp/cookies.txt)",
+      "Bash(python -m json.tool)",
+      "Bash(rm f:\\\\code\\\\portfolio\\\\LICENSE)",
+      "Bash(bash scripts/snapshot.sh \"结构优化前：CSS/api.js/db.init 拆分前备份\")"
     ]
   }
 }

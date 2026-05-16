@@ -127,4 +127,41 @@ router.get('/users/:id/posts', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/users/:id/stats — aggregated user statistics
+router.get('/users/:id/stats', requireAuth, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) return res.status(400).json({ error: '无效的用户ID' });
+    const user = get('SELECT id, level, xp, points, created_at FROM users WHERE id = ?', [userId]);
+    if (!user) return res.status(404).json({ error: '用户不存在' });
+
+    const postCount = get('SELECT COUNT(*) as count FROM posts WHERE created_by = ? AND deleted_at IS NULL', [userId]);
+    const commentReceived = get(
+      'SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.created_by = ? AND c.deleted_at IS NULL',
+      [userId]
+    );
+    const totalLikes = get(
+      "SELECT COALESCE(SUM(COALESCE(p.like_count, 0)), 0) as count FROM posts p WHERE p.created_by = ? AND p.deleted_at IS NULL",
+      [userId]
+    );
+    const createdAt = new Date((user.created_at || '').replace(' ', 'T') + 'Z');
+    const memberDays = Math.floor((Date.now() - createdAt.getTime()) / 86400000);
+
+    res.json({
+      stats: {
+        postCount: postCount ? postCount.count : 0,
+        commentReceived: commentReceived ? commentReceived.count : 0,
+        totalLikes: totalLikes ? totalLikes.count : 0,
+        memberDays: Math.max(1, memberDays),
+        level: user.level || 1,
+        xp: user.xp || 0,
+        points: user.points || 0
+      }
+    });
+  } catch (err) {
+    logger.error('[Users] Stats error:', err);
+    res.status(500).json({ error: '获取统计数据失败' });
+  }
+});
+
 module.exports = router;

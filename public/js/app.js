@@ -264,6 +264,7 @@ const App = {
         menu.className = 'side-menu';
         menu.id = 'side-menu';
         let menuHtml = `
+          <div class="side-menu-item" data-route="/profile" data-label="profile">👤 我的主页</div>
           <div class="side-menu-item" data-route="/works" data-label="works" data-zone="work">📂 作品区</div>
           <div class="side-menu-item" data-route="/chats" data-label="chats" data-zone="chat">💬 聊天区</div>
           <div class="side-menu-item" data-route="/music" data-label="music" data-zone="music">🎵 我的音乐</div>

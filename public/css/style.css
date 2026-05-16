@@ -4100,3 +4100,16 @@ button { cursor: pointer; font-family: inherit; }
 @media (max-width: 1660px) {
   .ad-bar.active { display: none !important; }
 }
+
+/* ===== Dashboard Responsive ===== */
+@media (max-width: 768px) {
+  .dashboard-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .stat-card {
+    padding: 12px 8px !important;
+  }
+  .stat-card div:first-child {
+    font-size: 20px !important;
+  }
+}

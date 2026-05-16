@@ -59,7 +59,10 @@ const Router = {
     }
 
     // Match routes
-    if (path === '/works') {
+    if (path === '/my-posts') {
+      if (!App.user) { showToast('请先登录', 'error'); this.navigate('#/login'); return; }
+      Components.renderMyPosts();
+    } else if (path === '/works') {
       Components.renderPostList('work');
     } else if (path === '/chats') {
       Components.renderPostList('chat');

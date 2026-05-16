@@ -15,6 +15,7 @@
 | [架构文档](architecture.md) | 系统架构、技术栈、数据流、目录结构 |
 | [API 参考](api-reference.md) | 全部后端 API 端点及参数说明 |
 | [用户指南](user-guide.md) | 功能使用说明和操作指南 |
+| [更新日志](CHANGELOG.md) | 版本历史与变更记录 |
 
 ## 快速入门
 
@@ -101,7 +102,9 @@ docs/
   architecture.md      # 架构文档
   api-reference.md     # API 参考
   user-guide.md        # 用户指南
+  CHANGELOG.md         # 更新日志
 scripts/
   snapshot.sh          # 快照备份
   rollback.sh          # 回滚脚本
 ```
+	
