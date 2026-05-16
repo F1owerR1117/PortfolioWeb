@@ -4,38 +4,25 @@ var ComponentsAds = {
   _currentIndex: { left: 0, right: 0 },
 
   _ensureContainers() {
-    if (document.getElementById('page-wrap')) return;
-    var app = document.getElementById('app');
-    if (!app) return;
-
-    var wrap = document.createElement('div');
-    wrap.id = 'page-wrap';
-
-    var left = document.createElement('aside');
-    left.id = 'ad-bar-left';
-    left.className = 'ad-bar ad-bar-left';
-
-    var right = document.createElement('aside');
-    right.id = 'ad-bar-right';
-    right.className = 'ad-bar ad-bar-right';
-
-    app.parentNode.insertBefore(wrap, app);
-    wrap.appendChild(left);
-    app.parentNode.removeChild(app);
-    wrap.appendChild(app);
-    wrap.appendChild(right);
+    if (!document.getElementById('ad-bar-left')) {
+      var left = document.createElement('aside');
+      left.id = 'ad-bar-left';
+      left.className = 'ad-bar ad-bar-left';
+      document.body.appendChild(left);
+    }
+    if (!document.getElementById('ad-bar-right')) {
+      var right = document.createElement('aside');
+      right.id = 'ad-bar-right';
+      right.className = 'ad-bar ad-bar-right';
+      document.body.appendChild(right);
+    }
   },
 
-  cleanup() {
-    var wrap = document.getElementById('page-wrap');
-    if (!wrap) return;
-    var app = document.getElementById('app');
-    if (app) {
-      wrap.parentNode.insertBefore(app, wrap);
-      app.style.cssText = '';
-    }
-    wrap.remove();
-    document.body.classList.remove('has-ads');
+  _removeContainers() {
+    var left = document.getElementById('ad-bar-left');
+    if (left) left.remove();
+    var right = document.getElementById('ad-bar-right');
+    if (right) right.remove();
   },
 
   async init() {
@@ -51,7 +38,7 @@ var ComponentsAds = {
 
   async refresh() {
     if (!App.user) {
-      this.cleanup();
+      this._removeContainers();
       return;
     }
     try {
@@ -84,7 +71,6 @@ var ComponentsAds = {
     }
 
     container.classList.add('active');
-    document.body.classList.add('has-ads');
 
     var ad = ads[idx];
     if (!ad || !ad.image_url) {

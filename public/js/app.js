@@ -397,9 +397,6 @@ const App = {
         MusicPlayer.playing = false;
       }
       localStorage.removeItem('music_player_state');
-      // Remove ad bar wrapper and restore original layout
-      ComponentsAds.cleanup();
-
       // Remove hamburger and side menu
       const hamburger = document.getElementById('hamburger-btn');
       if (hamburger) hamburger.remove();

@@ -4058,28 +4058,26 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 /* ===== Advertisement Bars ===== */
-#page-wrap {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-#page-wrap #app.container {
-  flex: 0 1 960px;
-  max-width: 960px;
-  margin: 0;
-}
-
 .ad-bar {
   width: 160px;
-  flex-shrink: 0;
+  position: fixed;
+  top: 72px;
   display: none;
   flex-direction: column;
   padding: 12px 8px;
+  z-index: 5;
 }
 
 .ad-bar.active {
   display: flex;
+}
+
+.ad-bar-left {
+  left: max(8px, calc(50% - 600px - 170px));
+}
+
+.ad-bar-right {
+  left: min(calc(50% + 600px + 10px), calc(100vw - 168px));
 }
 
 .ad-bar-inner {
@@ -4148,12 +4146,6 @@ button { cursor: pointer; font-family: inherit; }
   font-weight: 600;
 }
 
-@media (max-width: 1280px) {
-  #page-wrap { display: block; }
-  #page-wrap #app.container {
-    flex: none;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+@media (max-width: 1540px) {
   .ad-bar.active { display: none !important; }
 }
