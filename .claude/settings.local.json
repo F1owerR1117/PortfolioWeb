@@ -448,7 +448,18 @@
       "Bash(curl -s -b /tmp/c_new.txt http://localhost:3000/api/posts/41/download/78 -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -s -b /tmp/c_new.txt http://localhost:3000/api/levels/me)",
       "Bash(bash scripts/snapshot.sh \"修复：附件系统使用points而非coins+未解锁隐藏附件信息+作者下载无积分变动\")",
-      "Bash(bash scripts/snapshot.sh \"广告栏功能实现前\")"
+      "Bash(bash scripts/snapshot.sh \"广告栏功能实现前\")",
+      "Bash(curl -s -c /tmp/c_adm.txt -b /tmp/c_adm.txt -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
+      "Bash(curl -s -b /tmp/c_adm.txt http://localhost:3000/api/ads)",
+      "Bash(curl -s -b /tmp/c_adm.txt -F \"file=@/tmp/test_ad.png\" http://localhost:3000/api/upload)",
+      "Bash(curl -s -b /tmp/c_adm.txt -X POST http://localhost:3000/api/admin/ads -H \"Content-Type: application/json\" -d '{\"title\":\"左侧广告\",\"image_file_id\":84,\"position\":\"left\",\"sort_order\":0,\"link_url\":\"#/works\"}')",
+      "Bash(curl -s -b /tmp/c_adm.txt -X POST http://localhost:3000/api/admin/ads -H \"Content-Type: application/json\" -d '{\"title\":\"右侧广告\",\"image_file_id\":84,\"position\":\"right\",\"sort_order\":0,\"link_url\":\"https://example.com\"}')",
+      "Bash(curl -s http://localhost:3000/api/ads -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/admin/ads -H \"Content-Type: application/json\" -d '{\"title\":\"test\"}' -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -b /tmp/c_new.txt http://localhost:3000/api/admin/ads -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -b /tmp/c_adm.txt -X PATCH http://localhost:3000/api/admin/ads/1/status)",
+      "Bash(curl -s -b /tmp/c_adm.txt http://localhost:3000/api/admin/ads)",
+      "Bash(bash scripts/snapshot.sh \"广告栏实现：ads表+左右侧广告+管理员广告CRUD+图片裁剪上传\")"
     ]
   }
 }

@@ -158,6 +158,13 @@ const Router = {
         return;
       }
       Components.renderLoginNotices();
+    } else if (path === '/admin/ads') {
+      if (!App.user || App.user.role !== 'admin') {
+        showToast('权限不足', 'error');
+        this.navigate('#/works');
+        return;
+      }
+      Components.renderAdminAds();
     } else {
       this.navigate('#/works');
     }

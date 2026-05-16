@@ -254,5 +254,87 @@ var ComponentsAdmin = {
       var data = { title: document.getElementById('notice-title').value, content: document.getElementById('notice-content').value, link_url: document.getElementById('notice-link').value, image_url: imageUrl, priority: parseInt(document.getElementById('notice-priority').value) || 0, show_once: document.getElementById('notice-show-once').checked, start_date: document.getElementById('notice-start').value || null, end_date: document.getElementById('notice-end').value || null };
       try { if (isEdit) { await API.updateLoginNotice(noticeId, data); } else { await API.createLoginNotice(data); } showToast('已保存', 'success'); self.renderLoginNotices(); } catch(err) { showToast(err.message, 'error'); }
     });
+  },
+
+  // ===== Advertisement Management =====
+  renderAdminAds: async function() {
+    this.renderLoading();
+    try {
+      var self = this;
+      var page = 1;
+      var render = async function(p) {
+        var result = await API.getAdminAds(p, 20);
+        var ads = result.ads || [];
+        var pag = result.pagination || {};
+        document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+          '<h2 style="font-size:22px;font-weight:700;">📺 广告管理</h2>' +
+          '<button class="btn btn-primary" id="add-ad-btn">✚ 新建广告</button></div>' +
+          (ads.length === 0 ? '<p style="color:var(--text-secondary);text-align:center;padding:40px;">暂无广告</p>' :
+          '<div style="display:flex;flex-direction:column;gap:8px;">' + ads.map(function(a) {
+            var posLabel = a.position === 'left' ? '左侧' : '右侧';
+            return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
+              '<div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px;">' +
+              (a.image_file_id ? '<img src="/api/file/' + a.image_file_id + '" style="width:60px;height:40px;object-fit:cover;border-radius:4px;">' : '<div style="width:60px;height:40px;background:var(--bg);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;">🖼</div>') +
+              '<div><div style="font-weight:600;">' + escapeHtml(a.title) + '</div>' +
+              '<div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">' + posLabel + ' | 排序:' + a.sort_order + ' | ' + (a.is_active ? '✅ 启用' : '❌ 禁用') + ' | 👁 ' + (a.click_count || 0) + '</div></div></div>' +
+              '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+              '<button class="btn btn-sm btn-outline edit-ad-btn" data-id="' + a.id + '">编辑</button>' +
+              '<button class="btn btn-sm ' + (a.is_active ? 'btn-outline' : 'btn-primary') + ' toggle-ad-btn" data-id="' + a.id + '">' + (a.is_active ? '禁用' : '启用') + '</button>' +
+              '<button class="btn btn-sm btn-danger delete-ad-btn" data-id="' + a.id + '">删除</button></div></div>';
+          }).join('') + '</div>') +
+          (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;gap:4px;padding:12px 0;"><button class="btn btn-sm btn-outline" data-ap="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>上一页</button><span style="padding:4px 8px;">' + pag.page + '/' + pag.totalPages + '</span><button class="btn btn-sm btn-outline" data-ap="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页</button></div>' : '') +
+          '</div></div></div>';
+        document.getElementById('add-ad-btn').addEventListener('click', function() { self._showAdForm(); });
+        document.querySelectorAll('.edit-ad-btn').forEach(function(b) { b.addEventListener('click', function() { self._showAdForm(parseInt(b.dataset.id)); }); });
+        document.querySelectorAll('.toggle-ad-btn').forEach(function(b) { b.addEventListener('click', async function() { try { await API.toggleAdStatus(parseInt(b.dataset.id)); showToast('已更新', 'success'); render(p); } catch(err) { showToast(err.message, 'error'); } }); });
+        document.querySelectorAll('.delete-ad-btn').forEach(function(b) { b.addEventListener('click', async function() { if (!(await showConfirm('确定删除？'))) return; try { await API.deleteAd(parseInt(b.dataset.id)); showToast('已删除', 'success'); render(p); } catch(err) { showToast(err.message, 'error'); } }); });
+        document.querySelectorAll('[data-ap]').forEach(function(b) { b.addEventListener('click', function() { var dir = b.dataset.ap; if (dir === 'prev' && pag.page > 1) render(pag.page - 1); else if (dir === 'next' && pag.page < pag.totalPages) render(pag.page + 1); }); });
+      };
+      render(page);
+    } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
+  },
+
+  _showAdForm: async function(adId) {
+    var self = this;
+    var ad = null;
+    if (adId) {
+      try { var r = await API.getAdminAds(1, 100); ad = (r.ads || []).find(function(a) { return a.id === adId; }); } catch(e) {}
+    }
+    var isEdit = !!ad;
+    var imageFileId = ad ? (ad.image_file_id || null) : null;
+    var previewUrl = imageFileId ? '/api/file/' + imageFileId : '';
+    document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card">' +
+      '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">' + (isEdit ? '编辑' : '新建') + '广告</h2>' +
+      '<form id="ad-form">' +
+      '<div class="form-group"><label class="form-label">标题 *</label><input class="form-input" id="ad-title" value="' + escapeHtml(ad ? ad.title : '') + '" required></div>' +
+      '<div class="form-group"><label class="form-label">位置</label><select class="form-input" id="ad-position"><option value="right"' + (ad && ad.position === 'right' ? ' selected' : '') + '>右侧</option><option value="left"' + (ad && ad.position === 'left' ? ' selected' : '') + '>左侧</option></select></div>' +
+      '<div class="form-group"><label class="form-label">排序</label><input class="form-input" id="ad-sort" type="number" value="' + (ad ? ad.sort_order : 0) + '" min="0"></div>' +
+      '<div class="form-group"><label class="form-label">跳转链接</label><input class="form-input" id="ad-link" value="' + escapeHtml(ad ? ad.link_url : '') + '" placeholder="例如: #/works 或 https://..."></div>' +
+      '<div class="form-group"><label class="form-label">广告图片</label><div style="display:flex;gap:8px;align-items:center;"><button type="button" class="btn btn-sm btn-outline" id="ad-upload-img">📁 上传图片</button><input type="file" id="ad-img-file" accept="image/*" style="display:none;"><span id="ad-img-name" style="font-size:13px;">' + (previewUrl ? '已选择' : '未选择') + '</span></div>' +
+      '<div id="ad-img-preview" style="margin-top:8px;">' + (previewUrl ? '<img src="' + previewUrl + '" style="max-width:200px;max-height:150px;border-radius:8px;object-fit:cover;">' : '') + '</div></div>' +
+      '<div style="display:flex;gap:12px;margin-top:16px;"><button type="submit" class="btn btn-primary">' + (isEdit ? '保存' : '创建') + '</button><button type="button" class="btn btn-outline" id="ad-cancel-btn">取消</button></div>' +
+      '</form></div></div></div>';
+    // Bind events
+    document.getElementById('ad-cancel-btn').addEventListener('click', function() { self.renderAdminAds(); });
+    document.getElementById('ad-upload-img').addEventListener('click', function() { document.getElementById('ad-img-file').click(); });
+    document.getElementById('ad-img-file').addEventListener('change', async function() {
+      var f = this.files && this.files[0]; if (!f) return;
+      try { var cropped = await openCropModal(f, 4/3); if (!cropped) return; var r = await API.uploadFile(new File([cropped], 'ad.jpg', { type: 'image/jpeg' })); imageFileId = r.file.id; document.getElementById('ad-img-preview').innerHTML = '<img src="' + r.file.url + '" style="max-width:200px;max-height:150px;border-radius:8px;object-fit:cover;">'; document.getElementById('ad-img-name').textContent = '已选择'; } catch(err) { showToast(err.message, 'error'); }
+    });
+    document.getElementById('ad-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var data = {
+        title: document.getElementById('ad-title').value,
+        position: document.getElementById('ad-position').value,
+        sort_order: parseInt(document.getElementById('ad-sort').value) || 0,
+        link_url: document.getElementById('ad-link').value,
+        image_file_id: imageFileId
+      };
+      try {
+        if (isEdit) { await API.updateAd(adId, data); } else { await API.createAd(data); }
+        showToast('已保存', 'success'); self.renderAdminAds();
+      } catch(err) { showToast(err.message, 'error'); }
+    });
   }
 };

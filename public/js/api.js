@@ -454,6 +454,39 @@ const API = {
     return this.request('PATCH', `/admin/login-notices/${id}/status`);
   },
 
+  // ===== Advertisement Bars =====
+  getAds() {
+    return this.request('GET', '/ads');
+  },
+
+  recordAdClick(adId) {
+    return this.request('POST', `/ads/${adId}/click`);
+  },
+
+  getAdminAds(page, limit) {
+    return this.request('GET', `/admin/ads?page=${page || 1}&limit=${limit || 20}`);
+  },
+
+  createAd(data) {
+    return this.request('POST', '/admin/ads', data);
+  },
+
+  updateAd(id, data) {
+    return this.request('PUT', `/admin/ads/${id}`, data);
+  },
+
+  deleteAd(id) {
+    return this.request('DELETE', `/admin/ads/${id}`);
+  },
+
+  toggleAdStatus(id) {
+    return this.request('PATCH', `/admin/ads/${id}/status`);
+  },
+
+  updateAdImage(id, fileId) {
+    return this.request('POST', `/admin/ads/${id}/image`, { file_id: fileId });
+  },
+
   // ===== Attachment System =====
   uploadAttachment(file) {
     const formData = new FormData();

@@ -579,6 +579,21 @@ async function initDatabase() {
     FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
 
+  // ===== Advertisement bars =====
+  db.run(`CREATE TABLE IF NOT EXISTS ads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    image_file_id INTEGER,
+    link_url TEXT DEFAULT '',
+    position TEXT NOT NULL DEFAULT 'right' CHECK(position IN ('left','right')),
+    sort_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    click_count INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (image_file_id) REFERENCES files(id)
+  )`);
+
   // Ensure default settings
   const soundUrlExists = getFirst("SELECT value FROM settings WHERE key = 'sound_url'");
   if (!soundUrlExists) {

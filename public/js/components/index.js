@@ -14,6 +14,7 @@ var Components = Object.assign(
   ComponentsFriends,
   ComponentsChat,
   ComponentsAdmin,
+  ComponentsAds,
   {
     // Shared state variables
     currentPage: 1, hasMore: false, isLoading: false, currentPost: null,

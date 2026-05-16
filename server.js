@@ -199,6 +199,7 @@ const bookmarksRoutes = require('./routes/bookmarks');
 const reportsRoutes = require('./routes/reports');
 const levelsRoutes = require('./routes/levels');
 const loginNoticeRoutes = require('./routes/loginNotices');
+const adsRoutes = require('./routes/ads');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/posts', postsRoutes);
@@ -219,6 +220,7 @@ app.use('/api', bookmarksRoutes);
 app.use('/api', reportsRoutes);
 app.use('/api', levelsRoutes);
 app.use('/api', loginNoticeRoutes);
+app.use('/api', adsRoutes);
 
 // SPA fallback + API 404
 app.get('*', apiNotFound, (req, res) => {

@@ -29,6 +29,9 @@ const App = {
     // Initialize router
     Router.init();
 
+    // Initialize advertisement bars
+    ComponentsAds.init();
+
     // Mute checkbox from localStorage
     const muteCheckbox = document.getElementById('mute-checkbox');
     const savedMute = localStorage.getItem('portfolio_mute');
@@ -273,7 +276,8 @@ const App = {
           <div class="side-menu-item" data-route="/admin/reports" data-label="admin">🚩 举报管理</div>
           <div class="side-menu-item" data-route="/admin/users" data-label="admin">👥 用户管理</div>
           <div class="side-menu-item" data-route="/admin/levels" data-label="admin">🏅 等级管理</div>
-          <div class="side-menu-item" data-route="/admin/login-notices" data-label="admin">📢 弹窗管理</div>`;
+          <div class="side-menu-item" data-route="/admin/login-notices" data-label="admin">📢 弹窗管理</div>
+          <div class="side-menu-item" data-route="/admin/ads" data-label="admin">📺 广告管理</div>`;
         }
         menu.innerHTML = menuHtml;
         document.body.appendChild(menu);
