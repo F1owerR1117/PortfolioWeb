@@ -56,12 +56,13 @@ var ComponentsPostEditor = {
     } else if (b.type === 'file') {
       var fileName = b.attachment_name || '';
       var fileSize = b.attachment_size ? formatFileSize(b.attachment_size) : '';
-      var fileInfo = fileName ? '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;padding:8px;background:var(--bg);border-radius:6px;">📎 ' + escapeHtml(fileName) + (fileSize ? ' (' + fileSize + ')' : '') + '</div>' : '';
+      var hasFile = !!b.attachment_file_id;
+      var fileInfo = hasFile ? '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;padding:8px;background:var(--bg);border-radius:6px;display:flex;align-items:center;gap:8px;"><span>📎 ' + escapeHtml(fileName) + (fileSize ? ' (' + fileSize + ')' : '') + '</span><button class="btn btn-sm btn-outline editor-remove-attach-btn" data-index="' + i + '" style="color:var(--error);font-size:12px;padding:2px 8px;" title="移除附件">✕</button></div>' : '';
       return '<div>' + fileInfo +
         '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">' +
-        '<button class="btn btn-sm btn-outline editor-attach-btn" data-index="' + i + '">📁 上传附件</button>' +
+        '<button class="btn btn-sm btn-outline editor-attach-btn" data-index="' + i + '">' + (hasFile ? '🔄 替换附件' : '📁 上传附件') + '</button>' +
         '<input type="file" class="editor-attach-input" data-index="' + i + '" style="display:none;">' +
-        '<span class="editor-attach-name" data-index="' + i + '" style="font-size:13px;color:var(--text-secondary);">' + (fileName || '未选择文件') + '</span></div>' +
+        '<span class="editor-attach-name" data-index="' + i + '" style="font-size:13px;color:var(--text-secondary);">' + (hasFile ? fileName : '未选择文件') + '</span></div>' +
         '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;">' +
         '<div style="flex:1;min-width:100px;"><label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:2px;">最低查看等级</label>' +
         '<input type="number" class="form-input editor-min-level" data-index="' + i + '" value="' + (b.min_level_view || 0) + '" min="0" style="width:100%;font-size:13px;"></div>' +
@@ -247,6 +248,20 @@ var ComponentsPostEditor = {
           document.getElementById('editor-blocks-list').innerHTML = self._renderEditorBlocks();
           self._reBindEditorBlockEvents();
         } catch (err) { showToast(err.message, 'error'); }
+      });
+    });
+        document.querySelectorAll('.editor-remove-attach-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = parseInt(this.dataset.index);
+        if (isNaN(idx)) return;
+        var block = self.editorBlocks[idx];
+        if (block) {
+          block.attachment_file_id = null;
+          block.attachment_name = '';
+          block.attachment_size = 0;
+          document.getElementById('editor-blocks-list').innerHTML = self._renderEditorBlocks();
+          self._reBindEditorBlockEvents();
+        }
       });
     });
     document.querySelectorAll('.editor-min-level').forEach(function(input) {

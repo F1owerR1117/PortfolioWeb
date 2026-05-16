@@ -204,6 +204,17 @@ const PostService = {
               }
             }
           }
+          // Clean up old attachment file on replace
+          if (block.attachment_file_id !== undefined) {
+            const oldBlock = Post.getBlock(block.id, postId);
+            if (oldBlock && oldBlock.attachment_file_id && oldBlock.attachment_file_id !== block.attachment_file_id) {
+              if (!File.isReferenced(oldBlock.attachment_file_id, postId)) {
+                const fileRecord = File.findById(oldBlock.attachment_file_id);
+                if (fileRecord && fs.existsSync(fileRecord.filepath)) fs.unlinkSync(fileRecord.filepath);
+                File.delete(oldBlock.attachment_file_id);
+              }
+            }
+          }
           Post.updateBlock(block.id, postId, block, i);
         } else {
           Post.addBlock(postId, block, i);
