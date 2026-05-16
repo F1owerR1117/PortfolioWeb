@@ -479,7 +479,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
       "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"广告栏拉宽：动态填充侧边+固定10px边距\")",
       "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"广告图绝对定位：解决缩放留白bug\")",
-      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"广告图裁剪比调整前 1:3\")"
+      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"广告图裁剪比调整前 1:3\")",
+      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"广告图裁剪比改为 1:2.62 匹配1920x1080容器\")"
     ]
   }
 }
