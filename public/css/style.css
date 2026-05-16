@@ -4061,10 +4061,18 @@ button { cursor: pointer; font-family: inherit; }
 .ad-bar {
   width: 300px;
   position: fixed;
-  top: 72px;
+  top: 80px;
+  bottom: 80px;
   display: none;
   flex-direction: column;
   z-index: 5;
+}
+
+.ad-bar-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
 }
 
 .ad-bar.active {
