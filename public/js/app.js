@@ -271,7 +271,6 @@ const App = {
           <div class="side-menu-item" data-action="show-notices">📢 系统公告</div>`;
         if (App.user && App.user.role === 'admin') {
           menuHtml += `
-          <div class="side-menu-separator"></div>
           <div class="side-menu-item collapsible" data-action="toggle-admin">
             <span>⚙️ 后台管理</span>
             <span class="collapse-arrow">▶</span>
