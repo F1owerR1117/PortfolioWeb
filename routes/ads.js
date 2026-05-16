@@ -8,13 +8,14 @@ const logger = require('../logger');
 router.get('/ads', requireAuth, (req, res) => {
   try {
     const ads = all(
-      `SELECT id, image_file_id, link_url, position FROM ads
+      `SELECT id, title, image_file_id, link_url, position FROM ads
        WHERE is_active = 1 ORDER BY position, sort_order ASC, created_at DESC`
     );
     const result = { left: [], right: [] };
     for (const ad of ads) {
       const entry = {
         id: ad.id,
+        title: ad.title || '',
         image_url: ad.image_file_id ? `/api/file/${ad.image_file_id}` : null,
         link_url: ad.link_url || ''
       };

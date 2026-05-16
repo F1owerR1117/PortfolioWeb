@@ -464,7 +464,8 @@
       "Bash(bash scripts/snapshot.sh \"广告栏改用flex布局前\")",
       "Bash(bash scripts/snapshot.sh \"修复：广告栏改为flex flow布局，填充空白区域不影响页面结构\")",
       "Bash(bash scripts/snapshot.sh \"修复：广告栏position:fixed定位到内容区两侧空白处\")",
-      "Bash(bash scripts/snapshot.sh \"广告UI优化前\")"
+      "Bash(bash scripts/snapshot.sh \"广告UI优化前\")",
+      "Bash(bash scripts/snapshot.sh \"广告UI优化：240px宽+标题栏+◀▶圆形横向导航+ hover浮起\")"
     ]
   }
 }

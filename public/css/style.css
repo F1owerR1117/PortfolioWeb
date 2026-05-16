@@ -4059,7 +4059,7 @@ button { cursor: pointer; font-family: inherit; }
 
 /* ===== Advertisement Bars ===== */
 .ad-bar {
-  width: 160px;
+  width: 240px;
   position: fixed;
   top: 72px;
   display: none;
@@ -4073,11 +4073,11 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .ad-bar-left {
-  left: max(8px, calc(50% - 600px - 170px));
+  left: max(8px, calc(50% - 600px - 250px));
 }
 
 .ad-bar-right {
-  left: min(calc(50% + 600px + 10px), calc(100vw - 168px));
+  left: min(calc(50% + 600px + 10px), calc(100vw - 248px));
 }
 
 .ad-bar-inner {
@@ -4091,42 +4091,60 @@ button { cursor: pointer; font-family: inherit; }
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  transition: box-shadow 0.2s;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .ad-container:hover {
-  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .ad-image {
   width: 100%;
   height: auto;
   display: block;
-  object-fit: contain;
 }
 
 .ad-link {
   display: block;
   text-decoration: none;
-  cursor: pointer;
+}
+
+.ad-title {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-top: 1px solid var(--border);
 }
 
 .ad-nav {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 0;
 }
 
 .ad-nav-btn {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 12px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-secondary);
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .ad-nav-btn:hover:not(:disabled) {
@@ -4146,6 +4164,6 @@ button { cursor: pointer; font-family: inherit; }
   font-weight: 600;
 }
 
-@media (max-width: 1540px) {
+@media (max-width: 1680px) {
   .ad-bar.active { display: none !important; }
 }

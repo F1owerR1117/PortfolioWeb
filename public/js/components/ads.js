@@ -79,9 +79,10 @@ var ComponentsAds = {
     }
 
     var imgHtml = '<img src="' + escapeHtml(ad.image_url) + '" class="ad-image" alt="广告">';
+    var titleHtml = ad.title ? '<div class="ad-title">' + escapeHtml(ad.title) + '</div>' : '';
     var contentHtml = ad.link_url
-      ? '<a href="' + escapeHtml(ad.link_url) + '" class="ad-link" target="_blank" data-ad-id="' + ad.id + '">' + imgHtml + '</a>'
-      : imgHtml;
+      ? '<a href="' + escapeHtml(ad.link_url) + '" class="ad-link" target="_blank" data-ad-id="' + ad.id + '">' + imgHtml + titleHtml + '</a>'
+      : imgHtml + titleHtml;
 
     var isFirst = idx <= 0;
     var isLast = idx >= ads.length - 1;
@@ -91,9 +92,9 @@ var ComponentsAds = {
       '<div class="ad-container">' + contentHtml + '</div>' +
       (ads.length > 1
         ? '<div class="ad-nav">' +
-          '<button class="ad-nav-btn ad-prev" data-side="' + side + '"' + (isFirst ? ' disabled' : '') + '>▲</button>' +
+          '<button class="ad-nav-btn ad-prev" data-side="' + side + '"' + (isFirst ? ' disabled' : '') + '>◀</button>' +
           '<span class="ad-counter">' + (idx + 1) + '/' + ads.length + '</span>' +
-          '<button class="ad-nav-btn ad-next" data-side="' + side + '"' + (isLast ? ' disabled' : '') + '>▼</button>' +
+          '<button class="ad-nav-btn ad-next" data-side="' + side + '"' + (isLast ? ' disabled' : '') + '>▶</button>' +
           '</div>'
         : '') +
       '</div>';
