@@ -3,7 +3,23 @@ var ComponentsAds = {
   _ads: { left: [], right: [] },
   _currentIndex: { left: 0, right: 0 },
 
+  _ensureContainers() {
+    if (!document.getElementById('ad-bar-left')) {
+      var left = document.createElement('aside');
+      left.id = 'ad-bar-left';
+      left.className = 'ad-bar ad-bar-left';
+      document.body.appendChild(left);
+    }
+    if (!document.getElementById('ad-bar-right')) {
+      var right = document.createElement('aside');
+      right.id = 'ad-bar-right';
+      right.className = 'ad-bar ad-bar-right';
+      document.body.appendChild(right);
+    }
+  },
+
   async init() {
+    this._ensureContainers();
     if (!App.user) return;
     try {
       var data = await API.getAds();

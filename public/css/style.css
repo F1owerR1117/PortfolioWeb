@@ -4058,19 +4058,9 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 /* ===== Advertisement Bars ===== */
-#main-layout {
-  display: flex;
-  justify-content: center;
-  max-width: 1600px;
-  margin: 0 auto;
-  position: relative;
-  min-height: calc(100vh - 120px);
-}
-
 .ad-bar {
   width: 160px;
-  flex-shrink: 0;
-  position: sticky;
+  position: fixed;
   top: 72px;
   height: calc(100vh - 90px);
   display: none;
@@ -4081,18 +4071,11 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .ad-bar-left {
-  order: 0;
+  left: max(8px, calc(50% - 480px - 180px));
 }
 
 .ad-bar-right {
-  order: 2;
-}
-
-#app.container {
-  order: 1;
-  flex: 1;
-  min-width: 0;
-  max-width: 960px;
+  right: max(8px, calc(50% - 480px - 180px));
 }
 
 .ad-bar-inner {
@@ -4162,7 +4145,6 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 /* Hide ad bars on smaller screens */
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .ad-bar { display: none !important; }
-  #main-layout { display: block; }
 }

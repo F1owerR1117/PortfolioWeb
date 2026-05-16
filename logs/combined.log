@@ -5586,3 +5586,59 @@
 2026-05-16 15:26:36 [INFO] [API] GET /notifications 200 3ms user=2
 2026-05-16 15:27:31 [WARN] [API] GET /notifications/unread-count 401 2ms
 2026-05-16 15:28:32 [WARN] [API] GET /notifications/unread-count 401 2ms
+2026-05-16 15:28:57 [INFO] Portfolio app running at http://localhost:3000
+2026-05-16 15:28:57 [INFO] Default admin account: admin / admin123
+2026-05-16 15:29:10 [INFO] [API] POST /login 200 92ms user=1
+2026-05-16 15:29:10 [INFO] [API] GET /ads 200 5ms user=1
+2026-05-16 15:29:10 [INFO] [API] POST / 200 8ms user=1
+2026-05-16 15:29:10 [INFO] [API] POST /admin/ads 200 3ms user=1
+2026-05-16 15:29:10 [INFO] [API] POST /admin/ads 200 1ms user=1
+2026-05-16 15:29:10 [INFO] [API] GET /ads 200 2ms user=1
+2026-05-16 15:29:10 [INFO] [API] GET /admin/ads 200 3ms user=1
+2026-05-16 15:29:10 [INFO] [API] POST /ads/1/click 200 2ms user=1
+2026-05-16 15:29:10 [INFO] [API] GET /admin/ads 200 2ms user=1
+2026-05-16 15:29:21 [WARN] [API] GET /ads 401 1ms
+2026-05-16 15:29:21 [WARN] [API] POST /admin/ads 401 1ms
+2026-05-16 15:29:21 [WARN] [API] GET /admin/ads 403 4ms user=28
+2026-05-16 15:29:21 [INFO] [API] PATCH /admin/ads/1/status 200 1ms user=1
+2026-05-16 15:29:21 [INFO] [API] GET /admin/ads 200 1ms user=1
+2026-05-16 15:29:33 [WARN] [API] GET /notifications/unread-count 401 2ms
+2026-05-16 15:29:57 [WARN] [API] GET /notifications/unread-count 401 2ms
+2026-05-16 15:29:58 [INFO] [API] GET /sound 304 1ms
+2026-05-16 15:29:58 [INFO] [API] GET /me 200 2ms
+2026-05-16 15:29:58 [INFO] [API] GET /me 304 1ms
+2026-05-16 15:30:08 [INFO] [API] POST /login 200 66ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /zone-access/work 304 3ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /zone-access/chat 304 3ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /zone-access/music 304 4ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /notifications/unread-count 304 4ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /admin/levels/config 304 4ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET / 200 4ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /levels/me 200 4ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /zone-access/music 304 5ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /zone-access/music 304 1ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /friend-requests 304 2ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET / 304 2ms user=1
+2026-05-16 15:30:08 [INFO] [API] GET /friend-requests 304 0ms user=1
+2026-05-16 15:30:09 [INFO] [API] GET /login-notices 304 1ms user=1
+2026-05-16 15:30:11 [INFO] [API] POST /login-notices/5/view 200 3ms user=1
+2026-05-16 15:30:11 [INFO] [API] POST /login-notices/7/view 200 1ms user=1
+2026-05-16 15:30:11 [INFO] [API] POST /login-notices/8/view 200 2ms user=1
+2026-05-16 15:30:14 [INFO] [API] GET / 304 3ms user=1
+2026-05-16 15:30:14 [INFO] [API] GET /notifications/unread-count 304 2ms user=1
+2026-05-16 15:30:14 [INFO] [API] GET /zone-access/music 304 3ms user=1
+2026-05-16 15:30:14 [INFO] [API] GET /levels/me 304 3ms user=1
+2026-05-16 15:30:14 [INFO] [API] GET /friend-requests 304 0ms user=1
+2026-05-16 15:30:44 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-16 15:30:44 [INFO] [API] GET /friend-requests 304 1ms user=1
+2026-05-16 15:30:56 [INFO] [API] GET /admin/stats 200 3ms user=1
+2026-05-16 15:30:56 [INFO] [API] GET /notifications/unread-count 304 2ms user=1
+2026-05-16 15:30:56 [INFO] [API] GET /zone-access/music 304 2ms user=1
+2026-05-16 15:30:56 [INFO] [API] GET /levels/me 304 1ms user=1
+2026-05-16 15:30:56 [INFO] [API] GET /friend-requests 304 2ms user=1
+2026-05-16 15:31:00 [INFO] [API] GET /admin/reports 304 3ms user=1
+2026-05-16 15:31:00 [INFO] [API] GET /notifications/unread-count 304 3ms user=1
+2026-05-16 15:31:00 [INFO] [API] GET /zone-access/music 304 5ms user=1
+2026-05-16 15:31:00 [INFO] [API] GET /levels/me 304 5ms user=1
+2026-05-16 15:31:00 [INFO] [API] GET /friend-requests 304 0ms user=1

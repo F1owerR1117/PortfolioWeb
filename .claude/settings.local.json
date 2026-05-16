@@ -459,7 +459,8 @@
       "Bash(curl -s -b /tmp/c_new.txt http://localhost:3000/api/admin/ads -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -s -b /tmp/c_adm.txt -X PATCH http://localhost:3000/api/admin/ads/1/status)",
       "Bash(curl -s -b /tmp/c_adm.txt http://localhost:3000/api/admin/ads)",
-      "Bash(bash scripts/snapshot.sh \"广告栏实现：ads表+左右侧广告+管理员广告CRUD+图片裁剪上传\")"
+      "Bash(bash scripts/snapshot.sh \"广告栏实现：ads表+左右侧广告+管理员广告CRUD+图片裁剪上传\")",
+      "Bash(bash scripts/snapshot.sh \"修复：广告栏改为position:fixed脱离文档流，恢复原有页面布局\")"
     ]
   }
 }
