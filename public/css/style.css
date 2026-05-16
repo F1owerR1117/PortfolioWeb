@@ -39,8 +39,6 @@
 [data-theme="dark"] .block-type-badge.video { background: #4a3a0f; color: #fcd34d; }
 [data-theme="dark"] .block-type-badge.code { background: #14532d; color: #86efac; }
 [data-theme="dark"] .content-block pre { background: #0f172a; }
-[data-theme="dark"] .notif-unread { background: #1e3a5f; }
-[data-theme="dark"] .notif-unread:hover { background: #1e3a5f; }
 [data-theme="dark"] .tag-chip { background: #334155; color: #cbd5e1; }
 [data-theme="dark"] .tag-chip:hover { background: #475569; }
 [data-theme="dark"] .tag-chip.active { background: var(--primary); color: white; }
@@ -1494,85 +1492,6 @@ button { cursor: pointer; font-family: inherit; }
 .empty-state-icon { font-size: 64px; margin-bottom: 16px; }
 .empty-state-text { font-size: 16px; }
 
-/* ===== Notifications ===== */
-.notif-page {
-  max-width: 700px;
-  margin: 0 auto;
-}
-.notif-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  gap: 12px;
-}
-.notif-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-.notif-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px 20px;
-  cursor: pointer;
-  transition: background 0.15s;
-  border-bottom: 1px solid var(--border);
-}
-.notif-item:last-child { border-bottom: none; }
-.notif-item:hover { background: var(--bg); }
-.notif-unread { background: #eff6ff; }
-.notif-unread:hover { background: #dbeafe; }
-.notif-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: transparent;
-  flex-shrink: 0;
-  margin-top: 6px;
-}
-.notif-dot-active {
-  background: var(--primary);
-}
-.notif-body {
-  flex: 1;
-  min-width: 0;
-}
-.notif-text {
-  font-size: 14px;
-  color: var(--text);
-  line-height: 1.5;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-.notif-post {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-top: 2px;
-}
-.notif-reply-content {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-top: 2px;
-  padding: 4px 8px;
-  background: var(--bg);
-  border-radius: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-.notif-date {
-  font-size: 12px;
-  color: var(--text-light);
-  margin-top: 4px;
-}
-
 /* Unread badge in navbar */
 .unread-badge {
   position: absolute;
@@ -2926,13 +2845,6 @@ button { cursor: pointer; font-family: inherit; }
 .music-song-item:hover {
   background: linear-gradient(135deg, rgba(37,99,235,0.03), rgba(124,58,237,0.03));
 }
-.music-song-item.playing {
-  background: linear-gradient(135deg, rgba(37,99,235,0.07), rgba(124,58,237,0.05));
-  border-left: 3px solid var(--primary);
-}
-[data-theme="dark"] .music-song-item.playing {
-  background: linear-gradient(135deg, rgba(37,99,235,0.14), rgba(124,58,237,0.08));
-}
 [data-theme="dark"] .music-upload-file-info {
   background: #1e293b;
   border-color: #334155;
@@ -3972,11 +3884,6 @@ button { cursor: pointer; font-family: inherit; }
   color: #94a3b8;
   margin-top: 4px;
   position: relative; z-index: 1;
-}
-
-/* Keep song actions visible on hover */
-.music-song-item:hover .music-song-actions {
-  opacity: 1;
 }
 
 /* Playing badge */
