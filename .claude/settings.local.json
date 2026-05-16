@@ -471,7 +471,8 @@
       "Bash(bash scripts/snapshot.sh \"广告栏高度填充前\")",
       "Bash(bash scripts/snapshot.sh \"广告栏垂直填充：top/bottom:80px，内容垂直居中\")",
       "Bash(bash scripts/snapshot.sh \"广告页面显示控制前\")",
-      "Bash(bash scripts/snapshot.sh \"广告页面显示控制：display_pages字段+路由过滤+管理员页面选择\")"
+      "Bash(bash scripts/snapshot.sh \"广告页面显示控制：display_pages字段+路由过滤+管理员页面选择\")",
+      "Bash(bash scripts/snapshot.sh \"广告图片铺满容器：flex:1+object-fit:cover\")"
     ]
   }
 }
