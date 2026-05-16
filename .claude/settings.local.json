@@ -467,7 +467,8 @@
       "Bash(bash scripts/snapshot.sh \"广告UI优化前\")",
       "Bash(bash scripts/snapshot.sh \"广告UI优化：240px宽+标题栏+◀▶圆形横向导航+ hover浮起\")",
       "Bash(bash scripts/snapshot.sh \"广告栏300px竖旗优化前\")",
-      "Bash(bash scripts/snapshot.sh \"广告栏300px宽幅竖旗+移除标题+裁剪3:4竖版\")"
+      "Bash(bash scripts/snapshot.sh \"广告栏300px宽幅竖旗+移除标题+裁剪3:4竖版\")",
+      "Bash(bash scripts/snapshot.sh \"广告栏高度填充前\")"
     ]
   }
 }
