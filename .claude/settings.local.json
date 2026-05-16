@@ -496,7 +496,8 @@
       "Bash(python _fix_attach.py)",
       "Bash(node _fix_attach.js)",
       "Bash(node _fix_attach2.js)",
-      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"附件替换/删除功能：后端清理+前端UI\")"
+      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"附件替换/删除功能：后端清理+前端UI\")",
+      "Bash(bash \"f:\\\\code\\\\portfolio\\\\scripts\\\\snapshot.sh\" \"更新文档：架构/API/用户指南/CLAUDE.md\")"
     ]
   }
 }

@@ -6,6 +6,7 @@
 
 - [认证 Auth](#认证-auth)
 - [帖子 Posts](#帖子-posts)
+- [附件 Attachment](#附件-attachment)
 - [评论 Comments](#评论-comments)
 - [用户 Users](#用户-users)
 - [好友 Friends](#好友-friends)
@@ -17,6 +18,8 @@
 - [收藏 Bookmarks](#收藏-bookmarks)
 - [音乐 Music](#音乐-music)
 - [举报 Reports](#举报-reports)
+- [广告 Ads](#广告-ads)
+- [登录公告 Login Notices](#登录公告-login-notices)
 - [等级 Levels](#等级-levels)
 - [管理 Admin](#管理-admin)
 - [站点 Site](#站点-site)
@@ -108,6 +111,7 @@
 - 返回内容包括帖子和关联的 `content_blocks`
 - 普通用户仅能看到 `allow_preview=1` 的内容块
 - 管理员可看到所有内容块
+- 附件块包含权限状态: `attachment_status`（`level_locked`/`unlock_required`/`download_required`/`ready`）
 
 ### POST /api/posts
 创建帖子。
@@ -120,17 +124,22 @@
   "cover_file_id": "int(可选)",
   "tags": "string(可选，逗号分隔)",
   "category": "work|chat",
-  "blocks": [{ "type": "text|image|video|code", "value": "string", "file_id": "int", "allow_preview": bool }]
+  "blocks": [{ "type": "text|image|video|code|file", "value": "string", "file_id": "int", "allow_preview": bool }]
 }
 ```
 - `category=work` 仅管理员可发布
 - `category=chat` 所有已登录用户可发布
+- `type=file` 的块需要 `attachment_file_id`、`attachment_name`、`attachment_size` 等字段
 
 ### PUT /api/posts/:id
 更新帖子（管理员）。
 
 ```json
-{ "title": "...", "description": "...", "tags": "...", "blocks": [...], "deleted_block_ids": [...] }
+{
+  "title": "...", "description": "...", "tags": "...",
+  "blocks": [{ "id": "int(编辑时)", "type": "...", "attachment_file_id": "...", ... }],
+  "deleted_block_ids": [int, ...]
+}
 ```
 
 ### DELETE /api/posts/:id
@@ -153,12 +162,40 @@
 
 ---
 
+## 附件 Attachment
+
+### POST /api/posts/:id/purchase
+购买附件解锁或下载权限。
+
+```json
+{ "block_id": "int", "type": "unlock|download" }
+```
+- `type=unlock`: 支付积分解锁附件查看权限
+- `type=download`: 支付积分获得附件下载权限
+- 扣除用户积分，写入 `attachment_purchases` 记录
+- 管理员和帖子作者自动拥有全部权限，无需购买
+
+### GET /api/posts/:id/download/:blockId
+下载附件文件。
+
+- 检查用户权限：管理员和作者可直接下载
+- 普通用户需满足等级要求并通过 unlock/download 购买检查
+- 设置 `Content-Disposition: attachment` 触发下载
+
+---
+
 ## 评论 Comments
 
 挂载: `/api/posts/:postId/comments` 和 `/api/comments`
 
 ### GET /api/posts/:postId/comments
 获取帖子的所有评论（嵌套结构）。
+
+支持分页查询:
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| page | int | 页码，默认 1 |
+| limit | int | 每页数量，默认 30 |
 
 ### POST /api/posts/:postId/comments
 发表评论或回复。
@@ -309,6 +346,18 @@
 - 视频: mp4 (最大 50MB)
 - 代码: txt/py/css/json (最大 1MB)
 - **注意**: .html 和 .js 文件已被禁止上传（防止 XSS 攻击）
+
+### POST /api/upload/attachment
+上传附件文件（不限类型，最大 50MB）。
+
+| 参数 | 说明 |
+|------|------|
+| file | 附件文件，multipart/form-data |
+
+响应:
+```json
+{ "message": "附件上传成功", "file": { "id": int, "original_name": "string", "size": int, "url": "string" } }
+```
 
 ### POST /api/user/avatar
 上传头像。
@@ -471,12 +520,6 @@
 ### DELETE /api/music/playlists/:id/songs/:songId
 从播放列表移除单首歌曲。
 
----
-
-## 播放列表分享
-
-挂载: `/api/playlists`
-
 ### PUT /api/playlists/:id/public
 切换播放列表公开/私有。
 
@@ -507,21 +550,74 @@
 ```
 - 重复举报检测: 同一用户的同一目标未处理举报仅允许一次
 
-### GET /api/admin/reports
-管理员获取举报列表。
+---
 
-| 参数 | 说明 |
-|------|------|
-| status | 状态筛选: pending/resolved/dismissed |
-| page | 页码 |
-| limit | 每页数量 |
+## 广告 Ads
 
-### PUT /api/admin/reports/:id
-管理员处理举报。
+### GET /api/ads
+获取当前有效的广告列表（需登录）。
+
+```
+响应: {
+  left: [{ id, title, image_url, link_url, display_pages }],
+  right: [{ ... }]
+}
+```
+
+### POST /api/ads/:id/click
+记录广告点击。
+
+### GET /api/admin/ads
+管理员获取广告列表（分页）。
+
+### POST /api/admin/ads
+管理员创建广告。
 
 ```json
-{ "status": "resolved|dismissed" }
+{ "title": "string", "image_file_id": "int", "link_url": "string(可选)",
+  "position": "left|right", "sort_order": "int", "display_pages": "string" }
 ```
+
+### PUT /api/admin/ads/:id
+管理员更新广告信息。
+
+### DELETE /api/admin/ads/:id
+管理员删除广告。
+
+### PATCH /api/admin/ads/:id/status
+管理员切换广告启用/禁用状态。
+
+### POST /api/admin/ads/:id/image
+管理员设置广告图片（通过 file_id）。
+
+---
+
+## 登录公告 Login Notices
+
+### GET /api/login-notices
+获取当前用户未读的登录弹窗公告。
+
+### POST /api/login-notices/:id/view
+标记公告为已读。
+
+### GET /api/admin/login-notices
+管理员获取公告列表（分页）。
+
+### POST /api/admin/login-notices
+管理员创建公告。
+
+```json
+{ "title": "string", "content": "string", "image_url": "string(可选)", "link_url": "string(可选)" }
+```
+
+### PUT /api/admin/login-notices/:id
+管理员更新公告。
+
+### DELETE /api/admin/login-notices/:id
+管理员删除公告。
+
+### PATCH /api/admin/login-notices/:id/status
+管理员切换公告启用/禁用状态。
 
 ---
 
@@ -570,6 +666,7 @@
 ```
 - `banDuration` 不传或 null 为永久禁言
 - 不可禁言自己
+- 禁言时自动创建通知
 
 ### DELETE /api/admin/posts/batch
 管理员批量删除帖子。

@@ -29,11 +29,12 @@ models/                # 数据访问层（封装 SQL 查询）
   User.js / Post.js / Comment.js / Notification.js / File.js
 services/              # 业务逻辑层（封装复杂业务）
   AuthService.js       # 注册、登录、修改密码
-  PostService.js       # 帖子 CRUD、内容块管理
-  NotificationService.js / FileService.js
-routes/                # 18 个路由文件，按功能拆分
+  PostService.js       # 帖子 CRUD、内容块管理（含附件购买）
+  NotificationService.js / FileService.js / LoginNoticeService.js
+routes/                # 20 个路由文件，按功能拆分
   auth.js / posts.js / comments.js / notifications.js / ...
   music.js / bookmarks.js / reports.js / levels.js / ...
+  ads.js / loginNotices.js / site.js / settings.js / ...
 public/
   index.html           # SPA 入口
   css/style.css        # 完整样式（亮/暗主题、响应式）
@@ -41,17 +42,22 @@ public/
     utils.js           # 工具函数: Toast/音频/裁剪/模态框/格式化
     api.js             # 统一 fetch 封装，所有 API 方法
     music.js           # 底部音乐播放器模块
-    components/        # 拆分后的组件（13个文件，每个≤400行）
+    components/        # 拆分后的组件（14个文件）
       shared.js        # 共享工具方法
       auth.js / postList.js / postDetail.js / postEditor.js
       profile.js / notifications.js / bookmarks.js
       musicLibrary.js / friends.js / chat.js / admin.js
+      ads.js           # 左右侧广告栏组件
       index.js         # 聚合所有子模块
     router.js          # 前端哈希路由
     app.js             # 主应用初始化/导航/主题/轮询
 logs/                  # 日志文件目录
   combined.log         # 全部日志
   error.log            # 仅错误日志
+docs/                  # 文档目录
+  index.md / architecture.md / api-reference.md / user-guide.md
+scripts/               # 工具脚本
+  snapshot.sh / rollback.sh
 ```
 
 ## 技术要点
@@ -74,7 +80,13 @@ app.use('/api', commentsRoutes);       // 裸挂载，路由路径包含 /commen
 - 哈希路由 (`#/works`, `#/posts/123`, `#/chat/456?comment=789`)
 - `Components` 对象包含所有页面渲染方法（renderXxx）
 - `Router._handlePath()` 在每次路由切换时清理定时器
-- `App.updateNav()` 在每次页面切换后刷新导航栏
+- `App.updateNav()` 在每次页面切换后刷新导航栏，构建侧边菜单
+
+### 侧边菜单
+- 登录后动态创建，含 5 个核心项（作品区、聊天区、音乐、收藏夹、公告）
+- 管理员额外显示折叠的"后台管理"入口，内含 7 个管理子项
+- 点击 `▶` 箭头展开/收起，导航到管理页面时自动展开
+- 分区锁定状态通过 `_checkZoneLocks()` 异步检测
 
 ### 后端 API 前缀
 | 路由文件 | 挂载点 | 示例 |
@@ -84,6 +96,16 @@ app.use('/api', commentsRoutes);       // 裸挂载，路由路径包含 /commen
 | musicRoutes | `/api` | POST `/api/music/upload` |
 | bookmarksRoutes | `/api` | GET `/api/bookmarks/collections` |
 | levelsRoutes | `/api` | GET `/api/zone-access/:zone` |
+| adsRoutes | `/api` | GET `/api/ads` |
+| loginNoticesRoutes | `/api` | GET `/api/login-notices` |
+
+### 附件系统
+内容块支持附件文件，三级权限控制:
+1. **等级锁定** (`min_level_view`): 低于等级不可查看
+2. **积分解锁** (`unlock_points`): 支付积分解锁查看
+3. **积分下载** (`download_points`): 支付积分获得下载权限
+
+购买记录写 `attachment_purchases` 表。编辑帖子时支持替换/删除附件，旧文件自动清理。
 
 ### 标签迁移
 post_tags 迁移仅在首次运行时执行（通过 settings 表 `tag_migration_done` 标记 + `post_tags` 表为空双重检测）

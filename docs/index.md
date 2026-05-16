@@ -42,6 +42,7 @@ npm start              # 启动开发服务器
 ## 核心功能
 
 - **作品/帖子管理**: 发布、编辑、置顶、精华、锁定
+- **附件系统**: 等级锁定、积分解锁/下载、替换/删除
 - **评论系统**: 嵌套回复、编辑、删除
 - **用户系统**: 注册、登录、头像、个人信息、等级
 - **好友系统**: 添加好友、在线状态、私信
@@ -50,6 +51,8 @@ npm start              # 启动开发服务器
 - **举报系统**: 举报用户/帖子、管理员处理
 - **通知系统**: 实时通知、未读计数
 - **等级系统**: XP 经验值、等级权限、分区访问
+- **广告系统**: 左右侧广告栏、动态宽度、管理员管理
+- **登录公告**: 弹窗通知、图文展示
 - **管理面板**: 用户管理、禁言、批量删除、数据统计
 
 ## 文件结构
@@ -68,11 +71,13 @@ middleware/
 models/                # 数据访问层
   User.js / Post.js / Comment.js / Notification.js / File.js
 services/              # 业务逻辑层
-  AuthService.js / PostService.js / NotificationService.js / FileService.js
-routes/                # 18 个路由文件
+  AuthService.js / PostService.js / NotificationService.js
+  FileService.js / LoginNoticeService.js
+routes/                # 20 个路由文件
   auth.js, posts.js, comments.js, notifications.js, ...
   friends.js, music.js, bookmarks.js, reports.js, ...
   admin.js, levels.js, tags.js, reactions.js, ...
+  ads.js, loginNotices.js, site.js, settings.js, ...
 public/
   index.html           # SPA 入口
   css/style.css        # 完整样式 (亮/暗主题)
@@ -80,12 +85,12 @@ public/
     utils.js           # 工具函数
     api.js             # API 请求封装
     music.js           # 音乐播放器
-    components/        # 拆分后的组件（13个文件）
+    components/        # 拆分后的组件（14个文件）
       shared.js        # 共享工具方法
       auth.js / postList.js / postDetail.js / postEditor.js
       profile.js / notifications.js / bookmarks.js
       musicLibrary.js / friends.js / chat.js / admin.js
-      index.js         # 聚合所有子模块
+      ads.js / index.js
     router.js          # 前端路由
     app.js             # 应用初始化
 logs/                  # 日志文件目录

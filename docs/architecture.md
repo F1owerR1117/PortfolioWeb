@@ -14,16 +14,17 @@
 ┌─────────────────────────────────────────────────┐
 │            Express 服务器 (Node.js)              │
 │  ┌───────────┐  ┌────────────────────────────┐  │
-│  │ Middleware │  │      Routes (18 files)     │  │
+│  │ Middleware │  │      Routes (20 files)     │  │
 │  │ auth.js    │  │  auth  posts  comments     │  │
 │  │ upload.js  │  │  users  friends  music     │  │
-│  │ zoneAccess │  │  bookmarks  reports  ...   │  │
-│  │ helmet     │  └──────────┬─────────────────┘  │
-│  │ rateLimit  │             │                     │
-│  └───────────┘  ┌──────────▼─────────────────┐  │
-│                 │      Services (4 files)      │  │
+│  │ zoneAccess │  │  bookmarks  reports  ads   │  │
+│  │ helmet     │  │  loginNotices  site  ...   │  │
+│  │ rateLimit  │  └──────────┬─────────────────┘  │
+│  └───────────┘             │                     │
+│                 ┌──────────▼─────────────────┐  │
+│                 │      Services (5 files)      │  │
 │                 │  Auth  Post  Notification    │  │
-│                 │  File                        │  │
+│                 │  File  LoginNotice           │  │
 │                 └──────────┬─────────────────┘  │
 │                            │                     │
 │  ┌─────────────────────────▼──────────────────┐  │
@@ -133,6 +134,19 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 `addXP()` 函数在 XP 超过等级阈值时自动升级。等级存储在 `level_config` 表中，
 包含等级名称、图标、背景图、所需 XP 和可访问的分区列表。
 
+### 附件系统
+
+内容块支持附件文件，具有三级权限控制：
+
+1. **等级锁定**: `min_level_view` — 低于该等级无法查看附件内容
+2. **积分解锁**: `unlock_points` — 支付积分可解锁查看（一次性，记录在 `attachment_purchases` 表）
+3. **积分下载**: `download_points` — 解锁后可再支付积分获得下载权限
+
+附件购买记录存储在 `attachment_purchases` 表，区分 `unlock` 和 `download` 两种类型。
+前端根据权限状态显示：锁定图标 / 解锁按钮 / 下载按钮 / 直接下载链接。
+
+编辑帖子时支持替换和删除附件文件，后台自动清理旧文件。
+
 ### 文件存储
 
 - 物理文件: `uploads/` 目录，UUID 文件名
@@ -140,6 +154,16 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 - 垃圾回收: `deleteFileIfUnused()` 在帖子更新时清理孤立文件
 - 权限控制: `file.js` 路由检查文件所属块是否有 `allow_preview` 权限
 - 默认拒绝: 未关联内容的文件返回 403
+
+### 广告系统
+
+左右侧固定广告栏，具有以下特性：
+
+- 动态宽度: `calc((100vw - 1240px) / 2)`，范围 200px ~ 400px
+- 广告栏图片固定 1:2.62 宽高比（裁剪上传时指定）
+- 多广告导航按钮悬浮于图片底部（半透明背景）
+- 屏幕宽度 < 1660px 时自动隐藏
+- 管理员可在后台管理广告的上下架、排序、展示页面
 
 ### 通知系统
 
@@ -158,6 +182,13 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 前端每 30 秒轮询 `/api/notifications/unread-count`。
 点击通知可跳转到帖子详情并自动滚动到对应评论位置。
 
+### 侧边菜单
+
+左侧汉堡菜单，包含核心功能区（作品区、聊天区、音乐、收藏夹、系统公告）。
+管理员额外显示：分隔线和折叠的"⚙️ 后台管理"入口（含标签管理、区域统计、举报管理、
+用户管理、等级管理、弹窗管理、广告管理 7 个子项）。管理员子菜单在导航到
+管理页面时自动展开。
+
 ## 目录详细说明
 
 ### server.js
@@ -165,7 +196,7 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 - 配置: session、静态文件、body parser (10kb 限制)
 - 安全: helmet、rateLimit、CSRF 防护
 - 自定义 SQLiteSessionStore 实现
-- 挂载全部 18 个路由文件
+- 挂载全部 20 个路由文件
 - 全局错误处理中间件
 - 启动服务器监听 `:3000`
 
@@ -194,7 +225,7 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 2. api.js                  — API 封装 (70+ 方法)
 3. music.js                — 音乐播放器
 4. components/shared.js    — 共享工具方法
-5. components/*.js          — 12 个功能组件
+5. components/*.js          — 13 个功能组件
 6. components/index.js     — 聚合所有组件
 7. router.js               — 哈希路由
 8. app.js                  — 初始化/导航/主题/轮询
@@ -210,7 +241,8 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 | settings | 系统设置 (声音/迁移标记) |
 | site_info | 关于页面内容 |
 | posts | 帖子 (分类/封面/标签/视图/锁定) |
-| content_blocks | 帖子内容块 (文本/图片/视频/代码) |
+| content_blocks | 帖子内容块 (文本/图片/视频/代码/附件) |
+| attachment_purchases | 附件购买记录 (解锁/下载) |
 | comments | 评论 (嵌套结构) |
 | tags | 标签定义 |
 | post_tags | 帖子-标签关联 |
@@ -229,4 +261,7 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 | bookmark_collections | 收藏夹 |
 | post_bookmarks | 帖子收藏 |
 | reports | 举报记录 |
+| ads | 广告管理 |
+| login_notices | 登录弹窗公告 |
+| login_notice_views | 公告已读记录 |
 | zone_stats | 分区数据统计 |
