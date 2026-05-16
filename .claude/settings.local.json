@@ -505,7 +505,16 @@
       "Bash(curl -s http://localhost:3000/api/users/1/stats -b /tmp/cookies.txt)",
       "Bash(python -m json.tool)",
       "Bash(rm f:\\\\code\\\\portfolio\\\\LICENSE)",
-      "Bash(bash scripts/snapshot.sh \"结构优化前：CSS/api.js/db.init 拆分前备份\")"
+      "Bash(bash scripts/snapshot.sh \"结构优化前：CSS/api.js/db.init 拆分前备份\")",
+      "Bash(cd f:/code/portfolio && mkdir -p public/css/components public/css/themes public/js/api)",
+      "Bash(node scripts/split-css.js)",
+      "Bash(curl -s http://localhost:3000/api/posts -b /tmp/cookies.txt)",
+      "Bash(curl -s http://localhost:3000/css/base.css)",
+      "Bash(curl -s http://localhost:3000/css/components/nav.css)",
+      "Bash(curl -s http://localhost:3000/js/api/auth.js)",
+      "Bash(curl -s http://localhost:3000/js/api/music.js)",
+      "Bash(curl -s http://localhost:3000/js/api/admin.js)",
+      "Bash(bash scripts/snapshot.sh \"结构优化：CSS/api.js/db.init 三拆完成\")"
     ]
   }
 }

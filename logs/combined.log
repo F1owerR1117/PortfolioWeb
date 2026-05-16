@@ -12808,3 +12808,36 @@
 2026-05-17 00:36:33 [WARN] [API] GET /notifications/unread-count 401 1ms
 2026-05-17 00:37:03 [INFO] [API] GET /notifications/unread-count 304 2ms user=1
 2026-05-17 00:37:03 [INFO] [API] GET /friend-requests 304 0ms user=1
+2026-05-17 00:37:33 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-17 00:37:33 [INFO] [API] GET /friend-requests 304 0ms user=1
+2026-05-17 00:37:33 [WARN] [API] GET /notifications/unread-count 401 1ms
+2026-05-17 00:38:03 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-17 00:38:03 [INFO] [API] GET /friend-requests 304 1ms user=1
+2026-05-17 00:38:33 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-17 00:38:33 [INFO] [API] GET /friend-requests 304 1ms user=1
+2026-05-17 00:38:33 [WARN] [API] GET /notifications/unread-count 401 1ms
+2026-05-17 00:39:03 [INFO] [API] GET /notifications/unread-count 304 2ms user=1
+2026-05-17 00:39:03 [INFO] [API] GET /friend-requests 304 1ms user=1
+2026-05-17 00:39:33 [INFO] [API] GET /notifications/unread-count 304 2ms user=1
+2026-05-17 00:39:33 [INFO] [API] GET /friend-requests 304 1ms user=1
+2026-05-17 00:39:33 [WARN] [API] GET /notifications/unread-count 401 1ms
+2026-05-17 00:40:03 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-17 00:40:03 [INFO] [API] GET /friend-requests 304 0ms user=1
+2026-05-17 00:40:33 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-17 00:40:33 [INFO] [API] GET /friend-requests 304 0ms user=1
+2026-05-17 00:40:33 [WARN] [API] GET /notifications/unread-count 401 1ms
+2026-05-17 00:41:03 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-17 00:41:03 [INFO] [API] GET /friend-requests 304 1ms user=1
+2026-05-17 00:41:33 [INFO] [API] GET /notifications/unread-count 304 2ms user=1
+2026-05-17 00:41:33 [INFO] [API] GET /friend-requests 304 1ms user=1
+2026-05-17 00:41:33 [WARN] [API] GET /notifications/unread-count 401 0ms
+2026-05-17 00:42:03 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-17 00:42:03 [INFO] [API] GET /friend-requests 304 0ms user=1
+2026-05-17 00:42:17 [INFO] Portfolio app running at http://localhost:3000
+2026-05-17 00:42:17 [INFO] Default admin account: admin / admin123
+2026-05-17 00:42:33 [INFO] [API] GET /notifications/unread-count 304 9ms user=1
+2026-05-17 00:42:33 [INFO] [API] GET /friend-requests 304 2ms user=1
+2026-05-17 00:42:33 [WARN] [API] GET /notifications/unread-count 401 2ms
+2026-05-17 00:42:39 [INFO] [API] GET /me 200 6ms
+2026-05-17 00:42:39 [INFO] [API] POST /login 200 81ms user=1
+2026-05-17 00:42:39 [INFO] [API] GET / 200 3ms user=1

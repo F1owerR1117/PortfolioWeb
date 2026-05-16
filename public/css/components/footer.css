@@ -1,0 +1,63 @@
+/* ===== Footer ===== */
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: var(--bg-nav);
+  color: #94a3b8;
+  padding: 0 16px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+  height: 56px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.footer-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 13px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+/* Left and right use absolute positioning — stay at edges regardless of center visibility */
+.footer-left {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+}
+.footer-right {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+}
+.footer-center {
+  z-index: 1;
+  min-width: 0;
+}
+.mute-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+  color: #94a3b8;
+  font-size: 13px;
+}
+.mute-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+

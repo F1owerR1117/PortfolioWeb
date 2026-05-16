@@ -1,0 +1,36 @@
+/* ===== Settings ===== */
+
+.settings-page {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.settings-page.settings-page-wide {
+  max-width: 960px;
+}
+.settings-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+}
+.settings-item {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+.settings-item:last-child { border-bottom: none; }
+.settings-item-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.settings-item-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.volume-slider {
+  width: 100%;
+  accent-color: var(--primary);
+}
+

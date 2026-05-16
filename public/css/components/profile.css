@@ -1,0 +1,306 @@
+/* ===== About Page ===== */
+
+.about-page {
+  max-width: 700px;
+  margin: 0 auto;
+}
+.about-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 40px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+}
+.about-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: white;
+  margin: 0 auto 24px;
+  overflow: hidden;
+}
+.about-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.about-bio {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 28px;
+  white-space: pre-wrap;
+}
+.about-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary);
+}
+
+.about-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.about-skill-tag {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+[data-theme="dark"] .about-skill-tag {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+.about-social {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.about-social a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary);
+  font-size: 14px;
+}
+.about-edit-area {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.about-edit-area textarea {
+  min-height: 80px;
+}
+.about-edit-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.about-edit-skill-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+[data-theme="dark"] .about-edit-skill-item {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+.about-edit-skill-item .remove-skill {
+  cursor: pointer;
+  font-weight: 700;
+  margin-left: 2px;
+  opacity: 0.7;
+}
+.about-edit-skill-item .remove-skill:hover {
+  opacity: 1;
+}
+.about-add-skill-input {
+  display: flex;
+  gap: 8px;
+}
+.about-add-skill-input input {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg-card);
+}
+.about-social-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.about-social-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.about-social-row input {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg-card);
+}
+.about-social-row label {
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 60px;
+  color: var(--text-secondary);
+}
+.load-more-wrap {
+  text-align: center;
+  padding: 20px 0;
+}
+
+
+/* ===== User Info Bar ===== */
+
+.user-info-bar {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  color: #e2e8f0;
+  padding: 8px 16px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.user-info-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.user-info-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.user-info-item strong {
+  color: #facc15;
+  font-size: 14px;
+}
+.signin-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.signin-btn:hover { opacity: 0.85; }
+.signin-btn:disabled {
+  background: #475569;
+  cursor: default;
+  opacity: 0.6;
+}
+
+
+/* ===== Avatar Upload & Crop ===== */
+
+.avatar-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.avatar-upload-area:hover {
+  border-color: var(--primary);
+  background: rgba(37,99,235,0.04);
+}
+
+.avatar-crop-section {
+  margin-top: 12px;
+}
+
+.avatar-crop-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.avatar-crop-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.avatar-crop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.avatar-crop-box {
+  position: absolute;
+  border: 2px solid #fff;
+  cursor: move;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.avatar-crop-box .avatar-crop-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  pointer-events: none;
+}
+.avatar-crop-box .avatar-crop-grid span {
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.avatar-crop-handle {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 2px solid var(--primary);
+  border-radius: 3px;
+  cursor: nwse-resize;
+  pointer-events: auto;
+  z-index: 3;
+}
+
+.avatar-preview-area {
+  margin-top: 8px;
+}
+
+.avatar-preview-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+}
+
+.avatar-preview-empty {
+  color: var(--text-light);
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .avatar-crop-container {
+    max-width: 100%;
+  }
+}
+

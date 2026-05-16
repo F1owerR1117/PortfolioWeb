@@ -1,0 +1,117 @@
+/* ===== Advertisement Bars ===== */
+
+.ad-bar {
+  width: calc((100vw - 1240px) / 2);
+  max-width: 400px;
+  min-width: 200px;
+  position: fixed;
+  top: 80px;
+  bottom: 80px;
+  display: none;
+  flex-direction: column;
+  z-index: 5;
+}
+
+.ad-bar-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ad-bar.active {
+  display: flex;
+}
+
+.ad-bar-left {
+  left: 10px;
+}
+
+.ad-bar-right {
+  right: 10px;
+  left: auto;
+}
+
+.ad-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ad-container:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.ad-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ad-link {
+  display: block;
+  text-decoration: none;
+}
+
+.ad-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 0;
+  background: rgba(0,0,0,0.45);
+  border-radius: 0 0 12px 12px;
+  z-index: 1;
+}
+
+.ad-nav-btn {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
+  color: #fff;
+  transition: background 0.2s, color 0.2s;
+}
+
+.ad-nav-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.4);
+  color: #fff;
+  border-color: rgba(255,255,255,0.6);
+}
+
+.ad-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.ad-counter {
+  font-size: 11px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 600;
+}
+
+@media (max-width: 1660px) {
+  .ad-bar.active { display: none !important; }
+}
+

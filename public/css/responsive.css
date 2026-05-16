@@ -1,0 +1,51 @@
+/* ===== Responsive ===== */
+
+@media (max-width: 900px) {
+  .post-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .side-menu {
+    width: 200px;
+  }
+}
+@media (max-width: 600px) {
+  .post-grid { grid-template-columns: 1fr; }
+  .nav-inner { padding: 0 12px; }
+  .container { padding: 16px 12px; }
+  .editor-card, .auth-card, .settings-card { padding: 20px; }
+  .post-detail-cover { max-height: 200px; }
+  .form-row { grid-template-columns: 1fr; }
+  .auth-page { margin: 30px auto; }
+  .page-title { font-size: 22px; }
+  .nav-links { gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nav-btn { padding: 6px 10px; font-size: 13px; }
+  .nav-user { padding: 2px 8px; font-size: 12px; }
+  .block-header { flex-wrap: wrap; }
+  .comment[data-depth="1"] { padding-left: 20px; }
+  .comment[data-depth="2"] { padding-left: 36px; }
+  .comment[data-depth="3"] { padding-left: 52px; }
+  .comment[data-depth="4"],
+  .comment[data-depth="5"],
+  .comment[data-depth="6"] { padding-left: 68px; }
+}
+@media (max-width: 480px) {
+  .nav-brand { font-size: 16px; }
+  .hamburger-btn { padding: 0 10px; font-size: 20px; min-height: 50px; height: auto; }
+  .nav-inner { min-height: 50px; height: auto; }
+  .navbar { min-height: 50px; }
+}
+
+
+/* ===== Dashboard Responsive ===== */
+
+@media (max-width: 768px) {
+  .dashboard-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .stat-card {
+    padding: 12px 8px !important;
+  }
+  .stat-card div:first-child {
+    font-size: 20px !important;
+  }
+}
