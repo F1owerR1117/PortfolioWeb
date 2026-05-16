@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { run, get, all } = require('../db/init');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const logger = require('../logger');
 
 // GET /api/tags — list all tags with usage count (optionally filtered by category)
 router.get('/', requireAuth, (req, res) => {
@@ -29,7 +30,7 @@ router.get('/', requireAuth, (req, res) => {
     const tags = all(sql, params);
     res.json({ tags });
   } catch (err) {
-    console.error('[Tags] List error:', err);
+    logger.error('[Tags] List error:', err);
     res.status(500).json({ error: '获取标签列表失败' });
   }
 });
@@ -49,7 +50,7 @@ router.post('/', requireAuth, (req, res) => {
     }
     res.json({ message: '标签创建成功', tag });
   } catch (err) {
-    console.error('[Tags] Create error:', err);
+    logger.error('[Tags] Create error:', err);
     res.status(500).json({ error: '创建标签失败' });
   }
 });
@@ -66,7 +67,7 @@ router.delete('/:id', requireAdmin, (req, res) => {
     run('DELETE FROM tags WHERE id = ?', [tagId]);
     res.json({ message: '标签已删除' });
   } catch (err) {
-    console.error('[Tags] Delete error:', err);
+    logger.error('[Tags] Delete error:', err);
     res.status(500).json({ error: '删除标签失败' });
   }
 });

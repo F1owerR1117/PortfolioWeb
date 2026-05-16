@@ -376,6 +376,14 @@ const API = {
     return this.request('POST', '/reports', { target_type: targetType, target_id: targetId, reason });
   },
 
+  // ===== Bookmarks =====
+  deleteBookmark(id) {
+    return this.request('DELETE', `/bookmarks/${id}`);
+  },
+  batchDeleteBookmarks(ids) {
+    return this.request('DELETE', '/bookmarks/batch', { ids });
+  },
+
   // ===== Admin =====
   getAdminStats() {
     return this.request('GET', '/admin/stats');
@@ -414,5 +422,50 @@ const API = {
   // ===== Zone Access =====
   checkZoneAccess(zone) {
     return this.request('GET', `/zone-access/${zone}`);
+  },
+
+  // ===== Login Notices =====
+  getLoginNotices() {
+    return this.request('GET', '/login-notices');
+  },
+
+  markLoginNoticeViewed(noticeId) {
+    return this.request('POST', `/login-notices/${noticeId}/view`);
+  },
+
+  // Admin Login Notices
+  getAdminLoginNotices(page, limit) {
+    return this.request('GET', `/admin/login-notices?page=${page || 1}&limit=${limit || 20}`);
+  },
+
+  createLoginNotice(data) {
+    return this.request('POST', '/admin/login-notices', data);
+  },
+
+  updateLoginNotice(id, data) {
+    return this.request('PUT', `/admin/login-notices/${id}`, data);
+  },
+
+  deleteLoginNotice(id) {
+    return this.request('DELETE', `/admin/login-notices/${id}`);
+  },
+
+  toggleLoginNoticeStatus(id) {
+    return this.request('PATCH', `/admin/login-notices/${id}/status`);
+  },
+
+  // ===== Attachment System =====
+  uploadAttachment(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.request('POST', '/upload/attachment', formData);
+  },
+
+  purchaseBlock(postId, blockId, type) {
+    return this.request('POST', `/posts/${postId}/purchase`, { block_id: blockId, type });
+  },
+
+  downloadAttachmentUrl(postId, blockId) {
+    return `/api/posts/${postId}/download/${blockId}`;
   }
 };

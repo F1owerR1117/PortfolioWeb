@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { get, run, all } = require('../db/init');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireNotBanned } = require('../middleware/auth');
+const logger = require('../logger');
 
 // ===== Friend Requests =====
 
 // Send friend request
-router.post('/friend-request', requireAuth, (req, res) => {
+router.post('/friend-request', requireAuth, requireNotBanned, (req, res) => {
   try {
     const { to_user_id } = req.body;
     const fromUserId = req.session.userId;
@@ -57,7 +58,7 @@ router.post('/friend-request', requireAuth, (req, res) => {
 
     res.json({ success: true, id: result.lastID });
   } catch (err) {
-    console.error('[Friends] Send friend request error:', err);
+    logger.error('[Friends] Send friend request error:', err);
     res.status(500).json({ error: '发送好友申请失败' });
   }
 });
@@ -78,7 +79,7 @@ router.get('/friend-requests', requireAuth, (req, res) => {
     );
     res.json({ requests });
   } catch (err) {
-    console.error('[Friends] Get requests error:', err);
+    logger.error('[Friends] Get requests error:', err);
     res.status(500).json({ error: '获取好友申请失败' });
   }
 });
@@ -113,7 +114,7 @@ router.post('/friend-request/:id/approve', requireAuth, (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error('[Friends] Approve request error:', err);
+    logger.error('[Friends] Approve request error:', err);
     res.status(500).json({ error: '处理好友申请失败' });
   }
 });
@@ -137,7 +138,7 @@ router.post('/friend-request/:id/reject', requireAuth, (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error('[Friends] Reject request error:', err);
+    logger.error('[Friends] Reject request error:', err);
     res.status(500).json({ error: '拒绝好友申请失败' });
   }
 });
@@ -165,7 +166,7 @@ router.get('/friends', requireAuth, (req, res) => {
     );
     res.json({ friends });
   } catch (err) {
-    console.error('[Friends] Get friends error:', err);
+    logger.error('[Friends] Get friends error:', err);
     res.status(500).json({ error: '获取好友列表失败' });
   }
 });
@@ -181,7 +182,7 @@ router.delete('/friends/:id', requireAuth, (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error('[Friends] Remove friend error:', err);
+    logger.error('[Friends] Remove friend error:', err);
     res.status(500).json({ error: '删除好友失败' });
   }
 });
@@ -204,7 +205,7 @@ router.get('/friends/online', requireAuth, (req, res) => {
     online.forEach(function(row) { map[row.user_id] = !!row.is_online; });
     res.json({ online: map });
   } catch (err) {
-    console.error('[Friends] Online status error:', err);
+    logger.error('[Friends] Online status error:', err);
     res.status(500).json({ error: '获取在线状态失败' });
   }
 });
@@ -245,7 +246,7 @@ router.get('/friendship-status/:userId', requireAuth, (req, res) => {
 
     res.json({ status: 'none' });
   } catch (err) {
-    console.error('[Friends] Check status error:', err);
+    logger.error('[Friends] Check status error:', err);
     res.status(500).json({ error: '查询好友状态失败' });
   }
 });
@@ -260,7 +261,7 @@ router.get('/friend-requests/count', requireAuth, (req, res) => {
     );
     res.json({ count: row ? row.count : 0 });
   } catch (err) {
-    console.error('[Friends] Count error:', err);
+    logger.error('[Friends] Count error:', err);
     res.status(500).json({ error: '获取申请数量失败' });
   }
 });
@@ -303,13 +304,13 @@ router.get('/messages/:friendId', requireAuth, (req, res) => {
 
     res.json({ messages });
   } catch (err) {
-    console.error('[Friends] Get messages error:', err);
+    logger.error('[Friends] Get messages error:', err);
     res.status(500).json({ error: '获取消息失败' });
   }
 });
 
 // Send message
-router.post('/messages', requireAuth, (req, res) => {
+router.post('/messages', requireAuth, requireNotBanned, (req, res) => {
   try {
     const fromUserId = req.session.userId;
     const { to_user_id, content } = req.body;
@@ -340,7 +341,7 @@ router.post('/messages', requireAuth, (req, res) => {
 
     res.json({ success: true, id: result.lastID });
   } catch (err) {
-    console.error('[Friends] Send message error:', err);
+    logger.error('[Friends] Send message error:', err);
     res.status(500).json({ error: '发送消息失败' });
   }
 });
@@ -355,7 +356,7 @@ router.get('/messages/unread/count', requireAuth, (req, res) => {
     );
     res.json({ count: row ? row.count : 0 });
   } catch (err) {
-    console.error('[Friends] Unread count error:', err);
+    logger.error('[Friends] Unread count error:', err);
     res.status(500).json({ error: '获取未读数失败' });
   }
 });

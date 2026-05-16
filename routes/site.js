@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { run, get } = require('../db/init');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const logger = require('../logger');
 
 // GET /api/site/about — get about page content
 router.get('/about', requireAuth, async (req, res) => {
@@ -15,7 +16,7 @@ router.get('/about', requireAuth, async (req, res) => {
     };
     res.json({ about });
   } catch (err) {
-    console.error('[Site] About get error:', err);
+    logger.error('[Site] About get error:', err);
     res.status(500).json({ error: '获取关于信息失败' });
   }
 });
@@ -41,7 +42,7 @@ router.put('/about', requireAdmin, async (req, res) => {
 
     res.json({ message: '关于信息已更新', about: aboutData });
   } catch (err) {
-    console.error('[Site] About update error:', err);
+    logger.error('[Site] About update error:', err);
     res.status(500).json({ error: '更新关于信息失败' });
   }
 });

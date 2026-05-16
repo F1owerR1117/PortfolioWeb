@@ -72,6 +72,106 @@ const App = {
   setUser(user) {
     this.user = user;
     this.updateNav();
+    // Show login notice popup after a short delay
+    if (user) {
+      setTimeout(() => this._showLoginNotices(), 1000);
+    }
+  },
+
+  _noticeList: [],
+  _noticeIndex: 0,
+  _noticeOverlay: null,
+
+  async _showLoginNotices() {
+    try {
+      const data = await API.getLoginNotices();
+      const notices = data.notices || [];
+      if (notices.length === 0) return;
+      this._noticeList = notices;
+      this._noticeIndex = 0;
+      this._showNoticePopup();
+    } catch (e) { /* non-critical */ }
+  },
+
+  _showNoticePopup() {
+    var self = this;
+    var notices = this._noticeList;
+    var idx = this._noticeIndex;
+    var notice = notices[idx];
+    var total = notices.length;
+    var isSingle = total === 1;
+
+    // Create or reuse overlay
+    if (!this._noticeOverlay) {
+      this._noticeOverlay = document.createElement('div');
+      this._noticeOverlay.className = 'custom-modal-overlay';
+      this._noticeOverlay.style.zIndex = '10000';
+      this._noticeOverlay.addEventListener('click', function(e) { if (e.target === self._noticeOverlay) self._closeNoticePopup(); });
+      document.body.appendChild(this._noticeOverlay);
+      requestAnimationFrame(function() { self._noticeOverlay.classList.add('visible'); });
+    }
+
+    var imgHtml = notice.image_url ? '<img src="' + escapeHtml(notice.image_url) + '" style="width:100%;max-height:300px;object-fit:cover;border-radius:8px;margin-bottom:16px;">' : '';
+    var counterHtml = isSingle ? '' : '<span style="font-size:13px;color:var(--text-secondary);margin-left:8px;">[' + (idx + 1) + '/' + total + ']</span>';
+    var navHtml = isSingle ? '' :
+      '<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">' +
+      '<button class="btn btn-sm btn-outline notice-prev-btn"' + (idx === 0 ? ' disabled' : '') + '>◀ 上一个</button>' +
+      '<span style="font-size:13px;color:var(--text-secondary);">' + (idx + 1) + ' / ' + total + '</span>' +
+      '<button class="btn btn-sm btn-outline notice-next-btn"' + (idx === total - 1 ? ' disabled' : '') + '>下一个 ▶</button>' +
+      '</div>';
+
+    this._noticeOverlay.innerHTML = '<div class="custom-modal-dialog" style="max-width:480px;padding:0;overflow:hidden;">' +
+      '<div style="padding:20px 24px;">' +
+      '<div style="font-size:18px;font-weight:700;margin-bottom:8px;">📢 ' + escapeHtml(notice.title) + counterHtml + '</div>' +
+      imgHtml +
+      '<div style="color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">' + escapeHtml(notice.content) + '</div>' +
+      navHtml +
+      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">' +
+      '<button class="btn btn-outline notice-close-btn">我知道了</button>' +
+      (notice.link_url ? '<button class="btn btn-primary notice-link-btn">查看详情 →</button>' : '') +
+      '</div></div></div>';
+
+    // Bind buttons
+    var closeBtn = this._noticeOverlay.querySelector('.notice-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', function() { self._closeNoticePopup(); });
+
+    if (notice.link_url) {
+      var linkBtn = this._noticeOverlay.querySelector('.notice-link-btn');
+      if (linkBtn) linkBtn.addEventListener('click', function() {
+        self._closeNoticePopup();
+        if (notice.link_url.startsWith('#')) {
+          Router.navigate(notice.link_url);
+        } else {
+          window.open(notice.link_url, '_blank');
+        }
+      });
+    }
+
+    if (!isSingle) {
+      var prevBtn = this._noticeOverlay.querySelector('.notice-prev-btn');
+      var nextBtn = this._noticeOverlay.querySelector('.notice-next-btn');
+      if (prevBtn) prevBtn.addEventListener('click', function() {
+        if (self._noticeIndex > 0) { self._noticeIndex--; self._showNoticePopup(); }
+      });
+      if (nextBtn) nextBtn.addEventListener('click', function() {
+        if (self._noticeIndex < notices.length - 1) { self._noticeIndex++; self._showNoticePopup(); }
+      });
+    }
+  },
+
+  _closeNoticePopup() {
+    var self = this;
+    if (this._noticeOverlay) {
+      this._noticeOverlay.classList.remove('visible');
+      this._noticeOverlay.classList.add('closing');
+      setTimeout(function() { if (self._noticeOverlay && self._noticeOverlay.parentNode) self._noticeOverlay.parentNode.removeChild(self._noticeOverlay); self._noticeOverlay = null; }, 200);
+    }
+    // Mark all notices as viewed
+    if (this._noticeList.length > 0) {
+      this._noticeList.forEach(function(n) { API.markLoginNoticeViewed(n.id).catch(function() {}); });
+      this._noticeList = [];
+      this._noticeIndex = 0;
+    }
   },
 
   async refreshLevel() {
@@ -81,6 +181,7 @@ const App = {
         this.user.level = data.level;
         this.user.xp = data.xp;
         this.user.points = data.points;
+        this.user.coins = data.coins || 0;
       }
       const ld = document.getElementById('nav-level');
       if (ld) {
@@ -102,7 +203,7 @@ const App = {
           '<span class="lvl-details">' +
             '<span class="lvl-name-row">Lv.' + lvl + ' ' + lvlName + '</span>' +
             progressHtml +
-            '<span class="lvl-stats-row"><span class="lvl-points">⭐ ' + (data.points || 0) + ' 分</span></span>' +
+            '<span class="lvl-stats-row"><span class="lvl-points">⭐ ' + (data.points || 0) + ' 分</span> <span class="lvl-coins" style="margin-left:8px;">🪙 ' + (data.coins || 0) + '</span></span>' +
           '</span>';
       }
     } catch (e) {}
@@ -120,7 +221,7 @@ const App = {
           <span class="lvl-badge">${this.user.level || 1}</span>
           <span class="lvl-details">
             <span class="lvl-name-row">Lv.${this.user.level || 1}</span>
-            <span class="lvl-stats-row"><span class="lvl-points">⭐ ${this.user.points || 0} 分</span></span>
+            <span class="lvl-stats-row"><span class="lvl-points">⭐ ${this.user.points || 0} 分</span> <span class="lvl-coins" style="margin-left:8px;">🪙 ${this.user.coins || 0}</span></span>
           </span>
         </span>
         <button class="nav-btn" id="nav-friends" style="position:relative;">
@@ -164,14 +265,16 @@ const App = {
           <div class="side-menu-item" data-route="/works" data-label="works" data-zone="work">📂 作品区</div>
           <div class="side-menu-item" data-route="/chats" data-label="chats" data-zone="chat">💬 聊天区</div>
           <div class="side-menu-item" data-route="/music" data-label="music" data-zone="music">🎵 我的音乐</div>
-          <div class="side-menu-item" data-route="/bookmarks" data-label="bookmark">🔖 收藏夹</div>`;
+          <div class="side-menu-item" data-route="/bookmarks" data-label="bookmark">🔖 收藏夹</div>
+          <div class="side-menu-item" data-action="show-notices">📢 系统公告</div>`;
         if (App.user && App.user.role === 'admin') {
           menuHtml += `
           <div class="side-menu-item" data-route="/tags" data-label="tags">🏷️ 标签管理</div>
           <div class="side-menu-item" data-route="/admin/stats" data-label="admin">📊 区域统计</div>
           <div class="side-menu-item" data-route="/admin/reports" data-label="admin">🚩 举报管理</div>
           <div class="side-menu-item" data-route="/admin/users" data-label="admin">👥 用户管理</div>
-          <div class="side-menu-item" data-route="/admin/levels" data-label="admin">🏅 等级管理</div>`;
+          <div class="side-menu-item" data-route="/admin/levels" data-label="admin">🏅 等级管理</div>
+          <div class="side-menu-item" data-route="/admin/login-notices" data-label="admin">📢 弹窗管理</div>`;
         }
         menu.innerHTML = menuHtml;
         document.body.appendChild(menu);
@@ -195,6 +298,12 @@ const App = {
           const item = e.target.closest('.side-menu-item');
           if (item) {
             playClickSound();
+            // Handle action items (non-route)
+            if (item.dataset.action === 'show-notices') {
+              document.body.classList.remove('side-menu-open');
+              App._showLoginNotices();
+              return;
+            }
             if (item.dataset.locked === 'true') { showToast('等级不足，无法访问该分区', 'error'); return; }
             document.body.classList.remove('side-menu-open');
             Router.navigate(item.dataset.route);
@@ -301,7 +410,9 @@ const App = {
     const cur = hash.split('#')[1] || '/works';
     document.querySelectorAll('.side-menu-item').forEach(el => {
       const route = el.dataset.route;
-      el.classList.toggle('active', cur === route || (route && cur.startsWith(route + '/')));
+      // Skip items without data-route (e.g., action buttons like "系统公告")
+      if (!route) { el.classList.remove('active'); return; }
+      el.classList.toggle('active', cur === route || cur.startsWith(route + '/'));
     });
   },
 

@@ -16,24 +16,42 @@ npm start              # 启动，访问 http://localhost:3000
 
 ```
 server.js              # Express 入口 + SQLite Session Store
+config.js              # 统一配置管理（从 .env 读取）
+logger.js              # Winston 日志系统（console + 文件双输出）
 db/init.js             # sql.js 初始化 + 表结构 + 迁移 + XP 系统
 middleware/
   auth.js              # requireAuth / requireAdmin / requireNotBanned
   upload.js            # multer 配置（通用上传/声音上传）
   zoneAccess.js        # 基于等级的分区访问控制
+  errorHandler.js      # 全局错误处理中间件 + AppError 类
+  requestLogger.js     # API 请求日志中间件
+models/                # 数据访问层（封装 SQL 查询）
+  User.js / Post.js / Comment.js / Notification.js / File.js
+services/              # 业务逻辑层（封装复杂业务）
+  AuthService.js       # 注册、登录、修改密码
+  PostService.js       # 帖子 CRUD、内容块管理
+  NotificationService.js / FileService.js
 routes/                # 18 个路由文件，按功能拆分
   auth.js / posts.js / comments.js / notifications.js / ...
   music.js / bookmarks.js / reports.js / levels.js / ...
 public/
   index.html           # SPA 入口
   css/style.css        # 完整样式（亮/暗主题、响应式）
-  js/                  # 6 个前端 JS 模块
+  js/                  # 前端模块
     utils.js           # 工具函数: Toast/音频/裁剪/模态框/格式化
     api.js             # 统一 fetch 封装，所有 API 方法
     music.js           # 底部音乐播放器模块
-    components.js      # 所有页面渲染组件（~1800行）
+    components/        # 拆分后的组件（13个文件，每个≤400行）
+      shared.js        # 共享工具方法
+      auth.js / postList.js / postDetail.js / postEditor.js
+      profile.js / notifications.js / bookmarks.js
+      musicLibrary.js / friends.js / chat.js / admin.js
+      index.js         # 聚合所有子模块
     router.js          # 前端哈希路由
     app.js             # 主应用初始化/导航/主题/轮询
+logs/                  # 日志文件目录
+  combined.log         # 全部日志
+  error.log            # 仅错误日志
 ```
 
 ## 技术要点
@@ -88,7 +106,8 @@ post_tags 迁移仅在首次运行时执行（通过 settings 表 `tag_migration
 ### 错误处理
 - 后端: 所有路由 catch 块返回 `res.status(500).json({ error })`
 - 前端: API 请求失败抛 `Error(data.error)`，组件 catch 显示 toast
-- 全局错误处理: `server.js` 的 Express error handler
+- 全局错误处理: `middleware/errorHandler.js` 的 Express error handler
+- 日志: 使用 `logger.error/info/warn` 替代 `console.log`，输出到控制台和文件
 
 ## 常见操作
 

@@ -507,6 +507,78 @@ async function initDatabase() {
   try { db.run("INSERT OR IGNORE INTO zone_stats (zone_name, post_count, reply_count) VALUES ('works', 0, 0)"); } catch (e) {}
   try { db.run("INSERT OR IGNORE INTO zone_stats (zone_name, post_count, reply_count) VALUES ('chat', 0, 0)"); } catch (e) {}
 
+  // ===== Login notification popup =====
+  db.run(`CREATE TABLE IF NOT EXISTS login_notices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    image_url TEXT,
+    link_url TEXT NOT NULL DEFAULT '',
+    priority INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    start_date DATETIME,
+    end_date DATETIME,
+    show_once INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS login_notice_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    notice_id INTEGER NOT NULL,
+    viewed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, notice_id)
+  )`);
+
+  // ===== Attachment system: content_blocks migration to support file type ====
+  try {
+    const tableInfo = all("PRAGMA table_info(content_blocks)");
+    const hasAttachmentCol = tableInfo.find(col => col.name === 'attachment_file_id');
+    if (!hasAttachmentCol) {
+      console.log('[DB] Migrating content_blocks table for attachment support...');
+      db.run("PRAGMA foreign_keys = OFF");
+      db.run(`CREATE TABLE IF NOT EXISTS content_blocks_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        value TEXT DEFAULT '',
+        file_id INTEGER,
+        allow_preview INTEGER DEFAULT 1,
+        sort_order INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        attachment_file_id INTEGER,
+        attachment_name TEXT DEFAULT '',
+        attachment_size INTEGER DEFAULT 0,
+        min_level_view INTEGER DEFAULT 0,
+        unlock_points INTEGER DEFAULT 0,
+        download_points INTEGER DEFAULT 0,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+      )`);
+      db.run("INSERT INTO content_blocks_new SELECT id, post_id, type, value, file_id, allow_preview, sort_order, created_at, NULL, '', 0, 0, 0, 0 FROM content_blocks");
+      db.run("DROP TABLE content_blocks");
+      db.run("ALTER TABLE content_blocks_new RENAME TO content_blocks");
+      db.run("PRAGMA foreign_keys = ON");
+      saveDB();
+      console.log('[DB] Content_blocks migration complete.');
+    }
+  } catch (e) {
+    console.log('[DB] Content_blocks migration error:', e.message);
+    try { db.run("DROP TABLE IF EXISTS content_blocks_new"); } catch (ex) {}
+  }
+
+  // ===== Attachment purchases table =====
+  db.run(`CREATE TABLE IF NOT EXISTS attachment_purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    block_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('unlock','download')),
+    points_paid INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(block_id, user_id, type),
+    FOREIGN KEY (block_id) REFERENCES content_blocks(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )`);
+
   // Ensure default settings
   const soundUrlExists = getFirst("SELECT value FROM settings WHERE key = 'sound_url'");
   if (!soundUrlExists) {
@@ -583,14 +655,15 @@ function forceSave() {
   saveDB();
 }
 
-// Add XP to a user, handle level-up, and return new state
+// Add XP to a user, handle level-up, also reward coins, and return new state
 function addXP(userId, amount) {
   if (amount <= 0) return null;
-  const user = getFirst('SELECT xp, level, points FROM users WHERE id = ?', [userId]);
+  const user = getFirst('SELECT xp, level, points, coins FROM users WHERE id = ?', [userId]);
   if (!user) return null;
   let newXP = (user.xp || 0) + amount;
   let newLevel = user.level || 1;
   let newPoints = (user.points || 0) + amount;
+  let newCoins = (user.coins || 0) + amount;
   // Loop: check for level-up
   while (true) {
     const nextConfig = getFirst('SELECT xp_required FROM level_config WHERE level = ?', [newLevel + 1]);
@@ -601,8 +674,8 @@ function addXP(userId, amount) {
       break;
     }
   }
-  run('UPDATE users SET xp = ?, level = ?, points = ? WHERE id = ?', [newXP, newLevel, newPoints, userId]);
-  return { xp: newXP, level: newLevel, points: newPoints };
+  run('UPDATE users SET xp = ?, level = ?, points = ?, coins = ? WHERE id = ?', [newXP, newLevel, newPoints, newCoins, userId]);
+  return { xp: newXP, level: newLevel, points: newPoints, coins: newCoins };
 }
 
 module.exports = { initDatabase, getDb, run, get, getFirst, all, forceSave, addXP };

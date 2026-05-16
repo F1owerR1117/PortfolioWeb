@@ -2,12 +2,13 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireNotBanned } = require('../middleware/auth');
 const { run, get } = require('../db/init');
+const logger = require('../logger');
 
 // POST /api/user/avatar — upload/resize avatar for current user
 // Uses a userID+timestamp filename to bust caches
-router.post('/user/avatar', requireAuth, (req, res) => {
+router.post('/user/avatar', requireAuth, requireNotBanned, (req, res) => {
   const multer = require('multer');
   const uploadsDir = path.resolve('./uploads');
 
@@ -62,14 +63,20 @@ router.post('/user/avatar', requireAuth, (req, res) => {
       if (oldProfile && oldProfile.avatar_url) {
         const oldMatch = oldProfile.avatar_url.match(/^\/api\/file\/avatar\/(.+)$/);
         if (oldMatch) {
-          const oldPath = path.join(uploadsDir, oldMatch[1]);
-          try {
-            if (fs.existsSync(oldPath)) {
-              fs.unlinkSync(oldPath);
-              console.log('[Avatar] Deleted old avatar:', oldPath);
+          const oldFilename = oldMatch[1];
+          // SECURITY: prevent path traversal — validate filename is safe
+          if (oldFilename.includes('..') || oldFilename.includes('/') || oldFilename.includes('\\')) {
+            logger.warn('[Avatar] Blocked path traversal attempt:', oldFilename);
+          } else {
+            const oldPath = path.join(uploadsDir, oldFilename);
+            try {
+              if (fs.existsSync(oldPath)) {
+                fs.unlinkSync(oldPath);
+                logger.info('[Avatar] Deleted old avatar:', oldPath);
+              }
+            } catch (cleanErr) {
+              logger.error('[Avatar] Failed to delete old avatar:', cleanErr);
             }
-          } catch (cleanErr) {
-            console.error('[Avatar] Failed to delete old avatar:', cleanErr);
           }
         }
       }
@@ -79,7 +86,7 @@ router.post('/user/avatar', requireAuth, (req, res) => {
         avatar_url: fileUrl
       });
     } catch (dbErr) {
-      console.error('[Avatar] DB error:', dbErr);
+      logger.error('[Avatar] DB error:', dbErr);
       // Clean up uploaded file on error
       try { if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) {}
       res.status(500).json({ error: '保存头像失败' });

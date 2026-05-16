@@ -4,8 +4,9 @@ const path = require('path');
 const mime = require('mime-types');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
-const { generalUpload, uploadsDir } = require('../middleware/upload');
+const { generalUpload, attachmentUpload, uploadsDir } = require('../middleware/upload');
 const { run } = require('../db/init');
+const logger = require('../logger');
 
 // Per-category size limits (bytes)
 const SIZE_LIMITS = {
@@ -76,7 +77,7 @@ router.post('/', requireAuth, (req, res) => {
         try {
           codeContent = fs.readFileSync(filepath, 'utf-8');
         } catch (readErr) {
-          console.error('[Upload] Read code file error:', readErr);
+          logger.error('[Upload] Read code file error:', readErr);
         }
       }
 
@@ -92,13 +93,59 @@ router.post('/', requireAuth, (req, res) => {
         }
       });
     } catch (dbErr) {
-      console.error('[Upload] DB error:', dbErr);
+      logger.error('[Upload] DB error:', dbErr);
 
       // Clean up uploaded file on error
       try {
         if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       } catch (e) { /* ignore */ }
 
+      res.status(500).json({ error: '保存文件信息失败' });
+    }
+  });
+});
+
+// POST /api/upload/attachment — upload an attachment file (any auth user)
+router.post('/attachment', requireAuth, (req, res) => {
+  attachmentUpload.single('file')(req, res, async (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: '附件不能超过 50MB' });
+      }
+      return res.status(400).json({ error: err.message || '文件上传失败' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: '请选择要上传的文件' });
+    }
+
+    try {
+      const filepath = path.join(uploadsDir, req.file.filename);
+      const mimeType = req.file.mimetype || mime.lookup(req.file.originalname) || 'application/octet-stream';
+      const ext = path.extname(req.file.originalname).toLowerCase();
+
+      run(
+        'INSERT INTO files (filename, original_name, mime_type, filepath, size) VALUES (?, ?, ?, ?, ?)',
+        [req.file.filename, req.file.originalname, mimeType, filepath, req.file.size]
+      );
+
+      const { getFirst } = require('../db/init');
+      const fileRecord = getFirst('SELECT MAX(id) as id FROM files');
+      const fileId = fileRecord ? fileRecord.id : null;
+
+      res.json({
+        message: '附件上传成功',
+        file: {
+          id: fileId,
+          original_name: req.file.originalname,
+          mime_type: mimeType,
+          size: req.file.size,
+          url: `/api/file/${fileId}`
+        }
+      });
+    } catch (dbErr) {
+      logger.error('[Upload] Attachment DB error:', dbErr);
+      try { if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) {}
       res.status(500).json({ error: '保存文件信息失败' });
     }
   });

@@ -1,19 +1,47 @@
-require('dotenv').config();
+const config = require('./config');
+const logger = require('./logger');
 
 const express = require('express');
 const session = require('express-session');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const path = require('path');
 const fs = require('fs');
 
 const { initDatabase, getDb, all, get, run, forceSave } = require('./db/init');
+const requestLogger = require('./middleware/requestLogger');
+const { apiNotFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const SESSION_SECRET = process.env.SESSION_SECRET || 'portfolio-default-secret-change-me';
+
+// Rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // 10 attempts per minute
+  message: { error: '请求过于频繁，请稍后再试' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// General API rate limiter
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: { error: '请求过于频繁，请稍后再试' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for SPA compatibility
+  crossOriginEmbedderPolicy: false,
+}));
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(requestLogger);
 
 // Session configuration with custom SQLite store
 class SQLiteSessionStore extends session.Store {
@@ -36,7 +64,7 @@ class SQLiteSessionStore extends session.Store {
       forceSave();
       this.ready = true;
     } catch (e) {
-      console.error('[Session] Table create error:', e);
+      logger.error('Session table create error: ' + e.message);
     }
   }
 
@@ -118,18 +146,38 @@ const sessionStore = new SQLiteSessionStore();
 
 app.use(session({
   store: sessionStore,
-  secret: SESSION_SECRET,
+  secret: config.sessionSecret,
   resave: false,
   saveUninitialized: false,
-  cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    httpOnly: true,
-    sameSite: 'lax'
-  }
+  cookie: config.session
 }));
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
+
+// CSRF protection: validate Origin/Referer for state-changing requests
+app.use('/api', (req, res, next) => {
+  const method = req.method.toUpperCase();
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    const origin = req.headers.origin || req.headers.referer;
+    if (origin) {
+      try {
+        const url = new URL(origin);
+        const allowed = ['localhost', '127.0.0.1', req.hostname];
+        if (!allowed.includes(url.hostname)) {
+          logger.warn(`[CSRF] Blocked request from origin: ${origin}`);
+          return res.status(403).json({ error: '请求来源不允许' });
+        }
+      } catch (e) {
+        // Invalid origin URL — block
+        logger.warn(`[CSRF] Invalid origin: ${origin}`);
+        return res.status(403).json({ error: '请求来源无效' });
+      }
+    }
+    // No origin/referer header — allow (some legitimate clients don't send it)
+  }
+  next();
+});
 
 // API routes
 const authRoutes = require('./routes/auth');
@@ -150,8 +198,9 @@ const musicRoutes = require('./routes/music');
 const bookmarksRoutes = require('./routes/bookmarks');
 const reportsRoutes = require('./routes/reports');
 const levelsRoutes = require('./routes/levels');
+const loginNoticeRoutes = require('./routes/loginNotices');
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/file', fileRoutes);
@@ -169,49 +218,54 @@ app.use('/api', musicRoutes);
 app.use('/api', bookmarksRoutes);
 app.use('/api', reportsRoutes);
 app.use('/api', levelsRoutes);
+app.use('/api', loginNoticeRoutes);
 
-// Fallback: serve index.html for SPA
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: '接口不存在' });
-  }
+// SPA fallback + API 404
+app.get('*', apiNotFound, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
-  console.error('[Server] Unhandled error:', err);
-  if (req.path.startsWith('/api/')) {
-    res.status(500).json({ error: err.message || '服务器内部错误' });
-  } else {
-    next();
-  }
-});
+app.use(errorHandler);
 
 // Start server
 async function start() {
   try {
     // Ensure uploads directories exist
-    const dirs = ['./uploads', './uploads/sounds', './uploads/music', './uploads/music_covers'];
+    const dirs = [
+      config.uploadDir,
+      path.join(config.uploadDir, 'sounds'),
+      path.join(config.uploadDir, 'music'),
+      path.join(config.uploadDir, 'music_covers')
+    ];
     dirs.forEach(d => {
       if (!fs.existsSync(d)) {
         fs.mkdirSync(d, { recursive: true });
-        console.log(`[Server] Created directory: ${d}`);
+        logger.info('Created directory: ' + d);
       }
     });
 
     // Initialize database
     await initDatabase();
 
-    app.listen(PORT, () => {
-      console.log(`[Server] Portfolio app running at http://localhost:${PORT}`);
-      console.log(`[Server] Default admin account: admin / admin123`);
-      console.log(`[Server] Also accessible via network at http://0.0.0.0:${PORT}`);
+    app.listen(config.port, () => {
+      logger.info('Portfolio app running at http://localhost:' + config.port);
+      logger.info('Default admin account: admin / admin123');
     });
   } catch (err) {
-    console.error('[Server] Startup error:', err);
+    logger.error('Startup error: ' + err.message);
     process.exit(1);
   }
 }
+
+// Global error handlers
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception: ' + err.message);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Rejection: ' + String(reason));
+});
 
 start();

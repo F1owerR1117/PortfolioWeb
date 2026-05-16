@@ -151,6 +151,13 @@ const Router = {
         return;
       }
       Components.renderAdminLevels();
+    } else if (path === '/admin/login-notices') {
+      if (!App.user || App.user.role !== 'admin') {
+        showToast('权限不足', 'error');
+        this.navigate('#/works');
+        return;
+      }
+      Components.renderLoginNotices();
     } else {
       this.navigate('#/works');
     }

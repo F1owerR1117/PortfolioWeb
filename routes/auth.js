@@ -1,60 +1,37 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const router = express.Router();
-const { run, get } = require('../db/init');
 const { requireAuth } = require('../middleware/auth');
+const AuthService = require('../services/AuthService');
+const logger = require('../logger');
+
+// Helper: regenerate session and set user data
+function authenticateSession(req, user) {
+  return new Promise((resolve, reject) => {
+    // SECURITY: regenerate session ID to prevent session fixation
+    req.session.regenerate((err) => {
+      if (err) return reject(err);
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.role;
+      req.session.save((err2) => {
+        if (err2) return reject(err2);
+        resolve();
+      });
+    });
+  });
+}
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
     const { username, password, role, adminSecret } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({ error: '用户名和密码不能为空' });
-    }
-    if (username.length < 3 || username.length > 20) {
-      return res.status(400).json({ error: '用户名长度应在3-20个字符之间' });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ error: '密码长度至少6位' });
-    }
-
-    // Check if username already exists
-    const existing = get('SELECT id FROM users WHERE username = ?', [username]);
-    if (existing) {
-      return res.status(409).json({ error: '用户名已被注册' });
-    }
-
-    const finalRole = role === 'admin' ? 'admin' : 'user';
-
-    // Admin registration requires secret key
-    if (finalRole === 'admin') {
-      const expectedSecret = process.env.ADMIN_SECRET || 'AdminKey123';
-      if (!adminSecret || adminSecret !== expectedSecret) {
-        return res.status(403).json({ error: '管理员注册秘钥错误' });
-      }
-    }
-
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
-      [username, hashedPassword, finalRole]);
-
-    const newUser = get('SELECT id, username, role FROM users WHERE username = ?', [username]);
-
-    // Auto-login after registration (destroy any existing sessions first)
-    req.sessionStore.destroyByUserId(newUser.id);
-
-    req.session.userId = newUser.id;
-    req.session.username = newUser.username;
-    req.session.role = newUser.role;
-
-    res.json({
-      message: '注册成功',
-      user: { id: newUser.id, username: newUser.username, role: newUser.role }
-    });
+    const user = await AuthService.register(username, password, role, adminSecret);
+    await authenticateSession(req, user);
+    res.json({ message: '注册成功', user });
   } catch (err) {
-    console.error('[Auth] Register error:', err);
-    res.status(500).json({ error: '注册失败，请稍后重试' });
+    const status = err.status || 500;
+    logger.error('[Auth] Register error:', err.message || err);
+    res.status(status).json({ error: err.message || '注册失败，请稍后重试' });
   }
 });
 
@@ -62,45 +39,25 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({ error: '用户名和密码不能为空' });
-    }
-
-    const user = get('SELECT * FROM users WHERE username = ?', [username]);
-    if (!user) {
-      return res.status(401).json({ error: '用户名或密码错误' });
-    }
-
-    const valid = bcrypt.compareSync(password, user.password);
-    if (!valid) {
-      return res.status(401).json({ error: '用户名或密码错误' });
-    }
-
-    // Destroy existing sessions for this user (single-session enforcement)
+    const user = await AuthService.login(username, password);
+    // Destroy any existing sessions for this user (single-session enforcement)
     req.sessionStore.destroyByUserId(user.id);
-
-    req.session.userId = user.id;
-    req.session.username = user.username;
-    req.session.role = user.role;
-
-    res.json({
-      message: '登录成功',
-      user: { id: user.id, username: user.username, role: user.role }
-    });
+    await authenticateSession(req, user);
+    res.json({ message: '登录成功', user });
   } catch (err) {
-    console.error('[Auth] Login error:', err);
-    res.status(500).json({ error: '登录失败，请稍后重试' });
+    const status = err.status || 500;
+    logger.error('[Auth] Login error:', err.message || err);
+    res.status(status).json({ error: err.message || '登录失败，请稍后重试' });
   }
 });
 
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
+  const sessionId = req.sessionID;
   req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: '退出登录失败' });
-    }
-    res.clearCookie('connect.sid');
+    if (err) return res.status(500).json({ error: '退出登录失败' });
+    // Clear the session cookie (use configured name or default)
+    res.clearCookie('portfolio_sid');
     res.json({ message: '已退出登录' });
   });
 });
@@ -108,54 +65,23 @@ router.post('/logout', (req, res) => {
 // GET /api/auth/me
 router.get('/me', (req, res) => {
   if (req.session && req.session.userId) {
-    const { get } = require('../db/init');
-    const user = get('SELECT is_banned, banned_until, ban_reason, level, xp, points FROM users WHERE id = ?', [req.session.userId]);
-    res.json({
-      user: {
-        id: req.session.userId,
-        username: req.session.username,
-        role: req.session.role,
-        is_banned: user ? !!user.is_banned : false,
-        banned_until: user ? (user.banned_until || null) : null,
-        ban_reason: user ? (user.ban_reason || '') : '',
-        level: user ? (user.level || 1) : 1,
-        xp: user ? (user.xp || 0) : 0,
-        points: user ? (user.points || 0) : 0
-      }
-    });
+    const status = AuthService.getCurrentUser(req.session.userId);
+    res.json({ user: { id: req.session.userId, username: req.session.username, role: req.session.role, ...status } });
   } else {
     res.json({ user: null });
   }
 });
 
-// PUT /api/auth/password — change password (logged in user)
+// PUT /api/auth/password
 router.put('/password', requireAuth, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: '当前密码和新密码不能为空' });
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: '新密码长度至少6位' });
-    }
-
-    const user = get('SELECT * FROM users WHERE id = ?', [req.session.userId]);
-    if (!user) {
-      return res.status(404).json({ error: '用户不存在' });
-    }
-
-    if (!bcrypt.compareSync(currentPassword, user.password)) {
-      return res.status(403).json({ error: '当前密码错误' });
-    }
-
-    const hashedPassword = bcrypt.hashSync(newPassword, 10);
-    run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, req.session.userId]);
-
+    await AuthService.changePassword(req.session.userId, currentPassword, newPassword);
     res.json({ message: '密码修改成功' });
   } catch (err) {
-    console.error('[Auth] Password change error:', err);
-    res.status(500).json({ error: '密码修改失败，请稍后重试' });
+    const status = err.status || 500;
+    logger.error('[Auth] Password change error:', err.message || err);
+    res.status(status).json({ error: err.message || '密码修改失败' });
   }
 });
 

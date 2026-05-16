@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { run, get, all, getFirst, addXP } = require('../db/init');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const logger = require('../logger');
 
 // GET /api/levels/me — current user's level info
 router.get('/levels/me', requireAuth, (req, res) => {
   try {
-    const user = getFirst('SELECT level, xp, points FROM users WHERE id = ?', [req.session.userId]);
+    const user = getFirst('SELECT level, xp, points, coins FROM users WHERE id = ?', [req.session.userId]);
     if (!user) return res.status(404).json({ error: '用户不存在' });
     // Get next level requirement
     const nextConfig = getFirst('SELECT xp_required FROM level_config WHERE level = ?', [user.level + 1]);
@@ -15,13 +16,14 @@ router.get('/levels/me', requireAuth, (req, res) => {
       level: user.level || 1,
       xp: user.xp || 0,
       points: user.points || 0,
+      coins: user.coins || 0,
       next_xp_required: nextConfig ? nextConfig.xp_required : null,
       level_name: levelCfg ? (levelCfg.name || '') : '',
       title_icon: levelCfg ? (levelCfg.title_icon || '') : '',
       bg_image: levelCfg ? (levelCfg.bg_image || '') : ''
     });
   } catch (err) {
-    console.error('[Levels] Get me error:', err);
+    logger.error('[Levels] Get me error:', err);
     res.status(500).json({ error: '获取等级信息失败' });
   }
 });
@@ -32,7 +34,7 @@ router.get('/admin/levels/config', requireAuth, (req, res) => {
     const configs = all('SELECT * FROM level_config ORDER BY level ASC');
     res.json({ configs });
   } catch (err) {
-    console.error('[Levels] Config list error:', err);
+    logger.error('[Levels] Config list error:', err);
     res.status(500).json({ error: '获取等级配置失败' });
   }
 });
@@ -64,7 +66,7 @@ router.put('/admin/levels/config', requireAdmin, (req, res) => {
     }
     res.json({ message: '等级配置已更新' });
   } catch (err) {
-    console.error('[Levels] Config update error:', err);
+    logger.error('[Levels] Config update error:', err);
     res.status(500).json({ error: '更新等级配置失败' });
   }
 });
@@ -110,7 +112,7 @@ router.get('/admin/levels/users', requireAdmin, (req, res) => {
       }
     });
   } catch (err) {
-    console.error('[Levels] User list error:', err);
+    logger.error('[Levels] User list error:', err);
     res.status(500).json({ error: '获取用户列表失败' });
   }
 });
@@ -176,7 +178,7 @@ router.put('/admin/levels/users/:id', requireAdmin, (req, res) => {
     }
     res.json({ message: '用户等级已更新', user: { id: userId, username: user.username, ...updated } });
   } catch (err) {
-    console.error('[Levels] User update error:', err);
+    logger.error('[Levels] User update error:', err);
     res.status(500).json({ error: '更新用户等级失败' });
   }
 });
@@ -208,7 +210,7 @@ router.get('/zone-access/:zone', requireAuth, (req, res) => {
     }
     res.json({ zone, accessible });
   } catch (err) {
-    console.error('[Zone] Check error:', err);
+    logger.error('[Zone] Check error:', err);
     res.status(500).json({ error: '检查分区访问失败' });
   }
 });

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { run, get, all } = require('../db/init');
 const { requireAdmin } = require('../middleware/auth');
+const logger = require('../logger');
 
 // GET /api/admin/users — list all users with pagination and search (admin only)
 router.get('/admin/users', requireAdmin, async (req, res) => {
@@ -24,7 +25,7 @@ router.get('/admin/users', requireAdmin, async (req, res) => {
     const users = all(
       `SELECT u.id, u.username, u.role, u.created_at, u.is_banned,
               u.banned_until, u.ban_reason,
-              u.points, u.level, u.coins,
+              u.points, u.level, u.xp, u.coins,
               COALESCE(up.nickname, '') as nickname,
               COALESCE(up.avatar_url, '') as avatar_url
        FROM users u
@@ -51,7 +52,7 @@ router.get('/admin/users', requireAdmin, async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('[Admin] List users error:', err);
+    logger.error('[Admin] List users error:', err);
     res.status(500).json({ error: '获取用户列表失败' });
   }
 });
@@ -114,7 +115,7 @@ router.patch('/admin/users/:userId/ban', requireAdmin, async (req, res) => {
     };
     res.json(result);
   } catch (err) {
-    console.error('[Admin] Ban user error:', err);
+    logger.error('[Admin] Ban user error:', err);
     res.status(500).json({ error: '操作失败' });
   }
 });
@@ -156,7 +157,7 @@ router.delete('/admin/posts/batch', requireAdmin, async (req, res) => {
       }
     }
 
-    console.log(`[Admin] Batch soft-deleted ${existingIds.length} posts`);
+    logger.info(`[Admin] Batch soft-deleted ${existingIds.length} posts`);
 
     res.json({
       message: `成功删除 ${existingIds.length} 个帖子`,
@@ -164,7 +165,7 @@ router.delete('/admin/posts/batch', requireAdmin, async (req, res) => {
       notFoundIds
     });
   } catch (err) {
-    console.error('[Admin] Batch delete error:', err);
+    logger.error('[Admin] Batch delete error:', err);
     res.status(500).json({ error: '批量删除失败' });
   }
 });

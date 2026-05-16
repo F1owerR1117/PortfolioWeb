@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { run, get, all } = require('../db/init');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin, requireNotBanned } = require('../middleware/auth');
+const logger = require('../logger');
 
 // ===== Report System =====
 
 // POST /api/reports — create a report
-router.post('/reports', requireAuth, (req, res) => {
+router.post('/reports', requireAuth, requireNotBanned, (req, res) => {
   try {
     const { target_type, target_id, reason } = req.body;
     if (!target_type || !target_id) return res.status(400).json({ error: '请指定举报对象' });
@@ -34,7 +35,7 @@ router.post('/reports', requireAuth, (req, res) => {
 
     res.json({ message: '举报已提交，管理员将尽快处理' });
   } catch (err) {
-    console.error('[Reports] Create error:', err);
+    logger.error('[Reports] Create error:', err);
     res.status(500).json({ error: '提交举报失败' });
   }
 });
@@ -55,7 +56,9 @@ router.get('/admin/reports', requireAdmin, (req, res) => {
       `SELECT r.*, ru.username as reporter_name, COALESCE(up.avatar_url, '') as reporter_avatar,
               CASE WHEN r.target_type = 'post' THEN (SELECT p.title FROM posts p WHERE p.id = r.target_id)
                    WHEN r.target_type = 'user' THEN (SELECT u2.username FROM users u2 WHERE u2.id = r.target_id)
-              END as target_name
+              END as target_name,
+              (CASE WHEN r.target_type = 'post' THEN (SELECT COALESCE(p.is_locked, 0) FROM posts p WHERE p.id = r.target_id) END) as target_is_locked,
+              (CASE WHEN r.target_type = 'user' THEN (SELECT u2.is_banned FROM users u2 WHERE u2.id = r.target_id) END) as target_is_banned
        FROM reports r
        JOIN users ru ON r.reporter_id = ru.id
        LEFT JOIN user_profiles up ON up.user_id = ru.id
@@ -67,7 +70,7 @@ router.get('/admin/reports', requireAdmin, (req, res) => {
 
     res.json({ reports, pagination: { page, limit, total: total.count, totalPages: Math.ceil(total.count / limit), hasMore: offset + limit < total.count } });
   } catch (err) {
-    console.error('[Admin Reports] List error:', err);
+    logger.error('[Admin Reports] List error:', err);
     res.status(500).json({ error: '获取举报列表失败' });
   }
 });
@@ -85,7 +88,7 @@ router.put('/admin/reports/:id', requireAdmin, (req, res) => {
     run("UPDATE reports SET status = ?, resolved_at = CURRENT_TIMESTAMP WHERE id = ?", [status, id]);
     res.json({ message: status === 'resolved' ? '举报已处理' : '举报已驳回' });
   } catch (err) {
-    console.error('[Admin Reports] Update error:', err);
+    logger.error('[Admin Reports] Update error:', err);
     res.status(500).json({ error: '更新举报状态失败' });
   }
 });
@@ -110,7 +113,7 @@ router.get('/admin/stats', requireAdmin, (req, res) => {
 
     res.json({ zones, total_users: totalUsers.count, pending_reports: totalReports.count });
   } catch (err) {
-    console.error('[Admin Stats] Error:', err);
+    logger.error('[Admin Stats] Error:', err);
     res.status(500).json({ error: '获取统计数据失败' });
   }
 });

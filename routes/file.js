@@ -3,6 +3,7 @@ const fs = require('fs');
 const router = express.Router();
 const { get } = require('../db/init');
 const { requireAuth } = require('../middleware/auth');
+const logger = require('../logger');
 
 // GET /api/file/avatar/:filename — serve avatar files (public)
 router.get('/avatar/:filename', async (req, res) => {
@@ -19,12 +20,13 @@ router.get('/avatar/:filename', async (req, res) => {
     const ext = require('path').extname(filename).toLowerCase();
     const mimeMap = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp' };
     res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Cache-Control', 'private, max-age=86400');
     const stream = require('fs').createReadStream(filepath);
     stream.pipe(res);
     stream.on('error', () => { res.status(500).json({ error: '读取文件失败' }); });
   } catch (err) {
-    console.error('[File] Avatar error:', err);
+    logger.error('[File] Avatar error:', err);
     res.status(500).json({ error: '获取头像失败' });
   }
 });
@@ -67,11 +69,15 @@ router.get('/:fileId', requireAuth, async (req, res) => {
         ['%/api/file/' + fileId]
       );
 
-      if (!allowedBlock && !coverPost && !songCover && !playlistCover) {
-        // Not linked to any post, content block, song, or playlist.
-        // But the file exists in DB — allow access. File upload requires auth,
-        // so any file in the DB was uploaded by a legitimate user.
-        // This covers post/playlist cover preview before saving, etc.
+      // Also check if file is used as a login notice image
+      const loginNoticeImage = get(
+        "SELECT id FROM login_notices WHERE image_url LIKE ? LIMIT 1",
+        ['%/api/file/' + fileId]
+      );
+
+      if (!allowedBlock && !coverPost && !songCover && !playlistCover && !loginNoticeImage) {
+        // SECURITY: default deny — only serve files that are linked to public content
+        return res.status(403).json({ error: '无权访问此文件' });
       }
     }
 
@@ -84,6 +90,7 @@ router.get('/:fileId', requireAuth, async (req, res) => {
 
     // Serve the file
     res.setHeader('Content-Type', mimeType);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(fileRecord.original_name)}"`);
     res.setHeader('Cache-Control', 'private, max-age=3600');
 
@@ -93,7 +100,7 @@ router.get('/:fileId', requireAuth, async (req, res) => {
       res.status(500).json({ error: '读取文件失败' });
     });
   } catch (err) {
-    console.error('[File] Access error:', err);
+    logger.error('[File] Access error:', err);
     res.status(500).json({ error: '获取文件失败' });
   }
 });

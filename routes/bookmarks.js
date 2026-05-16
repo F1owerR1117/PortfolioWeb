@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { run, get, all } = require('../db/init');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireNotBanned } = require('../middleware/auth');
+const logger = require('../logger');
 
 // ===== Bookmarks & Collections =====
 
@@ -16,7 +17,7 @@ router.get('/bookmarks/collections', requireAuth, (req, res) => {
     );
     res.json({ collections });
   } catch (err) {
-    console.error('[Bookmarks] Collections error:', err);
+    logger.error('[Bookmarks] Collections error:', err);
     res.status(500).json({ error: '获取收藏夹失败' });
   }
 });
@@ -31,7 +32,7 @@ router.post('/bookmarks/collections', requireAuth, (req, res) => {
     const col = get('SELECT * FROM bookmark_collections WHERE id = ?', [result.lastID]);
     res.json({ collection: { ...col, count: 0 } });
   } catch (err) {
-    console.error('[Bookmarks] Create collection error:', err);
+    logger.error('[Bookmarks] Create collection error:', err);
     res.status(500).json({ error: '创建收藏夹失败' });
   }
 });
@@ -46,7 +47,7 @@ router.delete('/bookmarks/collections/:id', requireAuth, (req, res) => {
     run('DELETE FROM bookmark_collections WHERE id = ?', [id]);
     res.json({ message: '收藏夹已删除' });
   } catch (err) {
-    console.error('[Bookmarks] Delete collection error:', err);
+    logger.error('[Bookmarks] Delete collection error:', err);
     res.status(500).json({ error: '删除收藏夹失败' });
   }
 });
@@ -81,13 +82,13 @@ router.get('/bookmarks', requireAuth, (req, res) => {
 
     res.json({ bookmarks, pagination: { page, limit, total: total.count, totalPages: Math.ceil(total.count / limit), hasMore: offset + limit < total.count } });
   } catch (err) {
-    console.error('[Bookmarks] List error:', err);
+    logger.error('[Bookmarks] List error:', err);
     res.status(500).json({ error: '获取收藏列表失败' });
   }
 });
 
 // POST /api/bookmarks — toggle bookmark a post (add/remove)
-router.post('/bookmarks', requireAuth, (req, res) => {
+router.post('/bookmarks', requireAuth, requireNotBanned, (req, res) => {
   try {
     const { post_id, collection_id } = req.body;
     if (!post_id) return res.status(400).json({ error: '请指定帖子' });
@@ -118,8 +119,53 @@ router.post('/bookmarks', requireAuth, (req, res) => {
       res.json({ bookmarked: true, message: '已收藏' });
     }
   } catch (err) {
-    console.error('[Bookmarks] Toggle error:', err);
+    logger.error('[Bookmarks] Toggle error:', err);
     res.status(500).json({ error: '操作失败' });
+  }
+});
+
+// DELETE /api/bookmarks/batch — batch remove bookmarks by IDs
+router.delete('/bookmarks/batch', requireAuth, (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: '请提供要删除的收藏ID列表' });
+    }
+    const validIds = ids.filter(id => Number.isInteger(id) && id > 0);
+    if (validIds.length === 0) {
+      return res.status(400).json({ error: '无效的收藏ID' });
+    }
+    const placeholders = validIds.map(() => '?').join(',');
+    const ownIds = all(
+      `SELECT id FROM post_bookmarks WHERE id IN (${placeholders}) AND user_id = ?`,
+      [...validIds, req.session.userId]
+    ).map(r => r.id);
+
+    if (ownIds.length === 0) {
+      return res.status(404).json({ error: '没有找到要删除的收藏' });
+    }
+
+    const delPlaceholders = ownIds.map(() => '?').join(',');
+    run(`DELETE FROM post_bookmarks WHERE id IN (${delPlaceholders})`, ownIds);
+
+    res.json({ message: `成功删除 ${ownIds.length} 个收藏`, deletedCount: ownIds.length });
+  } catch (err) {
+    logger.error('[Bookmarks] Batch delete error:', err);
+    res.status(500).json({ error: '批量删除失败' });
+  }
+});
+
+// DELETE /api/bookmarks/:id — remove a single bookmark by its ID
+router.delete('/bookmarks/:id', requireAuth, (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const bm = get('SELECT id FROM post_bookmarks WHERE id = ? AND user_id = ?', [id, req.session.userId]);
+    if (!bm) return res.status(404).json({ error: '收藏不存在' });
+    run('DELETE FROM post_bookmarks WHERE id = ?', [id]);
+    res.json({ message: '已取消收藏' });
+  } catch (err) {
+    logger.error('[Bookmarks] Delete error:', err);
+    res.status(500).json({ error: '删除收藏失败' });
   }
 });
 
@@ -131,7 +177,7 @@ router.get('/bookmarks/check/:postId', requireAuth, (req, res) => {
       [req.session.userId, postId]);
     res.json({ collection_ids: rows.map(r => r.collection_id) });
   } catch (err) {
-    console.error('[Bookmarks] Check error:', err);
+    logger.error('[Bookmarks] Check error:', err);
     res.status(500).json({ error: '查询失败' });
   }
 });

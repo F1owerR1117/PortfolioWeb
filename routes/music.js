@@ -5,7 +5,8 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 const { run, get, all } = require('../db/init');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireNotBanned } = require('../middleware/auth');
+const logger = require('../logger');
 
 // Ensure music uploads directory
 const musicDir = path.resolve('./uploads/music');
@@ -67,7 +68,7 @@ const coverUpload = multer({
 // ===== Song Management =====
 
 // POST /api/music/upload — upload a song with metadata
-router.post('/music/upload', requireAuth, songUpload.single('song'), async (req, res) => {
+router.post('/music/upload', requireAuth, requireNotBanned, songUpload.single('song'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: '请选择音频文件' });
 
@@ -97,13 +98,13 @@ router.post('/music/upload', requireAuth, songUpload.single('song'), async (req,
 
     res.status(201).json({ message: '歌曲上传成功' });
   } catch (err) {
-    console.error('[Music] Upload error:', err);
+    logger.error('[Music] Upload error:', err);
     res.status(500).json({ error: err.message || '上传失败' });
   }
 });
 
 // POST /api/music/upload-cover — upload cover image (returns file ID)
-router.post('/music/upload-cover', requireAuth, coverUpload.single('cover'), async (req, res) => {
+router.post('/music/upload-cover', requireAuth, requireNotBanned, coverUpload.single('cover'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: '请选择封面图片' });
 
@@ -117,7 +118,7 @@ router.post('/music/upload-cover', requireAuth, coverUpload.single('cover'), asy
       cover_url: '/api/file/' + result.lastID
     });
   } catch (err) {
-    console.error('[Music] Cover upload error:', err);
+    logger.error('[Music] Cover upload error:', err);
     res.status(500).json({ error: '封面上传失败' });
   }
 });
@@ -141,7 +142,7 @@ router.get('/music/songs', requireAuth, async (req, res) => {
 
     res.json({ songs });
   } catch (err) {
-    console.error('[Music] List songs error:', err);
+    logger.error('[Music] List songs error:', err);
     res.status(500).json({ error: '获取歌曲列表失败' });
   }
 });
@@ -170,7 +171,7 @@ router.put('/music/songs/:id', requireAuth, async (req, res) => {
 
     res.json({ message: '歌曲已更新' });
   } catch (err) {
-    console.error('[Music] Update song error:', err);
+    logger.error('[Music] Update song error:', err);
     res.status(500).json({ error: '更新歌曲失败' });
   }
 });
@@ -206,7 +207,7 @@ router.delete('/music/songs/:id', requireAuth, async (req, res) => {
 
     res.json({ message: '歌曲已删除' });
   } catch (err) {
-    console.error('[Music] Delete song error:', err);
+    logger.error('[Music] Delete song error:', err);
     res.status(500).json({ error: '删除歌曲失败' });
   }
 });
@@ -246,7 +247,7 @@ router.get('/music/stream/:filename', requireAuth, async (req, res) => {
       fs.createReadStream(filePath).pipe(res);
     }
   } catch (err) {
-    console.error('[Music] Stream error:', err);
+    logger.error('[Music] Stream error:', err);
     res.status(500).json({ error: '音频流失败' });
   }
 });
@@ -262,13 +263,13 @@ router.get('/music/playlists', requireAuth, async (req, res) => {
     );
     res.json({ playlists });
   } catch (err) {
-    console.error('[Music] List playlists error:', err);
+    logger.error('[Music] List playlists error:', err);
     res.status(500).json({ error: '获取歌单列表失败' });
   }
 });
 
 // POST /api/music/playlists — create a new playlist
-router.post('/music/playlists', requireAuth, async (req, res) => {
+router.post('/music/playlists', requireAuth, requireNotBanned, async (req, res) => {
   try {
     const { name, cover_url } = req.body;
     if (!name || !name.trim()) {
@@ -285,7 +286,7 @@ router.post('/music/playlists', requireAuth, async (req, res) => {
       playlist: { id: result.lastID, name: name.trim(), cover_url: cover_url || '', song_count: 0 }
     });
   } catch (err) {
-    console.error('[Music] Create playlist error:', err);
+    logger.error('[Music] Create playlist error:', err);
     res.status(500).json({ error: '创建歌单失败' });
   }
 });
@@ -313,7 +314,7 @@ router.put('/music/playlists/:id', requireAuth, async (req, res) => {
 
     res.json({ message: '歌单已更新' });
   } catch (err) {
-    console.error('[Music] Update playlist error:', err);
+    logger.error('[Music] Update playlist error:', err);
     res.status(500).json({ error: '更新歌单失败' });
   }
 });
@@ -330,7 +331,7 @@ router.delete('/music/playlists/:id', requireAuth, async (req, res) => {
     run('DELETE FROM playlists WHERE id = ?', [playlistId]);
     res.json({ message: '歌单已删除' });
   } catch (err) {
-    console.error('[Music] Delete playlist error:', err);
+    logger.error('[Music] Delete playlist error:', err);
     res.status(500).json({ error: '删除歌单失败' });
   }
 });
@@ -355,13 +356,13 @@ router.get('/music/playlists/:id', requireAuth, async (req, res) => {
 
     res.json({ playlist: { ...playlist, songs } });
   } catch (err) {
-    console.error('[Music] Get playlist error:', err);
+    logger.error('[Music] Get playlist error:', err);
     res.status(500).json({ error: '获取歌单详情失败' });
   }
 });
 
 // POST /api/music/playlists/:id/songs — add songs to playlist (batch or single)
-router.post('/music/playlists/:id/songs', requireAuth, async (req, res) => {
+router.post('/music/playlists/:id/songs', requireAuth, requireNotBanned, async (req, res) => {
   try {
     const playlistId = parseInt(req.params.id);
     if (isNaN(playlistId)) return res.status(400).json({ error: '无效的歌单ID' });
@@ -410,7 +411,7 @@ router.post('/music/playlists/:id/songs', requireAuth, async (req, res) => {
 
     res.status(201).json({ message: `已添加 ${addedCount} 首歌曲`, addedCount });
   } catch (err) {
-    console.error('[Music] Add to playlist error:', err);
+    logger.error('[Music] Add to playlist error:', err);
     res.status(500).json({ error: '添加到歌单失败' });
   }
 });
@@ -437,7 +438,7 @@ router.delete('/music/playlists/:id/songs', requireAuth, async (req, res) => {
 
     res.json({ message: `已移除 ${songIds.length} 首歌曲`, removedCount: songIds.length });
   } catch (err) {
-    console.error('[Music] Batch remove error:', err);
+    logger.error('[Music] Batch remove error:', err);
     res.status(500).json({ error: '移除歌曲失败' });
   }
 });
@@ -455,7 +456,7 @@ router.delete('/music/playlists/:id/songs/:songId', requireAuth, async (req, res
     run('DELETE FROM playlist_songs WHERE playlist_id = ? AND song_id = ?', [playlistId, songId]);
     res.json({ message: '已从歌单移除' });
   } catch (err) {
-    console.error('[Music] Remove from playlist error:', err);
+    logger.error('[Music] Remove from playlist error:', err);
     res.status(500).json({ error: '从歌单移除失败' });
   }
 });
@@ -472,7 +473,7 @@ router.put('/playlists/:id/public', requireAuth, (req, res) => {
     run('UPDATE playlists SET is_public = ? WHERE id = ?', [is_public ? 1 : 0, playlistId]);
     res.json({ message: is_public ? '歌单已设为公开' : '歌单已设为私密', is_public: !!is_public });
   } catch (err) {
-    console.error('[Music] Public toggle error:', err);
+    logger.error('[Music] Public toggle error:', err);
     res.status(500).json({ error: '操作失败' });
   }
 });
@@ -492,7 +493,7 @@ router.get('/users/:userId/public-playlists', requireAuth, (req, res) => {
     const user = get('SELECT username FROM users WHERE id = ?', [userId]);
     res.json({ playlists, username: user ? user.username : '' });
   } catch (err) {
-    console.error('[Music] Public list error:', err);
+    logger.error('[Music] Public list error:', err);
     res.status(500).json({ error: '获取公开歌单失败' });
   }
 });
@@ -521,13 +522,13 @@ router.get('/playlists/:id/public-view', requireAuth, (req, res) => {
 
     res.json({ playlist: { ...playlist, songs }, collected: !!collected });
   } catch (err) {
-    console.error('[Music] Public view error:', err);
+    logger.error('[Music] Public view error:', err);
     res.status(500).json({ error: '获取歌单失败' });
   }
 });
 
 // POST /api/playlists/:id/collect — toggle collect a public playlist
-router.post('/playlists/:id/collect', requireAuth, (req, res) => {
+router.post('/playlists/:id/collect', requireAuth, requireNotBanned, (req, res) => {
   try {
     const playlistId = parseInt(req.params.id);
     const userId = req.session.userId;
@@ -548,7 +549,7 @@ router.post('/playlists/:id/collect', requireAuth, (req, res) => {
       res.json({ collected: true, message: '已收藏歌单' });
     }
   } catch (err) {
-    console.error('[Music] Collect error:', err);
+    logger.error('[Music] Collect error:', err);
     res.status(500).json({ error: '操作失败' });
   }
 });
@@ -569,7 +570,7 @@ router.get('/playlists/collected', requireAuth, (req, res) => {
     );
     res.json({ playlists });
   } catch (err) {
-    console.error('[Music] Collected list error:', err);
+    logger.error('[Music] Collected list error:', err);
     res.status(500).json({ error: '获取收藏歌单失败' });
   }
 });

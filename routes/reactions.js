@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { run, get, addXP } = require('../db/init');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireNotBanned } = require('../middleware/auth');
+const logger = require('../logger');
 
 // POST /api/posts/:postId/reaction — like, dislike, or revoke
 // Body: { type: "like" | "dislike" | null }
 // null = revoke current reaction
-router.post('/posts/:postId/reaction', requireAuth, async (req, res) => {
+router.post('/posts/:postId/reaction', requireAuth, requireNotBanned, async (req, res) => {
   try {
     const postId = parseInt(req.params.postId);
     if (isNaN(postId)) return res.status(400).json({ error: '无效的帖子ID' });
@@ -102,7 +103,7 @@ router.post('/posts/:postId/reaction', requireAuth, async (req, res) => {
       dislike_count: postCounts.dislike_count || 0
     });
   } catch (err) {
-    console.error('[Reactions] Error:', err);
+    logger.error('[Reactions] Error:', err);
     res.status(500).json({ error: '操作失败' });
   }
 });

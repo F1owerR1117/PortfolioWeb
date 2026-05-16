@@ -3,8 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const router = express.Router();
 const { get, run } = require('../db/init');
-const { requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { soundUpload, soundsDir } = require('../middleware/upload');
+const logger = require('../logger');
 
 // GET /api/settings/sound — get sound settings
 router.get('/sound', async (req, res) => {
@@ -22,7 +23,7 @@ router.get('/sound', async (req, res) => {
       has_custom_sound: hasCustomSound
     });
   } catch (err) {
-    console.error('[Settings] Get sound error:', err);
+    logger.error('[Settings] Get sound error:', err);
     res.status(500).json({ error: '获取声音设置失败' });
   }
 });
@@ -59,7 +60,7 @@ router.post('/sound/upload', requireAdmin, (req, res) => {
         file_id: fileId
       });
     } catch (dbErr) {
-      console.error('[Settings] Sound upload DB error:', dbErr);
+      logger.error('[Settings] Sound upload DB error:', dbErr);
       res.status(500).json({ error: '保存声音设置失败' });
     }
   });
@@ -77,13 +78,13 @@ router.put('/sound', requireAdmin, async (req, res) => {
 
     res.json({ message: '音量设置已更新', volume });
   } catch (err) {
-    console.error('[Settings] Update volume error:', err);
+    logger.error('[Settings] Update volume error:', err);
     res.status(500).json({ error: '更新音量设置失败' });
   }
 });
 
-// GET /api/settings/sound/file — serve the click sound file
-router.get('/sound/file', async (req, res) => {
+// GET /api/settings/sound/file — serve the click sound file (require auth)
+router.get('/sound/file', requireAuth, async (req, res) => {
   try {
     const soundPath = path.join(soundsDir, 'click.mp3');
     if (!fs.existsSync(soundPath)) {
@@ -115,7 +116,7 @@ router.get('/sound/file', async (req, res) => {
       res.status(404).json({ error: '提示音文件未找到' });
     }
   } catch (err) {
-    console.error('[Settings] Serve sound error:', err);
+    logger.error('[Settings] Serve sound error:', err);
     res.status(500).json({ error: '获取提示音文件失败' });
   }
 });
