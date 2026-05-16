@@ -7,7 +7,7 @@ const logger = require('../logger');
 // GET /api/levels/me — current user's level info
 router.get('/levels/me', requireAuth, (req, res) => {
   try {
-    const user = getFirst('SELECT level, xp, points, coins FROM users WHERE id = ?', [req.session.userId]);
+    const user = getFirst('SELECT level, xp, points FROM users WHERE id = ?', [req.session.userId]);
     if (!user) return res.status(404).json({ error: '用户不存在' });
     // Get next level requirement
     const nextConfig = getFirst('SELECT xp_required FROM level_config WHERE level = ?', [user.level + 1]);
@@ -16,7 +16,6 @@ router.get('/levels/me', requireAuth, (req, res) => {
       level: user.level || 1,
       xp: user.xp || 0,
       points: user.points || 0,
-      coins: user.coins || 0,
       next_xp_required: nextConfig ? nextConfig.xp_required : null,
       level_name: levelCfg ? (levelCfg.name || '') : '',
       title_icon: levelCfg ? (levelCfg.title_icon || '') : '',
@@ -88,7 +87,7 @@ router.get('/admin/levels/users', requireAdmin, (req, res) => {
 
     const total = getFirst(`SELECT COUNT(*) as count FROM users u ${whereClause}`, params);
     const users = all(
-      `SELECT u.id, u.username, u.role, u.level, u.xp, u.points, u.coins,
+      `SELECT u.id, u.username, u.role, u.level, u.xp, u.points,
               COALESCE(up.nickname, '') as nickname
        FROM users u
        LEFT JOIN user_profiles up ON up.user_id = u.id
@@ -169,7 +168,7 @@ router.put('/admin/levels/users/:id', requireAdmin, (req, res) => {
         run('UPDATE users SET level = ?, xp = ? WHERE id = ?', [newLevel, newXP, userId]);
     }
 
-    const updated = getFirst('SELECT level, xp, points, coins FROM users WHERE id = ?', [userId]);
+    const updated = getFirst('SELECT level, xp, points FROM users WHERE id = ?', [userId]);
     // Sync session if admin edited their own level
     if (userId === req.session.userId) {
       req.session.level = updated.level;

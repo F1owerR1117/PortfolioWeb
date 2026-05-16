@@ -17,8 +17,8 @@ var ComponentsPostDetail = {
 
         // Attachment block rendering
         if (b.attachment_file_id) {
-          var attachName = escapeHtml(b.attachment_name || '附件');
-          var attachSize = b.attachment_size ? formatFileSize(b.attachment_size) : '';
+          var attachName = b.attachment_name ? escapeHtml(b.attachment_name) : '🔒 已加密的附件';
+          var attachSize = (b.attachment_name && b.attachment_size) ? formatFileSize(b.attachment_size) : '';
           var status = b.attachment_status || 'ready';
           var msg = b.attachment_msg || '';
           var downloadUrl = b.attachment_download_url || '';
@@ -37,7 +37,7 @@ var ComponentsPostDetail = {
           el.innerHTML = '<div class="content-block-label">📎 附件</div>' +
             '<div style="border:1px solid var(--border);border-radius:8px;margin-top:8px;overflow:hidden;">' +
             '<div style="padding:12px;display:flex;align-items:center;gap:12px;background:var(--bg-card);">' +
-            '<span style="font-size:32px;">📎</span>' +
+            '<span style="font-size:32px;">' + (b.attachment_can_view ? '📎' : '🔒') + '</span>' +
             '<div style="flex:1;"><div style="font-weight:600;">' + attachName + '</div>' +
             '<div style="font-size:13px;color:var(--text-secondary);">' + attachSize + '</div></div></div>' +
             actionsHtml + '</div>';

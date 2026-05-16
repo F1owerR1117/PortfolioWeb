@@ -181,7 +181,6 @@ const App = {
         this.user.level = data.level;
         this.user.xp = data.xp;
         this.user.points = data.points;
-        this.user.coins = data.coins || 0;
       }
       const ld = document.getElementById('nav-level');
       if (ld) {
@@ -203,7 +202,7 @@ const App = {
           '<span class="lvl-details">' +
             '<span class="lvl-name-row">Lv.' + lvl + ' ' + lvlName + '</span>' +
             progressHtml +
-            '<span class="lvl-stats-row"><span class="lvl-points">⭐ ' + (data.points || 0) + ' 分</span> <span class="lvl-coins" style="margin-left:8px;">🪙 ' + (data.coins || 0) + '</span></span>' +
+            '<span class="lvl-stats-row"><span class="lvl-points">⭐ ' + (data.points || 0) + ' 分</span></span>' +
           '</span>';
       }
     } catch (e) {}
@@ -221,7 +220,7 @@ const App = {
           <span class="lvl-badge">${this.user.level || 1}</span>
           <span class="lvl-details">
             <span class="lvl-name-row">Lv.${this.user.level || 1}</span>
-            <span class="lvl-stats-row"><span class="lvl-points">⭐ ${this.user.points || 0} 分</span> <span class="lvl-coins" style="margin-left:8px;">🪙 ${this.user.coins || 0}</span></span>
+            <span class="lvl-stats-row"><span class="lvl-points">⭐ ${this.user.points || 0} 分</span></span>
           </span>
         </span>
         <button class="nav-btn" id="nav-friends" style="position:relative;">

@@ -107,6 +107,14 @@ const PostService = {
             }
           }
         }
+
+        // Hide attachment info if user can't view it
+        if (!block.attachment_can_view) {
+          block.attachment_name = '';
+          block.attachment_size = 0;
+          block._attachment_url = null;
+          block.attachment_file_id = null;
+        }
       }
 
       return block;
@@ -254,12 +262,12 @@ const PostService = {
     if (existing) throw { status: 400, message: '已经购买过此权限' };
 
     // Check user balance
-    const buyer = getFirst('SELECT coins FROM users WHERE id = ?', [userId]);
-    if (!buyer || (buyer.coins || 0) < points) throw { status: 400, message: `积分不足，需要 ${points} 积分，当前 ${buyer.coins || 0} 积分` };
+    const buyer = getFirst('SELECT points FROM users WHERE id = ?', [userId]);
+    if (!buyer || (buyer.points || 0) < points) throw { status: 400, message: `积分不足，需要 ${points} 积分，当前 ${buyer.points || 0} 积分` };
 
-    // Transfer coins: deduct from buyer, add to post author
-    run('UPDATE users SET coins = coins - ? WHERE id = ?', [points, userId]);
-    run('UPDATE users SET coins = coins + ? WHERE id = ?', [points, post.created_by]);
+    // Deduct points from buyer (no transfer to author)
+    run('UPDATE users SET points = points - ? WHERE id = ?', [points, userId]);
+    
 
     // Record purchase
     run('INSERT INTO attachment_purchases (block_id, user_id, type, points_paid) VALUES (?, ?, ?, ?)',

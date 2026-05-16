@@ -25,7 +25,7 @@ router.get('/admin/users', requireAdmin, async (req, res) => {
     const users = all(
       `SELECT u.id, u.username, u.role, u.created_at, u.is_banned,
               u.banned_until, u.ban_reason,
-              u.points, u.level, u.xp, u.coins,
+              u.points, u.level, u.xp,
               COALESCE(up.nickname, '') as nickname,
               COALESCE(up.avatar_url, '') as avatar_url
        FROM users u

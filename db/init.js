@@ -655,15 +655,14 @@ function forceSave() {
   saveDB();
 }
 
-// Add XP to a user, handle level-up, also reward coins, and return new state
+// Add XP to a user, handle level-up, and return new state
 function addXP(userId, amount) {
   if (amount <= 0) return null;
-  const user = getFirst('SELECT xp, level, points, coins FROM users WHERE id = ?', [userId]);
+  const user = getFirst('SELECT xp, level, points FROM users WHERE id = ?', [userId]);
   if (!user) return null;
   let newXP = (user.xp || 0) + amount;
   let newLevel = user.level || 1;
   let newPoints = (user.points || 0) + amount;
-  let newCoins = (user.coins || 0) + amount;
   // Loop: check for level-up
   while (true) {
     const nextConfig = getFirst('SELECT xp_required FROM level_config WHERE level = ?', [newLevel + 1]);
@@ -674,8 +673,8 @@ function addXP(userId, amount) {
       break;
     }
   }
-  run('UPDATE users SET xp = ?, level = ?, points = ?, coins = ? WHERE id = ?', [newXP, newLevel, newPoints, newCoins, userId]);
-  return { xp: newXP, level: newLevel, points: newPoints, coins: newCoins };
+  run('UPDATE users SET xp = ?, level = ?, points = ? WHERE id = ?', [newXP, newLevel, newPoints, userId]);
+  return { xp: newXP, level: newLevel, points: newPoints };
 }
 
 module.exports = { initDatabase, getDb, run, get, getFirst, all, forceSave, addXP };

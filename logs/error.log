@@ -11,3 +11,11 @@
 2026-05-15 20:46:09 [ERROR] [Auth] Password change error:
 2026-05-16 13:27:03 [ERROR] Uncaught Exception: listen EADDRINUSE: address already in use :::3000
 2026-05-16 13:30:14 [ERROR] [Auth] Login error:
+2026-05-16 15:10:06 [ERROR] [Posts] Get error:
+2026-05-16 15:10:09 [ERROR] [Posts] Get error:
+2026-05-16 15:10:11 [ERROR] [Posts] Get error:
+2026-05-16 15:10:44 [ERROR] [Auth] Register error:
+2026-05-16 15:10:47 [ERROR] [Auth] Register error:
+2026-05-16 15:11:08 [ERROR] [Posts] Purchase error:
+2026-05-16 15:12:13 [ERROR] [Posts] Purchase error:
+2026-05-16 15:12:13 [ERROR] [Posts] Purchase error:
