@@ -2429,6 +2429,27 @@ button { cursor: pointer; font-family: inherit; }
   font-weight: 600;
 }
 
+/* Collapsible admin section */
+.side-menu-item.collapsible {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.collapse-arrow {
+  font-size: 10px;
+  transition: transform 0.2s;
+  color: var(--text-light);
+}
+.side-menu-item.collapsible.open .collapse-arrow {
+  transform: rotate(90deg);
+}
+.side-menu-sub {
+  display: none;
+}
+.side-menu-sub.open {
+  display: block;
+}
+
 
 /* ===== Tag Manager ===== */
 .tag-manager-item {

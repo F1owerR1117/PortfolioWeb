@@ -271,13 +271,20 @@ const App = {
           <div class="side-menu-item" data-action="show-notices">📢 系统公告</div>`;
         if (App.user && App.user.role === 'admin') {
           menuHtml += `
-          <div class="side-menu-item" data-route="/tags" data-label="tags">🏷️ 标签管理</div>
-          <div class="side-menu-item" data-route="/admin/stats" data-label="admin">📊 区域统计</div>
-          <div class="side-menu-item" data-route="/admin/reports" data-label="admin">🚩 举报管理</div>
-          <div class="side-menu-item" data-route="/admin/users" data-label="admin">👥 用户管理</div>
-          <div class="side-menu-item" data-route="/admin/levels" data-label="admin">🏅 等级管理</div>
-          <div class="side-menu-item" data-route="/admin/login-notices" data-label="admin">📢 弹窗管理</div>
-          <div class="side-menu-item" data-route="/admin/ads" data-label="admin">📺 广告管理</div>`;
+          <div class="side-menu-separator"></div>
+          <div class="side-menu-item collapsible" data-action="toggle-admin">
+            <span>⚙️ 后台管理</span>
+            <span class="collapse-arrow">▶</span>
+          </div>
+          <div class="side-menu-sub" id="admin-submenu">
+            <div class="side-menu-item" data-route="/tags" data-label="tags">🏷️ 标签管理</div>
+            <div class="side-menu-item" data-route="/admin/stats" data-label="admin">📊 区域统计</div>
+            <div class="side-menu-item" data-route="/admin/reports" data-label="admin">🚩 举报管理</div>
+            <div class="side-menu-item" data-route="/admin/users" data-label="admin">👥 用户管理</div>
+            <div class="side-menu-item" data-route="/admin/levels" data-label="admin">🏅 等级管理</div>
+            <div class="side-menu-item" data-route="/admin/login-notices" data-label="admin">📢 弹窗管理</div>
+            <div class="side-menu-item" data-route="/admin/ads" data-label="admin">📺 广告管理</div>
+          </div>`;
         }
         menu.innerHTML = menuHtml;
         document.body.appendChild(menu);
@@ -305,6 +312,12 @@ const App = {
             if (item.dataset.action === 'show-notices') {
               document.body.classList.remove('side-menu-open');
               App._showLoginNotices();
+              return;
+            }
+            if (item.dataset.action === 'toggle-admin') {
+              item.classList.toggle('open');
+              var sub = document.getElementById('admin-submenu');
+              if (sub) sub.classList.toggle('open');
               return;
             }
             if (item.dataset.locked === 'true') { showToast('等级不足，无法访问该分区', 'error'); return; }
@@ -417,6 +430,14 @@ const App = {
       if (!route) { el.classList.remove('active'); return; }
       el.classList.toggle('active', cur === route || cur.startsWith(route + '/'));
     });
+    // Auto-open admin submenu when on admin page
+    var toggle = document.querySelector('.side-menu-item[data-action="toggle-admin"]');
+    var sub = document.getElementById('admin-submenu');
+    if (toggle && sub) {
+      var shouldOpen = cur.startsWith('/admin') || cur === '/tags';
+      toggle.classList.toggle('open', shouldOpen);
+      sub.classList.toggle('open', shouldOpen);
+    }
   },
 
   _notifPollTimer: null,
