@@ -5879,3 +5879,7 @@
 2026-05-16 15:35:15 [INFO] [API] GET /friend-requests 304 2ms user=1
 2026-05-16 15:35:45 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
 2026-05-16 15:35:45 [INFO] [API] GET /friend-requests 304 1ms user=1
+2026-05-16 15:36:16 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-16 15:36:16 [INFO] [API] GET /friend-requests 304 0ms user=1
+2026-05-16 15:36:46 [INFO] [API] GET /notifications/unread-count 304 1ms user=1
+2026-05-16 15:36:46 [INFO] [API] GET /friend-requests 304 0ms user=1

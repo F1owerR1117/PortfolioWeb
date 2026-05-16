@@ -4,23 +4,43 @@ var ComponentsAds = {
   _currentIndex: { left: 0, right: 0 },
 
   _ensureContainers() {
-    if (!document.getElementById('ad-bar-left')) {
-      var left = document.createElement('aside');
-      left.id = 'ad-bar-left';
-      left.className = 'ad-bar ad-bar-left';
-      document.body.appendChild(left);
+    if (document.getElementById('page-wrap')) return;
+    var app = document.getElementById('app');
+    if (!app) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = 'page-wrap';
+
+    var left = document.createElement('aside');
+    left.id = 'ad-bar-left';
+    left.className = 'ad-bar ad-bar-left';
+
+    var right = document.createElement('aside');
+    right.id = 'ad-bar-right';
+    right.className = 'ad-bar ad-bar-right';
+
+    app.parentNode.insertBefore(wrap, app);
+    wrap.appendChild(left);
+    app.parentNode.removeChild(app);
+    wrap.appendChild(app);
+    wrap.appendChild(right);
+  },
+
+  cleanup() {
+    var wrap = document.getElementById('page-wrap');
+    if (!wrap) return;
+    var app = document.getElementById('app');
+    if (app) {
+      wrap.parentNode.insertBefore(app, wrap);
+      app.style.cssText = '';
     }
-    if (!document.getElementById('ad-bar-right')) {
-      var right = document.createElement('aside');
-      right.id = 'ad-bar-right';
-      right.className = 'ad-bar ad-bar-right';
-      document.body.appendChild(right);
-    }
+    wrap.remove();
+    document.body.classList.remove('has-ads');
   },
 
   async init() {
-    this._ensureContainers();
     if (!App.user) return;
+    this._ensureContainers();
     try {
       var data = await API.getAds();
       this._ads = { left: data.left || [], right: data.right || [] };
@@ -30,11 +50,13 @@ var ComponentsAds = {
   },
 
   async refresh() {
-    if (!App.user) return;
+    if (!App.user) {
+      this.cleanup();
+      return;
+    }
     try {
       var data = await API.getAds();
       this._ads = { left: data.left || [], right: data.right || [] };
-      // Reset index if current is out of bounds
       ['left', 'right'].forEach(function(side) {
         if (ComponentsAds._currentIndex[side] >= ComponentsAds._ads[side].length) {
           ComponentsAds._currentIndex[side] = 0;
@@ -57,10 +79,12 @@ var ComponentsAds = {
     if (!container) return;
 
     if (ads.length === 0 || !App.user) {
-      container.style.display = 'none';
+      container.classList.remove('active');
       return;
     }
-    container.style.display = 'flex';
+
+    container.classList.add('active');
+    document.body.classList.add('has-ads');
 
     var ad = ads[idx];
     if (!ad || !ad.image_url) {
@@ -92,7 +116,6 @@ var ComponentsAds = {
   _bindNavEvents: function() {
     var self = this;
     document.querySelectorAll('.ad-prev, .ad-next').forEach(function(btn) {
-      // Avoid duplicate binding
       var newBtn = btn.cloneNode(true);
       btn.parentNode.replaceChild(newBtn, btn);
       newBtn.addEventListener('click', function(e) {
@@ -112,7 +135,6 @@ var ComponentsAds = {
       });
     });
 
-    // Record ad click
     document.querySelectorAll('.ad-link').forEach(function(link) {
       var newLink = link.cloneNode(true);
       link.parentNode.replaceChild(newLink, link);
