@@ -82,37 +82,47 @@ var ComponentsProfile = {
           notifHtml += '<div style="text-align:right;margin-top:4px;"><a href="#/notifications" style="font-size:13px;">查看全部 →</a></div>';
         }
 
-        app.innerHTML = '<div class="page-fade-in"><div class="about-page">' +
-          // Profile card
-          '<div class="about-card">' +
-          '<div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;">' +
-          '<div class="about-avatar" style="flex-shrink:0;">' + (avatarUrl ? '<img src="' + escapeHtml(avatarUrl) + '" alt="头像">' : '👤') + '</div>' +
-          '<div style="flex:1;min-width:200px;">' +
-          '<h1 style="font-size:24px;font-weight:700;margin-bottom:2px;">' + escapeHtml(p.nickname || p.username) + '</h1>' +
-          '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">' +
-          (p.nickname ? '<span style="font-size:12px;color:var(--text-light);">@' + escapeHtml(p.username) + '</span> · ' : '') +
-          (p.role === 'admin' ? '管理员' : '用户') + ' · ' + self._renderLevelBadge((p.level || 1)) +
-          ' · ' + (p.xp || 0) + 'XP · ' + (p.points || 0) + '分 · 加入于 ' + formatDate(p.created_at) +
+        app.innerHTML = '<div class="page-fade-in"><div class="profile-page">' +
+          // Profile header
+          '<div class="profile-header">' +
+          '<div class="profile-avatar-wrap">' +
+          '<div class="profile-avatar">' + (avatarUrl ? '<img src="' + escapeHtml(avatarUrl) + '" alt="头像">' : '👤') + '</div>' +
+          '<button class="avatar-edit-btn" id="toggle-edit-profile">✎</button>' +
           '</div>' +
-          '<div class="about-bio">' + escapeHtml(p.bio || '暂无简介') + '</div>' +
-          (skills.length > 0 ? '<div class="about-skills" style="margin-top:8px;">' + skills.map(function(s) { return '<span class="about-skill-tag">' + escapeHtml(s) + '</span>'; }).join('') + '</div>' : '') +
-          '</div></div>' +
-          // Stats row
-          statsHtml +
-          // Action buttons
-          '<div style="text-align:center;margin-top:20px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' +
-          '<button class="btn btn-outline btn-sm" id="toggle-edit-profile">✏ 编辑个人信息</button>' +
+          '<div class="profile-info">' +
+          '<div class="profile-name">' + escapeHtml(p.nickname || p.username) + ' ⭐' + (p.level || 1) + '</div>' +
+          '<div class="profile-username">@' + escapeHtml(p.username) + ' · ' + (p.role === 'admin' ? '管理员' : '用户') + '</div>' +
+          '<div class="profile-bio">' + escapeHtml(p.bio || '暂无简介') + '</div>' +
+          (skills.length > 0 ? '<div class="about-skills" style="margin-bottom:16px;">' + skills.map(function(s) { return '<span class="about-skill-tag">' + escapeHtml(s) + '</span>'; }).join('') + '</div>' : '') +
+          '<div class="profile-actions">' +
+          '<button class="btn btn-outline btn-sm" id="toggle-edit-profile-btn">✏ 编辑资料</button>' +
           '<button class="btn btn-outline btn-sm" id="preview-other-view">👁 他人视角</button>' +
           '</div>' +
+          '</div></div>' +
+          // Stats
+          '<div class="profile-stats">' +
+          '<div class="stat-card"><div class="stat-number">' + (stats.postCount || 0) + '</div><div class="stat-label">作品</div></div>' +
+          '<div class="stat-card"><div class="stat-number">' + (stats.totalLikes || 0) + '</div><div class="stat-label">获赞</div></div>' +
+          '<div class="stat-card"><div class="stat-number">' + (stats.commentReceived || 0) + '</div><div class="stat-label">评论</div></div>' +
+          '<div class="stat-card"><div class="stat-number">' + (stats.memberDays || 1) + '</div><div class="stat-label">注册天数</div></div>' +
           '</div>' +
-          // Dashboard content: recent posts + recent notifications
-          '<div class="dashboard-content-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;">' +
+          // XP Section
+          '<div class="xp-section">' +
+          '<div class="xp-header">' +
+          '<div class="xp-level">⭐ Lv.' + (p.level || 1) + ' ' + escapeHtml(p.level_name || '') + ' <span class="level-badge">' + (p.xp || 0) + ' XP</span></div>' +
+          '<div class="xp-numbers">' + (p.xp_earned || 0) + ' / ' + (p.xp_next || 100) + '</div>' +
+          '</div>' +
+          '<div class="xp-bar"><div class="xp-bar-fill" style="width:' + Math.min(100, Math.round(((p.xp_earned || 0) / Math.max(1, (p.xp_next || 100))) * 100)) + '%;"></div></div>' +
+          '</div>' +
+          // Dashboard content
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;">' +
           '<div class="about-card" style="padding:20px;">' + postsHtml + '</div>' +
           '<div class="about-card" style="padding:20px;">' + notifHtml + '</div>' +
           '</div></div></div>';
 
         // Bind events
         document.getElementById('toggle-edit-profile').addEventListener('click', function() { playClickSound(); renderEdit(); });
+        document.getElementById('toggle-edit-profile-btn').addEventListener('click', function() { playClickSound(); renderEdit(); });
         document.getElementById('preview-other-view')?.addEventListener('click', function() { playClickSound(); Router.navigate('#/users/' + App.user.id); });
         document.querySelectorAll('#dashboard-post-grid .post-card')?.forEach(function(c) {
           c.addEventListener('click', function() { playClickSound(); Router.navigate('#/posts/' + c.dataset.postId); });

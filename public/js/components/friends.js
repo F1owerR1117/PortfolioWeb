@@ -39,6 +39,8 @@ var ComponentsFriends = {
           }
           API.searchUsers(q).then(function(d) {
             var results = d.users || [];
+            var friendIds = {};
+            friends.forEach(function(f) { friendIds[f.friend_id] = true; });
             var content = document.getElementById('fr-content');
             if (!content) return;
             if (results.length === 0) {
@@ -48,7 +50,11 @@ var ComponentsFriends = {
             content.innerHTML = results.map(function(u) {
               var initial = escapeHtml((u.nickname || u.username).charAt(0).toUpperCase());
               var avatar = u.avatar_url ? '<img src="' + escapeHtml(u.avatar_url) + '" alt="">' : initial;
-              return '<div class="request-card" style="cursor:pointer;"><div class="req-avatar" data-uid="' + u.id + '">' + avatar + '</div><div class="req-info" data-uid="' + u.id + '"><div class="req-name" data-uid="' + u.id + '">' + escapeHtml(u.nickname || u.username) + '</div><div class="req-time">@' + escapeHtml(u.username) + '</div></div><button class="btn btn-sm btn-outline add-friend-btn" data-uid="' + u.id + '">➕ 添加好友</button></div>';
+              var isFriend = friendIds[u.id];
+              var btnHtml = isFriend
+                ? '<button class="btn btn-sm btn-success" disabled style="opacity:0.6;">✓ 已是好友</button>'
+                : '<button class="btn btn-sm btn-outline add-friend-btn" data-uid="' + u.id + '">➕ 添加好友</button>';
+              return '<div class="request-card" style="cursor:pointer;"><div class="req-avatar" data-uid="' + u.id + '">' + avatar + '</div><div class="req-info" data-uid="' + u.id + '"><div class="req-name" data-uid="' + u.id + '">' + escapeHtml(u.nickname || u.username) + '</div><div class="req-time">@' + escapeHtml(u.username) + '</div></div>' + btnHtml + '</div>';
             }).join('');
             content.querySelectorAll('[data-uid]').forEach(function(el) {
               el.addEventListener('click', function() { Router.navigate('#/users/' + this.dataset.uid); });
