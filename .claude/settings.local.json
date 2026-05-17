@@ -547,7 +547,8 @@
       "Bash(bash scripts/snapshot.sh \"个人主页优化：profile-header+stat-card+XP进度条\")",
       "Bash(bash scripts/snapshot.sh \"音乐重构前备份\")",
       "Bash(curl -s http://localhost:3000/css/components/music.css)",
-      "Bash(curl -s http://localhost:3000/js/components/musicLibrary.js)"
+      "Bash(curl -s http://localhost:3000/js/components/musicLibrary.js)",
+      "Bash(bash scripts/snapshot.sh \"播放器重构前备份\")"
     ]
   }
 }
