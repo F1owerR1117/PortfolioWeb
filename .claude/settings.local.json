@@ -544,7 +544,8 @@
       "Bash(bash scripts/snapshot.sh \"好友功能重新设计：卡片+tabs+搜索\")",
       "Bash(curl -s http://localhost:3000/css/components/profile.css)",
       "Bash(curl -s http://localhost:3000/js/components/profile.js)",
-      "Bash(bash scripts/snapshot.sh \"个人主页优化：profile-header+stat-card+XP进度条\")"
+      "Bash(bash scripts/snapshot.sh \"个人主页优化：profile-header+stat-card+XP进度条\")",
+      "Bash(bash scripts/snapshot.sh \"音乐重构前备份\")"
     ]
   }
 }

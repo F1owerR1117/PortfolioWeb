@@ -17,10 +17,11 @@ var ComponentsProfile = {
       var self = this;
 
       // Fetch dashboard data in parallel
-      var [statsData, userPostsData, notifData] = await Promise.all([
+      var [statsData, userPostsData, notifData, levelData] = await Promise.all([
         API.getUserStats(App.user.id).catch(function() { return { stats: {} }; }),
         API.getUserPosts(App.user.id, 1, 6).catch(function() { return { posts: [] }; }),
-        API.getNotifications().catch(function() { return { notifications: [] }; })
+        API.getNotifications().catch(function() { return { notifications: [] }; }),
+        API.getMyLevel().catch(function() { return { xp: 0, next_xp_required: 0 }; })
       ]);
       var stats = statsData.stats || {};
       var recentPosts = (userPostsData.posts || []).slice(0, 6);
@@ -110,9 +111,9 @@ var ComponentsProfile = {
           '<div class="xp-section">' +
           '<div class="xp-header">' +
           '<div class="xp-level">⭐ Lv.' + (p.level || 1) + ' ' + escapeHtml(p.level_name || '') + ' <span class="level-badge">' + (p.xp || 0) + ' XP</span></div>' +
-          '<div class="xp-numbers">' + (p.xp_earned || 0) + ' / ' + (p.xp_next || 100) + '</div>' +
+          '<div class="xp-numbers">' + (levelData.xp || 0) + ' / ' + (levelData.next_xp_required || 0) + '</div>' +
           '</div>' +
-          '<div class="xp-bar"><div class="xp-bar-fill" style="width:' + Math.min(100, Math.round(((p.xp_earned || 0) / Math.max(1, (p.xp_next || 100))) * 100)) + '%;"></div></div>' +
+          '<div class="xp-bar"><div class="xp-bar-fill" style="width:' + Math.min(100, Math.round(((levelData.xp || 0) / Math.max(1, (levelData.next_xp_required || 1))) * 100)) + '%;"></div></div>' +
           '</div>' +
           // Dashboard content
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;">' +
