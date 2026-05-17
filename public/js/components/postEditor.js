@@ -1,21 +1,30 @@
 // Post editor component: create/edit posts
 var ComponentsPostEditor = {
-  renderCreatePost: function(category) { this.editorMode = 'create'; this.editorPostId = null; this.editorBlocks = []; this._editorCategory = category === 'chat' ? 'chat' : 'work'; this._renderEditor(category === 'chat' ? '发布帖子' : '发布新作品', null, this._editorCategory); },
+  renderCreatePost: function(category) { this.editorMode = 'create'; this.editorPostId = null; this.editorBlocks = []; this._editorCategory = category === 'chat' ? 'chat' : category === 'job' ? 'job' : 'work'; this._renderEditor(category === 'chat' ? '发布帖子' : '发布新作品', null, this._editorCategory); },
 
-  renderEditPost: async function(postId) { this.editorMode = 'edit'; this.editorPostId = postId; this._deletedBlockIds = []; this.renderLoading(); try { var d = await API.getPost(postId); this.editorBlocks = (d.blocks || []).map(function(b) { return { _id: b.id, type: b.type, value: b.value || '', file_id: b.file_id || null, file_url: b.file_url || null, allow_preview: !!b.allow_preview, attachment_file_id: b.attachment_file_id || null, attachment_name: b.attachment_name || '', attachment_size: b.attachment_size || 0, min_level_view: b.min_level_view || 0, unlock_points: b.unlock_points || 0, download_points: b.download_points || 0, _tempId: Date.now() + '_' + Math.random().toString(36).substr(2, 5) }; }); this._renderEditor('编辑作品', d.post); } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); } },
+  _blockLabel: function(type) { return type === 'text' ? '📝 文本' : type === 'image' ? '🖼 图片' : type === 'video' ? '🎬 视频' : type === 'code' ? '💻 代码' : '📎 附件'; },
+
+  renderEditPost: async function(postId) { this.editorMode = 'edit'; this.editorPostId = postId; this._deletedBlockIds = []; this.renderLoading(); try { var d = await API.getPost(postId); this.editorBlocks = (d.blocks || []).map(function(b) { return { _id: b.id, type: b.type, value: b.value || '', label: b.label || '', file_id: b.file_id || null, file_url: b.file_url || null, allow_preview: !!b.allow_preview, show_in_toc: !!b.show_in_toc, attachment_file_id: b.attachment_file_id || null, attachment_name: b.attachment_name || '', attachment_size: b.attachment_size || 0, min_level_view: b.min_level_view || 0, unlock_points: b.unlock_points || 0, download_points: b.download_points || 0, _tempId: Date.now() + '_' + Math.random().toString(36).substr(2, 5) }; }); this._renderEditor('编辑作品', d.post); } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); } },
 
   _renderEditor: function(title, post, category) {
     var isEdit = !!post, self = this;
     var cat = category || (post ? post.category : 'work');
-    var editorHtml = '<div class="page-fade-in"><div class="editor-page"><div class="editor-page-header"><h1>' + escapeHtml(title) + '</h1></div><div class="editor-card">' +
+    var coverUrl = post && post.cover_url ? post.cover_url : '';
+    var coverName = coverUrl ? '已有封面' : '未选择';
+    var coverStyle = coverUrl ? '' : ' style="display:none;"';
+    var coverImg = coverUrl ? '<img src="' + post.cover_url + '">' : '';
+    var catGroupStyle = cat === 'chat' ? '' : ' style="display:none;"';
+    var editorHtml = '<div class="page-fade-in"><div class="editor-page"><div class="editor-page-header"><h1>' + escapeHtml(title) + '</h1></div><div class="editor-card"><div class="edit-layout"><div class="edit-main">' +
       '<div class="form-group"><label class="form-label">标题 <span style="color:var(--error);">*</span></label><input class="form-input" id="editor-title" value="' + escapeHtml(post ? post.title : '') + '" placeholder="输入作品标题..."></div>' +
       '<div class="form-group"><label class="form-label">简介</label><textarea class="form-textarea" id="editor-desc" rows="2" placeholder="简要描述">' + escapeHtml(post ? (post.description || '') : '') + '</textarea></div>' +
-      '<div class="form-group"><label class="form-label">标签</label><div class="tag-input-wrap"><input class="form-input" id="editor-tag-input" type="text" placeholder="输入标签后添加..." value=""><button class="btn btn-outline btn-sm" id="editor-add-tag-btn" style="padding:10px 20px;">添加</button></div><div class="tag-chips" id="editor-tag-chips"></div></div>' +
-      '<div class="form-group" id="editor-cat-group" style="' + (cat === 'chat' ? '' : 'display:none;') + '"><label class="form-label">分类</label><select class="form-input form-select" id="editor-category"><option value="work"' + (cat === 'work' ? ' selected' : '') + '>📂 作品区</option><option value="chat"' + (cat === 'chat' ? ' selected' : '') + '>💬 聊天区</option></select></div>' +
-      '<div class="form-group"><label class="form-label">封面图片</label><div class="cover-upload-row"><button class="btn btn-outline btn-sm" id="editor-upload-cover-btn">📁 选择图片</button><input type="file" id="editor-cover-file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><span class="cover-name" id="editor-cover-name">' + (post && post.cover_url ? '已有封面' : '未选择') + '</span><button class="btn btn-outline btn-sm" id="editor-remove-cover-btn"' + (post && post.cover_url ? '' : ' style="display:none;"') + '>✕ 移除</button></div></div>' +
-      '<div class="cover-preview" id="editor-cover-preview"' + (post && post.cover_url ? '' : ' style="display:none;"') + '>' + (post && post.cover_url ? '<img src="' + post.cover_url + '">' : '') + '</div>' +
-      '<div style="margin:24px 0 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h3 style="font-size:16px;font-weight:600;">📝 内容块</h3></div><div id="editor-blocks-list">' + self._renderEditorBlocks() + '</div><div class="add-block-bar"><button class="add-block-btn" data-type="text">➕ 文本</button><button class="add-block-btn" data-type="image">🖼 图片</button><button class="add-block-btn" data-type="video">🎬 视频</button><button class="add-block-btn" data-type="code">💻 代码</button><button class="add-block-btn" data-type="file">📎 附件</button></div></div>' +
-      '<div class="editor-actions"><button class="btn btn-primary" id="editor-save-btn">💾 ' + (isEdit ? '保存修改' : '发布') + '</button><button class="btn btn-outline" id="editor-cancel-btn">取消</button></div></div></div></div>';
+      '<div style="margin:24px 0 12px;font-size:13px;font-weight:600;color:var(--text-secondary);display:flex;align-items:center;gap:8px;">📝 内容块 <span style="font-weight:400;color:var(--text-muted);font-size:12px;">' + (self.editorBlocks.length || 0) + ' 个块</span></div>' +
+      '<div class="blocks-list" id="editor-blocks-list">' + self._renderEditorBlocks() + '</div>' +
+      '<div class="add-block-bar"><button class="add-block-btn" data-type="text">➕ 文本</button><button class="add-block-btn" data-type="image">🖼 图片</button><button class="add-block-btn" data-type="video">🎬 视频</button><button class="add-block-btn" data-type="code">💻 代码</button><button class="add-block-btn" data-type="file">📎 附件</button></div>' +
+      '<div class="editor-footer" style="display:flex;gap:10px;justify-content:flex-end;margin-top:28px;padding-top:24px;border-top:1px solid var(--border);"><button class="btn btn-primary" id="editor-save-btn">💾 ' + (isEdit ? '保存修改' : '发布') + '</button><button class="btn btn-outline" id="editor-cancel-btn">取消</button></div></div><div class="edit-sidebar">' +
+      '<div class="edit-sidebar-card"><h4>🖼 封面</h4><div id="editor-cover-preview" class="cover-preview-box" style="width:100%;height:80px;margin-bottom:8px;' + (coverUrl ? '' : 'display:flex;') + '">' + coverImg + (coverUrl ? '' : '📄') + '</div><div class="cover-actions" style="margin-top:0;"><button class="btn btn-sm btn-outline" id="editor-upload-cover-btn" style="width:100%;justify-content:center;">📁 选择图片</button><input type="file" id="editor-cover-file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><button class="btn btn-sm btn-outline" id="editor-remove-cover-btn"' + coverStyle + ' style="width:100%;justify-content:center;color:var(--error);">✕ 移除</button></div></div>' +
+      '<div class="edit-sidebar-card"><h4>🏷️ 标签</h4><div class="tag-input-wrap" style="display:flex;gap:6px;margin-bottom:8px;"><input class="form-input form-input-sm" id="editor-tag-input" type="text" placeholder="添加标签..." value="" style="flex:1;"><button class="btn btn-sm btn-outline" id="editor-add-tag-btn" style="padding:7px 12px;">➕</button></div><div class="tag-chips" id="editor-tag-chips"></div></div>' +
+      '<div class="edit-sidebar-card"' + catGroupStyle + '><h4>📂 分类</h4><select class="form-input" id="editor-category" style="font-size:13px;"><option value="work"' + (cat === 'work' ? ' selected' : '') + '>📂 作品区</option><option value="job">💼 求职招聘</option><option value="chat"' + (cat === 'chat' ? ' selected' : '') + '>💬 聊天区</option></select></div>' +
+      '</div></div></div></div></div>';
     document.getElementById('app').innerHTML = editorHtml;
     this._initEditorTags(post);
     this._bindEditorEvents(isEdit, post);
@@ -28,36 +37,37 @@ var ComponentsPostEditor = {
     var h = '';
     for (var i = 0; i < this.editorBlocks.length; i++) {
       var b = this.editorBlocks[i];
-      var typeName = b.type === 'text' ? '📝 文本' : b.type === 'image' ? '🖼 图片' : b.type === 'video' ? '🎬 视频' : b.type === 'code' ? '💻 代码' : '📎 附件';
-      h += '<div class="editor-block-wrap" data-index="' + i + '">' +
-        '<div class="editor-block-header"><span class="block-type-badge ' + b.type + '">' + typeName + '</span>' +
-        '<div class="block-actions">' +
-        '<button class="editor-move-up-btn" data-index="' + i + '"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
-        '<button class="editor-move-down-btn" data-index="' + i + '"' + (i === this.editorBlocks.length - 1 ? ' disabled' : '') + '>↓</button>' +
-        '<button class="delete-btn editor-remove-block-btn" data-index="' + i + '">✕</button></div></div>' +
-        this._renderEditorBlockContent(b, i) + '</div>';
+      var typeName = b.label || Components._blockLabel(b.type);
+      h += '<div class="block-wrap" data-index="' + i + '">' +
+        '<div class="block-bar"><input class="editor-block-label" data-index="' + i + '" value="' + escapeHtml(typeName) + '" style="background:none;border:none;color:var(--text);font-size:12px;font-weight:600;font-family:inherit;outline:none;flex:1;min-width:0;padding:2px 6px;border-radius:4px;transition:background .15s;" onfocus="this.style.background=\'rgba(255,255,255,0.05)\'" onblur="this.style.background=\'none\'">' +
+        '<div class="block-actions" style="display:flex;gap:4px;">' +
+        '<button class="btn btn-sm btn-outline btn-icon editor-move-up-btn" data-index="' + i + '"' + (i === 0 ? ' disabled' : '') + ' style="width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px;">↑</button>' +
+        '<button class="btn btn-sm btn-outline btn-icon editor-move-down-btn" data-index="' + i + '"' + (i === this.editorBlocks.length - 1 ? ' disabled' : '') + ' style="width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px;">↓</button>' +
+        '<button class="btn btn-sm btn-outline btn-icon editor-remove-block-btn" data-index="' + i + '" style="width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--error);">✕</button></div></div>' +
+        '<div class="block-body">' + this._renderEditorBlockContent(b, i) + '</div></div>';
     }
     return h;
   },
 
   _renderEditorBlockContent: function(b, i) {
     var previewCb = '<label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;margin-top:6px;"><input type="checkbox" class="editor-allow-preview" data-index="' + i + '"' + (b.allow_preview ? ' checked' : '') + '> 允许普通用户预览</label>';
+    var tocCb = '<label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;margin-top:4px;"><input type="checkbox" class="editor-show-in-toc" data-index="' + i + '"' + (b.show_in_toc ? ' checked' : '') + '> 📑 添加到目录</label>';
     if (b.type === 'text') {
-      return '<textarea class="form-textarea editor-block-input" data-index="' + i + '" rows="4" placeholder="输入文本内容..." style="font-family:inherit;">' + escapeHtml(b.value || '') + '</textarea>' + previewCb;
+      return '<textarea class="form-textarea editor-block-input" data-index="' + i + '" rows="4" placeholder="输入文本内容..." style="font-family:inherit;">' + escapeHtml(b.value || '') + '</textarea>' + previewCb + tocCb;
     } else if (b.type === 'image') {
       var preview = b.file_url ? '<div style="margin-bottom:8px;"><img src="' + b.file_url + '" style="max-width:200px;max-height:150px;border-radius:6px;object-fit:cover;"></div>' : '';
-      return '<div>' + preview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择图片</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入图片URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;">' + previewCb + '</div></div>';
+      return '<div>' + preview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择图片</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入图片URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;">' + previewCb + '</div>' + tocCb + '</div>';
     } else if (b.type === 'video') {
       var vPreview = b.file_url ? '<div style="margin-bottom:8px;"><video controls style="max-width:300px;max-height:150px;"><source src="' + b.file_url + '"></video></div>' : '';
-      return '<div>' + vPreview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择视频</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="video/mp4,video/webm,video/ogg" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入视频URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;"></div>' + previewCb + '</div>';
+      return '<div>' + vPreview + '<div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-sm btn-outline editor-upload-btn" data-index="' + i + '">📁 选择视频</button><input type="file" class="editor-file-input" data-index="' + i + '" accept="video/mp4,video/webm,video/ogg" style="display:none;"><input class="form-input editor-block-url" data-index="' + i + '" type="text" placeholder="或输入视频URL" value="' + escapeHtml(b.value || '') + '" style="flex:1;"></div>' + previewCb + tocCb + '</div>';
     } else if (b.type === 'code') {
-      return '<div><div class="form-group" style="margin-bottom:4px;"><select class="form-input editor-code-lang" data-index="' + i + '" style="width:150px;font-size:13px;"><option value="">自动检测</option><option value="javascript"' + (b.language === 'javascript' ? ' selected' : '') + '>JavaScript</option><option value="python"' + (b.language === 'python' ? ' selected' : '') + '>Python</option><option value="html"' + (b.language === 'html' ? ' selected' : '') + '>HTML</option><option value="css"' + (b.language === 'css' ? ' selected' : '') + '>CSS</option><option value="json"' + (b.language === 'json' ? ' selected' : '') + '>JSON</option><option value="bash"' + (b.language === 'bash' ? ' selected' : '') + '>Bash</option></select></div><textarea class="form-textarea editor-block-input code-input" data-index="' + i + '" rows="6" placeholder="输入代码..." style="font-family:monospace;">' + escapeHtml(b.value || '') + '</textarea>' + previewCb + '</div>';
+      return '<div><div class="form-group" style="margin-bottom:4px;"><select class="form-input editor-code-lang" data-index="' + i + '" style="width:150px;font-size:13px;"><option value="">自动检测</option><option value="javascript"' + (b.language === 'javascript' ? ' selected' : '') + '>JavaScript</option><option value="python"' + (b.language === 'python' ? ' selected' : '') + '>Python</option><option value="html"' + (b.language === 'html' ? ' selected' : '') + '>HTML</option><option value="css"' + (b.language === 'css' ? ' selected' : '') + '>CSS</option><option value="json"' + (b.language === 'json' ? ' selected' : '') + '>JSON</option><option value="bash"' + (b.language === 'bash' ? ' selected' : '') + '>Bash</option></select></div><textarea class="form-textarea editor-block-input code-input" data-index="' + i + '" rows="6" placeholder="输入代码..." style="font-family:monospace;">' + escapeHtml(b.value || '') + '</textarea>' + previewCb + tocCb + '</div>';
     } else if (b.type === 'file') {
       var fileName = b.attachment_name || '';
       var fileSize = b.attachment_size ? formatFileSize(b.attachment_size) : '';
       var hasFile = !!b.attachment_file_id;
       var fileInfo = hasFile ? '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;padding:8px;background:rgba(0,0,0,0.2);border-radius:6px;display:flex;align-items:center;gap:8px;"><span>📎 ' + escapeHtml(fileName) + (fileSize ? ' (' + fileSize + ')' : '') + '</span><button class="btn btn-sm btn-outline editor-remove-attach-btn" data-index="' + i + '" style="color:var(--error);font-size:12px;padding:2px 8px;" title="移除附件">✕</button></div>' : '';
-      return '<div>' + fileInfo +
+      return '<div>' + fileInfo + previewCb + tocCb + 
         '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">' +
         '<button class="btn btn-sm btn-outline editor-attach-btn" data-index="' + i + '">' + (hasFile ? '🔄 替换附件' : '📁 上传附件') + '</button>' +
         '<input type="file" class="editor-attach-input" data-index="' + i + '" style="display:none;">' +
@@ -68,7 +78,7 @@ var ComponentsPostEditor = {
         '<div class="editor-attach-field"><label>积分解锁</label>' +
         '<input type="number" class="editor-unlock-points" data-index="' + i + '" value="' + (b.unlock_points || 0) + '" min="0"></div>' +
         '<div class="editor-attach-field"><label>积分下载</label>' +
-        '<input type="number" class="editor-download-points" data-index="' + i + '" value="' + (b.download_points || 0) + '" min="0"></div></div></div>' + previewCb + '</div>';
+        '<input type="number" class="editor-download-points" data-index="' + i + '" value="' + (b.download_points || 0) + '" min="0"></div></div></div></div>';
     }
     return '';
   },
@@ -118,7 +128,7 @@ var ComponentsPostEditor = {
       btn.addEventListener('click', function() {
         playClickSound();
         var type = this.dataset.type;
-        self.editorBlocks.push({ type: type, value: '', file_id: null, file_url: null, allow_preview: true, _tempId: Date.now() + '_' + Math.random().toString(36).substr(2, 5) });
+        self.editorBlocks.push({ type: type, value: '', label: '', file_id: null, file_url: null, allow_preview: true, show_in_toc: false, _tempId: Date.now() + '_' + Math.random().toString(36).substr(2, 5) });
         document.getElementById('editor-blocks-list').innerHTML = self._renderEditorBlocks();
         self._reBindEditorBlockEvents();
       });
@@ -135,16 +145,15 @@ var ComponentsPostEditor = {
         coverFileId = result.file.id;
         var previewDiv = document.getElementById('editor-cover-preview');
         previewDiv.style.display = 'block';
-        previewDiv.innerHTML = '<img src="' + result.file.url + '" style="max-width:200px;max-height:120px;border-radius:8px;object-fit:cover;">';
-        document.getElementById('editor-cover-name').textContent = '已选择封面';
+        previewDiv.innerHTML = '<img src="' + result.file.url + '" style="width:100%;height:100%;object-fit:cover;">';
         document.getElementById('editor-remove-cover-btn').style.display = '';
       } catch (err) { showToast(err.message, 'error'); }
     });
     document.getElementById('editor-remove-cover-btn').addEventListener('click', function() {
       coverFileId = null;
-      document.getElementById('editor-cover-preview').style.display = 'none';
-      document.getElementById('editor-cover-preview').innerHTML = '';
-      document.getElementById('editor-cover-name').textContent = '未选择';
+      var pv = document.getElementById('editor-cover-preview');
+      pv.style.display = 'flex';
+      pv.innerHTML = '📄';
       this.style.display = 'none';
     });
     document.getElementById('editor-save-btn').addEventListener('click', async function() {
@@ -163,9 +172,9 @@ var ComponentsPostEditor = {
           showToast('请为附件块上传文件', 'warning'); return;
         }
       }
-      var blocks = self.editorBlocks.map(function(b) {
+      var jobType = document.getElementById('editor-job-type'); var jobWorkType = document.getElementById('editor-job-worktype'); var jobCity = document.getElementById('editor-job-city'); var jobDetail = document.getElementById('editor-job-detail'); var jobSalMin = document.getElementById('editor-job-salary-min'); var jobSalMax = document.getElementById('editor-job-salary-max'); if (jobType) data.job_location_type = jobType.value || null; if (jobWorkType) data.job_type = jobWorkType.value || null; if (jobCity) data.job_location_city = jobCity.value.trim() || null; if (jobDetail) data.job_location_detail = jobDetail.value.trim() || null; if (jobSalMin) data.job_salary_min = jobSalMin.value || null; if (jobSalMax) data.job_salary_max = jobSalMax.value || null; var blocks = self.editorBlocks.map(function(b) {
         var ob = { type: b.type, value: b.value || '', file_id: b.file_id || null, allow_preview: !!b.allow_preview,
-          attachment_file_id: b.attachment_file_id || null, attachment_name: b.attachment_name || '',
+          label: b.label || b.type, show_in_toc: !!b.show_in_toc, attachment_file_id: b.attachment_file_id || null, attachment_name: b.attachment_name || '',
           attachment_size: b.attachment_size || 0, min_level_view: b.min_level_view || 0,
           unlock_points: b.unlock_points || 0, download_points: b.download_points || 0 };
         if (b._id) ob.id = b._id; return ob;
@@ -330,6 +339,14 @@ var ComponentsPostEditor = {
     document.querySelectorAll('.editor-block-url').forEach(function(el) {
       var idx = parseInt(el.dataset.index);
       if (!isNaN(idx) && self.editorBlocks[idx]) self.editorBlocks[idx].value = el.value;
+    });
+    document.querySelectorAll('.editor-block-label').forEach(function(el) {
+      var idx = parseInt(el.dataset.index);
+      if (!isNaN(idx) && self.editorBlocks[idx]) self.editorBlocks[idx].label = el.value.trim();
+    });
+    document.querySelectorAll('.editor-show-in-toc').forEach(function(el) {
+      var idx = parseInt(el.dataset.index);
+      if (!isNaN(idx) && self.editorBlocks[idx]) self.editorBlocks[idx].show_in_toc = el.checked;
     });
   }
 };

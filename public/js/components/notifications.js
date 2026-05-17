@@ -19,5 +19,32 @@ var ComponentsNotifications = {
       document.querySelectorAll('.notif-card').forEach(function(i) { i.addEventListener('click', async function() { var id = parseInt(this.dataset.id); if (id) try { await API.markAsRead(id); } catch(e) {} var type = this.dataset.type; var commentId = this.dataset.commentId ? parseInt(this.dataset.commentId) : null; var postDeleted = this.dataset.postDeleted === '1'; var navTo = this.dataset.nav; if ((type === 'reply' || type === 'comment') && commentId && !postDeleted && navTo) { navTo = navTo.split('?')[0] + '?comment=' + commentId; } if (navTo) { Router.navigate(navTo); } else { switch (type) { case 'post_deleted': showToast('该帖子已被管理员删除', 'info'); break; case 'banned': showToast('你已被管理员禁言', 'error'); break; case 'playlist_collect': showToast('有人收藏了你的歌单', 'info'); break; default: Components.renderNotifications(); } } }); });
       document.getElementById('mark-all-read-btn')?.addEventListener('click', async function() { try { await API.markAllAsRead(); showToast('已全部标记已读', 'success'); var b = document.getElementById('unread-badge'); if (b) { b.style.display = 'none'; } Components.renderNotifications(); } catch (err) { showToast(err.message, 'error'); } });
     } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
-  }
+  },
+
+  renderAdminNotifications: async function() {
+    if (!App.user || App.user.role !== 'admin') { Router.navigate('#/works'); return; }
+    this.renderLoading();
+    try {
+      var data = await API.getAdminNotifications();
+      var list = data.notifications || [];
+      var h = '<div class="page-fade-in"><div class="notif-page-wrap"><div class="notif-header-card"><div class="notif-title-row"><h2>🔔 管理员通知 <span style="font-size:12px;color:var(--text-secondary);font-weight:400;"></h2></div></div>' +
+        '<div class="notif-list" style="margin-top:0;">';
+      if (list.length === 0) h += '<p style="color:var(--text-secondary);padding:40px;text-align:center;">暂无管理员通知</p>';
+      else {
+        for (var i = 0; i < list.length; i++) {
+          var n = list[i];
+          var borderColor = n.type === 'admin_report' ? 'var(--primary)' : (n.type === 'admin_application' ? '#f59e0b' : 'var(--text-muted)');
+          h += '<div class="notif-card" style="border-left:3px solid ' + borderColor + ';" data-id="' + n.id + '">' +
+            '<span class="' + (n.is_read ? 'dot read' : 'dot unread') + '"></span>' +
+            '<div class="content"><div class="text">' + escapeHtml(n.message) + '</div>' +
+            '<div class="time">' + formatDate(n.created_at) +
+            (n.target_url ? ' · <span class="admin-notif-link" data-url="' + n.target_url + '" style="color:var(--primary);cursor:pointer;">查看详情 →</span>' : '') + '</div></div></div>';
+        }
+      }
+      h += '</div></div></div>';
+      document.getElementById('app').innerHTML = h;
+      document.querySelectorAll('.admin-notif-link').forEach(function(el) { el.addEventListener('click', function() { Router.navigate(this.dataset.url); }); });
+    } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
+  },
+
 };

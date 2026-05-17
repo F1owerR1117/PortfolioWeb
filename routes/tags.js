@@ -9,7 +9,7 @@ router.get('/', requireAuth, (req, res) => {
   try {
     const category = req.query.category || null;
     let sql, params;
-    if (category && (category === 'work' || category === 'chat')) {
+    if (category && ['work', 'chat', 'job'].includes(category)) {
       sql = `SELECT t.*, COUNT(p.id) as count
              FROM tags t
              LEFT JOIN post_tags pt ON t.id = pt.tag_id
@@ -52,6 +52,61 @@ router.post('/', requireAuth, (req, res) => {
   } catch (err) {
     logger.error('[Tags] Create error:', err);
     res.status(500).json({ error: '创建标签失败' });
+  }
+});
+
+// PUT /api/tags/:id — rename a tag (admin only)
+router.put('/:id', requireAdmin, (req, res) => {
+  try {
+    const tagId = parseInt(req.params.id);
+    if (isNaN(tagId)) return res.status(400).json({ error: '无效的标签ID' });
+
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: '标签名不能为空' });
+    }
+    const trimmed = name.trim();
+
+    const existing = get('SELECT * FROM tags WHERE id = ?', [tagId]);
+    if (!existing) return res.status(404).json({ error: '标签不存在' });
+
+    const dup = get('SELECT * FROM tags WHERE name = ? AND id != ?', [trimmed, tagId]);
+    if (dup) return res.status(409).json({ error: '标签名已存在' });
+
+    run('UPDATE tags SET name = ? WHERE id = ?', [trimmed, tagId]);
+    res.json({ message: '标签已重命名' });
+  } catch (err) {
+    logger.error('[Tags] Rename error:', err);
+    res.status(500).json({ error: '重命名标签失败' });
+  }
+});
+
+// POST /api/tags/merge — merge tags (admin only)
+router.post('/merge', requireAdmin, (req, res) => {
+  try {
+    const { target_id, source_ids } = req.body;
+    const targetId = parseInt(target_id);
+    if (isNaN(targetId)) return res.status(400).json({ error: '无效的目标标签ID' });
+
+    const target = get('SELECT * FROM tags WHERE id = ?', [targetId]);
+    if (!target) return res.status(404).json({ error: '目标标签不存在' });
+
+    const ids = Array.isArray(source_ids) ? source_ids.map(Number).filter(id => !isNaN(id) && id !== targetId) : [];
+    if (ids.length === 0) return res.status(400).json({ error: '请选择要合并的标签' });
+
+    for (const sourceId of ids) {
+      const source = get('SELECT * FROM tags WHERE id = ?', [sourceId]);
+      if (!source) continue;
+      // Reassign post_tags from source to target
+      run('INSERT OR IGNORE INTO post_tags (post_id, tag_id) SELECT post_id, ? FROM post_tags WHERE tag_id = ?', [targetId, sourceId]);
+      run('DELETE FROM post_tags WHERE tag_id = ?', [sourceId]);
+      run('DELETE FROM tags WHERE id = ?', [sourceId]);
+    }
+
+    res.json({ message: `已合并 ${ids.length} 个标签到 "${target.name}"` });
+  } catch (err) {
+    logger.error('[Tags] Merge error:', err);
+    res.status(500).json({ error: '合并标签失败' });
   }
 });
 

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏷️ 标签管理 · 🚩 举报管理 · 优化预览</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#a3e635;--primary-dark:#65a30d;
+  --bg:#0a0a0f;--bg-card:rgba(23,23,23,.9);--bg-card2:rgba(30,30,40,.85);
+  --bg-subtle:rgba(255,255,255,.04);--bg-active:rgba(163,230,53,.08);
+  --bg-input:rgba(0,0,0,.3);
+  --text:#e4e4ec;--text-secondary:rgba(255,255,255,.4);--text-muted:rgba(255,255,255,.25);
+  --border:rgba(255,255,255,.06);--radius:12px;--radius-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.3);--shadow-lg:0 10px 30px rgba(0,0,0,.4);
+  --btn-primary-gradient:linear-gradient(135deg,#a3e635,#65a30d);
+  --card-gradient:linear-gradient(135deg,rgba(23,23,23,.95),rgba(41,37,36,.9));
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans SC',sans-serif;
+  background:var(--bg);color:var(--text);padding:28px 32px;
+  max-width:1100px;margin:0 auto;line-height:1.6;
+}
+h2{font-size:22px;font-weight:700;margin:36px 0 12px;display:flex;align-items:center;gap:8px;}
+p.sub{font-size:13px;color:var(--text-secondary);margin-bottom:20px;}
+hr{border:none;border-top:1px solid var(--border);margin:40px 0;}
+
+.opt-nav{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
+.opt-btn{padding:10px 24px;border-radius:var(--radius);border:1px solid var(--border);
+  background:var(--bg-card);color:var(--text-secondary);font-size:14px;font-weight:500;
+  cursor:pointer;transition:all .2s;font-family:inherit;}
+.opt-btn:hover{border-color:var(--primary);color:var(--primary);}
+.opt-btn.active{background:var(--bg-active);border-color:var(--primary);color:var(--primary);font-weight:600;}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ================================================================
+   A · 标签管理
+   ================================================================ */
+
+/* 当前旧样式 */
+.a-old-bar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.a-old-btn{padding:6px 18px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:inherit;}
+.a-old-btn.active{background:var(--bg-active);border-color:var(--bg-active);color:var(--primary);}
+.a-old-search{margin-bottom:16px;}
+.a-old-search input{width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-input);color:var(--text);font-size:14px;font-family:inherit;outline:none;}
+.a-old-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.a-old-tag{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:var(--bg-active);color:var(--primary);font-size:13px;font-weight:500;}
+.a-old-tag .count{font-size:11px;color:var(--text-secondary);margin-left:2px;}
+.a-old-tag .remove{width:16px;height:16px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:var(--text-secondary);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.a-old-add{display:flex;gap:8px;margin-top:12px;}
+.a-old-add input{flex:1;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-input);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+
+/* A1 — 标签管理：卡片+搜索+批量 */
+.a1-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:16px;}
+.a1-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.a1-title{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.a1-title span.total{font-size:13px;font-weight:400;color:var(--text-secondary);}
+.a1-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.a1-search{position:relative;flex:1;min-width:180px;}
+.a1-search input{width:100%;padding:9px 14px 9px 34px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+.a1-search .icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.3;}
+
+.a1-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:16px;}
+.a1-tag-card{background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;position:relative;}
+.a1-tag-card:hover{border-color:var(--bg-active);transform:translateY(-1px);}
+.a1-tag-card .name{font-size:14px;font-weight:600;margin-bottom:2px;}
+.a1-tag-card .count{font-size:11px;color:var(--text-muted);}
+.a1-tag-card .more{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--text-secondary);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
+.a1-tag-card:hover .more{opacity:1;}
+.a1-tag-card .cat-badge{font-size:9px;padding:1px 6px;border-radius:4px;display:inline-block;margin-top:4px;}
+.a1-tag-card .cat-badge.work{background:rgba(163,230,53,.1);color:var(--primary);}
+.a1-tag-card .cat-badge.chat{background:rgba(96,165,250,.1);color:#60a5fa;}
+
+.a1-add{display:flex;gap:8px;}
+.a1-add input{flex:1;padding:10px 14px;border:1px dashed var(--border);border-radius:10px;background:transparent;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;}
+.a1-add input:focus{border-color:rgba(163,230,53,.15);}
+.a1-add button{padding:10px 22px;border:none;border-radius:10px;background:var(--btn-primary-gradient);color:#0a0a0f;font-size:13px;font-weight:600;cursor:pointer;}
+
+/* A2 — 标签管理：分组+热度+编辑 */
+.a2-layout{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;}
+.a2-main{min-width:0;}
+.a2-side{position:sticky;top:20px;}
+.a2-side-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;}
+.a2-side-card h4{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-secondary);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bg-subtle);}
+
+.a2-group-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;}
+.a2-group-tab{padding:7px 18px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-secondary);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;}
+.a2-group-tab:hover{border-color:var(--bg-active);color:var(--primary);}
+.a2-group-tab.active{background:var(--bg-active);border-color:var(--bg-active);color:var(--primary);font-weight:600;}
+
+.a2-search{position:relative;margin-bottom:14px;}
+.a2-search input{width:100%;padding:9px 14px 9px 36px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+.a2-search .icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.3;}
+
+.a2-list{display:flex;flex-direction:column;gap:4px;}
+.a2-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;transition:background .15s;cursor:pointer;}
+.a2-item:hover{background:var(--bg-active);}
+.a2-item .bar{width:3px;height:24px;border-radius:2px;flex-shrink:0;}
+.a2-item .bar.hot{background:var(--primary);}
+.a2-item .bar.warm{background:#f59e0b;}
+.a2-item .bar.cool{background:#60a5fa;}
+.a2-item .info{flex:1;min-width:0;}
+.a2-item .tname{font-size:13px;font-weight:600;}
+.a2-item .tcount{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.a2-item .tcat{font-size:10px;padding:1px 6px;border-radius:4px;flex-shrink:0;}
+.a2-item .tcat.work{background:rgba(163,230,53,.1);color:var(--primary);}
+.a2-item .tcat.chat{background:rgba(96,165,250,.1);color:#60a5fa;}
+.a2-item .tact{display:flex;gap:4px;flex-shrink:0;opacity:0;transition:opacity .15s;}
+.a2-item:hover .tact{opacity:1;}
+.a2-item .tact button{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+.a2-merge-bar{display:flex;gap:8px;align-items:center;padding:12px;background:var(--bg-active);border-radius:10px;margin-top:12px;}
+.a2-merge-bar span{font-size:12px;color:var(--primary);}
+.a2-merge-bar button{padding:6px 16px;border:none;border-radius:8px;background:var(--btn-primary-gradient);color:#0a0a0f;font-size:12px;font-weight:600;cursor:pointer;}
+
+/* ================================================================
+   B · 举报管理
+   ================================================================ */
+
+/* 当前旧样式 */
+.b-old-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.b-old-report{border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;}
+
+/* B1 — 举报管理：卡片式+详情面板 */
+.b1-report{border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;transition:border-color .2s;}
+.b1-report:hover{border-color:rgba(163,230,53,.08);}
+.b1-head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;transition:background .15s;}
+.b1-head:hover{background:var(--bg-active);}
+.b1-head .status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.b1-head .status-dot.pending{background:#f59e0b;}
+.b1-head .status-dot.resolved{background:#22c55e;}
+.b1-head .status-dot.dismissed{background:rgba(255,255,255,.15);}
+.b1-head .type-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600;flex-shrink:0;}
+.b1-head .type-badge.post{background:rgba(163,230,53,.1);color:var(--primary);}
+.b1-head .type-badge.user{background:rgba(96,165,250,.1);color:#60a5fa;}
+.b1-head .reason{flex:1;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.b1-head .date{font-size:11px;color:var(--text-muted);flex-shrink:0;}
+.b1-body{padding:0 18px 14px;display:none;}
+.b1-body.open{display:block;}
+.b1-detail{background:var(--bg-input);border-radius:10px;padding:14px;margin-bottom:12px;}
+.b1-detail-row{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid var(--bg-subtle);}
+.b1-detail-row:last-child{border:none;}
+.b1-detail-label{color:var(--text-secondary);}
+.b1-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.b1-actions button{padding:7px 16px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s;}
+.b1-actions .act-primary{background:var(--btn-primary-gradient);color:#0a0a0f;}
+.b1-actions .act-danger{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.15);}
+.b1-actions .act-warn{background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.15);}
+.b1-actions .act-outline{border:1px solid var(--border);background:transparent;color:var(--text-secondary);}
+
+/* B2 — 举报管理：表格+筛选+批量 */
+.b2-toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.b2-tabs{display:flex;gap:4px;}
+.b2-tab{padding:8px 18px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-secondary);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;}
+.b2-tab.active{background:var(--bg-active);border-color:var(--bg-active);color:var(--primary);font-weight:600;}
+.b2-tab .count{margin-left:4px;color:var(--text-muted);font-size:11px;}
+
+.b2-search{position:relative;flex:1;min-width:160px;}
+.b2-search input{width:100%;padding:8px 14px 8px 32px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+.b2-search .icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;opacity:.3;}
+
+.b2-table{width:100%;border-collapse:collapse;font-size:13px;}
+.b2-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-secondary);border-bottom:1px solid var(--border);}
+.b2-table td{padding:12px 14px;border-bottom:1px solid var(--bg-subtle);vertical-align:middle;}
+.b2-table tr:hover td{background:var(--bg-active);}
+.b2-table .user-cell{display:flex;align-items:center;gap:8px;}
+.b2-table .user-avatar{width:28px;height:28px;border-radius:8px;background:var(--btn-primary-gradient);color:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;overflow:hidden;}
+.b2-table .user-avatar img{width:100%;height:100%;object-fit:cover;}
+.b2-action-group{display:flex;gap:4px;}
+
+/* 统计卡 */
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+.stat-cd{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+.stat-cd .num{font-size:22px;font-weight:700;}
+.stat-cd .lbl{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+.stat-cd.pending .num{color:#f59e0b;}
+.stat-cd.resolved .num{color:#22c55e;}
+.stat-cd.dismissed .num{color:var(--text-muted);}
+.stat-cd.total .num{color:var(--primary);}
+
+/* 对比表 */
+.cg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:16px 0;}
+.cg-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.cg-card h4{font-size:14px;font-weight:700;margin-bottom:8px;}
+.cg-card ul{padding-left:16px;font-size:12px;color:var(--text-secondary);line-height:1.8;}
+</style>
+</head>
+<body>
+
+<h1>🏷️ 标签管理 · 🚩 举报管理 优化方案</h1>
+<p class="sub">三种不同方向的设计优化，点击选项卡切换</p>
+
+<div class="opt-nav">
+  <button class="opt-btn active" onclick="showP('a')">A · 标签卡片 + 批量操作</button>
+  <button class="opt-btn" onclick="showP('b')">B · 标签分组 + 热度图谱</button>
+  <button class="opt-btn" onclick="showP('c')">C · 举报卡片 + 详情面板</button>
+</div>
+
+<!-- ================================================================ -->
+<!-- A · 标签卡片 + 搜索 + 批量操作 -->
+<!-- ================================================================ -->
+<div class="panel active" id="p-a">
+<h2>A · 标签卡片化 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);">卡片网格 · 分类筛选 · 批量删除 · 实时搜索</span></h2>
+
+<div class="a1-card">
+  <div class="a1-header">
+    <div class="a1-title">🏷️ 标签管理 <span class="total">共 24 个标签</span></div>
+    <div class="a1-toolbar">
+      <div class="a1-search"><span class="icon">🔍</span><input placeholder="搜索标签..."></div>
+      <div style="display:flex;gap:4px;">
+        <button class="opt-btn" style="padding:7px 14px;font-size:12px;">📋 全部</button>
+        <button class="opt-btn active" style="padding:7px 14px;font-size:12px;">📂 作品区</button>
+        <button class="opt-btn" style="padding:7px 14px;font-size:12px;">💬 聊天区</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="a1-grid">
+    <div class="a1-tag-card"><div class="name">Three.js <span class="count">12 帖</span></div><span class="cat-badge work">作品区</span><button class="more">⋯</button></div>
+    <div class="a1-tag-card"><div class="name">WebGL <span class="count">8 帖</span></div><span class="cat-badge work">作品区</span><button class="more">⋯</button></div>
+    <div class="a1-tag-card"><div class="name">游戏 <span class="count">15 帖</span></div><span class="cat-badge chat">聊天区</span><button class="more">⋯</button></div>
+    <div class="a1-tag-card"><div class="name">React <span class="count">6 帖</span></div><span class="cat-badge work">作品区</span><button class="more">⋯</button></div>
+    <div class="a1-tag-card"><div class="name">讨论 <span class="count">22 帖</span></div><span class="cat-badge chat">聊天区</span><button class="more">⋯</button></div>
+    <div class="a1-tag-card"><div class="name">Rust <span class="count">4 帖</span></div><span class="cat-badge work">作品区</span><button class="more">⋯</button></div>
+    <div class="a1-tag-card"><div class="name">Flutter <span class="count">3 帖</span></div><span class="cat-badge work">作品区</span><button class="more">⋯</button></div>
+    <div class="a1-tag-card"><div class="name">心情 <span class="count">10 帖</span></div><span class="cat-badge chat">聊天区</span><button class="more">⋯</button></div>
+  </div>
+
+  <div class="a1-add">
+    <input placeholder="输入新标签名称...">
+    <button>✚ 添加</button>
+  </div>
+</div>
+
+<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+  <h4 style="font-size:13px;font-weight:600;margin-bottom:8px;">🔄 对比当前</h4>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--text-secondary);">
+    <div><span style="color:var(--error);font-weight:600;">旧</span> 扁平列表，标签拥挤在一行，无法快速筛选</div>
+    <div><span style="color:#22c55e;font-weight:600;">新</span> 卡片网格，每卡片显示名称/帖数/分区，hover 露出操作菜单</div>
+    <div><span style="color:var(--error);font-weight:600;">旧</span> 添加标签输入框无视觉区分</div>
+    <div><span style="color:#22c55e;font-weight:600;">新</span> 虚线边框输入框 + 绿色按钮，引导清晰</div>
+    <div><span style="color:var(--error);font-weight:600;">旧</span> 标签删除按钮始终可见</div>
+    <div><span style="color:#22c55e;font-weight:600;">新</span> 操作按钮 hover 露出，界面更清爽</div>
+  </div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- B · 标签分组 + 热度图谱 -->
+<!-- ================================================================ -->
+<div class="panel" id="p-b">
+<h2>B · 分组视图 + 热度排序 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);">颜色条 · 左侧栏编辑 · 合并标签 · Sidebar</span></h2>
+
+<div class="a2-layout">
+  <div class="a2-main">
+    <div class="a1-card">
+      <div class="a2-group-tabs">
+        <button class="a2-group-tab active">📋 全部 · 24</button>
+        <button class="a2-group-tab">📂 作品区 · 14</button>
+        <button class="a2-group-tab">💬 聊天区 · 10</button>
+      </div>
+      <div class="a2-search"><span class="icon">🔍</span><input placeholder="搜索标签..."></div>
+      <div class="a2-list">
+        <div class="a2-item"><div class="bar hot"></div><div class="info"><div class="tname">讨论</div><div class="tcount">22 帖</div></div><span class="tcat chat">聊天区</span><div class="tact"><button>✏</button><button>🗑</button></div></div>
+        <div class="a2-item"><div class="bar hot"></div><div class="info"><div class="tname">游戏</div><div class="tcount">15 帖</div></div><span class="tcat chat">聊天区</span><div class="tact"><button>✏</button><button>🗑</button></div></div>
+        <div class="a2-item"><div class="bar hot"></div><div class="info"><div class="tname">Three.js</div><div class="tcount">12 帖</div></div><span class="tcat work">作品区</span><div class="tact"><button>✏</button><button>🗑</button></div></div>
+        <div class="a2-item"><div class="bar warm"></div><div class="info"><div class="tname">心情</div><div class="tcount">10 帖</div></div><span class="tcat chat">聊天区</span><div class="tact"><button>✏</button><button>🗑</button></div></div>
+        <div class="a2-item"><div class="bar warm"></div><div class="info"><div class="tname">WebGL</div><div class="tcount">8 帖</div></div><span class="tcat work">作品区</span><div class="tact"><button>✏</button><button>🗑</button></div></div>
+        <div class="a2-item"><div class="bar warm"></div><div class="info"><div class="tname">React</div><div class="tcount">6 帖</div></div><span class="tcat work">作品区</span><div class="tact"><button>✏</button><button>🗑</button></div></div>
+        <div class="a2-item"><div class="bar cool"></div><div class="info"><div class="tname">Rust</div><div class="tcount">4 帖</div></div><span class="tcat work">作品区</span><div class="tact"><button>✏</button><button>🗑</button></div></div>
+        <div class="a2-item"><div class="bar cool"></div><div class="info"><div class="tname">Flutter</div><div class="tcount">3 帖</div></div><span class="tcat work">作品区</span><div class="tact"><button>✏</button><button>🗑</button></div></div>
+      </div>
+      <div class="a2-merge-bar">
+        <span>📎 选中 2 个标签</span>
+        <button>合并标签</button>
+      </div>
+    </div>
+  </div>
+  <div class="a2-side">
+    <div class="a2-side-card">
+      <h4>🏷️ 标签统计</h4>
+      <div style="font-size:12px;color:var(--text-secondary);">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;">总标签 <span style="color:var(--text);font-weight:600;">24</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;">作品区 <span style="color:var(--primary);font-weight:600;">14</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;">聊天区 <span style="color:#60a5fa;font-weight:600;">10</span></div>
+      </div>
+    </div>
+    <div class="a2-side-card">
+      <h4>🔥 热度分布</h4>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;gap:6px;align-items:center;"><span class="bar hot" style="width:8px;height:8px;border-radius:2px;"></span><span style="font-size:11px;color:var(--text-muted);">热 &gt;10 帖</span></div>
+        <div style="display:flex;gap:6px;align-items:center;"><span class="bar warm" style="width:8px;height:8px;border-radius:2px;"></span><span style="font-size:11px;color:var(--text-muted);">中 5-9 帖</span></div>
+        <div style="display:flex;gap:6px;align-items:center;"><span class="bar cool" style="width:8px;height:8px;border-radius:2px;"></span><span style="font-size:11px;color:var(--text-muted);">冷 &lt;5 帖</span></div>
+      </div>
+    </div>
+    <div class="a2-side-card">
+      <h4>✚ 添加标签</h4>
+      <div style="display:flex;gap:6px;">
+        <input style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text);font-size:12px;font-family:inherit;outline:none;" placeholder="名称...">
+        <button style="padding:8px 16px;border:none;border-radius:8px;background:var(--btn-primary-gradient);color:#0a0a0f;font-size:12px;font-weight:600;cursor:pointer;">添加</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<!-- C · 举报管理卡片化 -->
+<!-- ================================================================ -->
+<div class="panel" id="p-c">
+<h2>C · 举报管理卡片化 <span style="font-size:13px;font-weight:400;color:var(--text-secondary);">统计卡 · 可展开详情 · 快速操作</span></h2>
+
+<div class="stat-cards">
+  <div class="stat-cd total"><div class="num">18</div><div class="lbl">📋 总举报</div></div>
+  <div class="stat-cd pending"><div class="num">5</div><div class="lbl">⏳ 待处理</div></div>
+  <div class="stat-cd resolved"><div class="num">10</div><div class="lbl">✅ 已处理</div></div>
+  <div class="stat-cd dismissed"><div class="num">3</div><div class="lbl">❌ 已驳回</div></div>
+</div>
+
+<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+  <div style="display:flex;gap:4px;">
+    <button class="b2-tab active">⏳ 待处理 <span class="count">5</span></button>
+    <button class="b2-tab">✅ 已处理 <span class="count">10</span></button>
+    <button class="b2-tab">❌ 已驳回 <span class="count">3</span></button>
+  </div>
+  <div class="b2-search" style="max-width:200px;"><span class="icon">🔍</span><input placeholder="搜索..."></div>
+</div>
+
+<!-- 卡片列表 -->
+<div class="b1-report">
+  <div class="b1-head" onclick="this.nextElementSibling.classList.toggle('open')">
+    <span class="status-dot pending"></span>
+    <span class="type-badge post">📄帖子</span>
+    <span class="reason">⛔ 违规内容：包含不当言论和攻击性语言...</span>
+    <span class="date">2小时前</span>
+  </div>
+  <div class="b1-body open">
+    <div class="b1-detail">
+      <div class="b1-detail-row"><span class="b1-detail-label">举报目标</span><span style="color:var(--primary);cursor:pointer;">基于 Three.js 的 3D 可视化作品集</span></div>
+      <div class="b1-detail-row"><span class="b1-detail-label">举报人</span><span style="color:var(--primary);cursor:pointer;">李四</span></div>
+      <div class="b1-detail-row"><span class="b1-detail-label">举报原因</span><span>包含不当言论和攻击性语言，严重违反社区规范</span></div>
+      <div class="b1-detail-row"><span class="b1-detail-label">举报时间</span><span>2026-05-17 21:30</span></div>
+    </div>
+    <div class="b1-actions">
+      <button class="act-primary">✅ 处理（标记已处理）</button>
+      <button class="act-warn">🔒 锁定帖子</button>
+      <button class="act-danger">🗑 删除帖子</button>
+      <button class="act-outline">❌ 驳回</button>
+    </div>
+  </div>
+</div>
+
+<div class="b1-report">
+  <div class="b1-head" onclick="this.nextElementSibling.classList.toggle('open')">
+    <span class="status-dot pending"></span>
+    <span class="type-badge user">👤用户</span>
+    <span class="reason">🚫 恶意骚扰：持续在评论区攻击其他用户</span>
+    <span class="date">5小时前</span>
+  </div>
+  <div class="b1-body">
+    <div class="b1-detail">
+      <div class="b1-detail-row"><span class="b1-detail-label">举报目标</span><span style="color:var(--primary);cursor:pointer;">王五</span></div>
+      <div class="b1-detail-row"><span class="b1-detail-label">举报人</span><span style="color:var(--primary);cursor:pointer;">张三</span></div>
+      <div class="b1-detail-row"><span class="b1-detail-label">举报原因</span><span>持续在评论区攻击其他用户，多次警告无效</span></div>
+    </div>
+    <div class="b1-actions">
+      <button class="act-primary">✅ 处理</button>
+      <button class="act-warn">🔇 禁言</button>
+      <button class="act-outline">❌ 驳回</button>
+    </div>
+  </div>
+</div>
+
+<div class="b1-report">
+  <div class="b1-head" onclick="this.nextElementSibling.classList.toggle('open')">
+    <span class="status-dot resolved"></span>
+    <span class="type-badge post">📄帖子</span>
+    <span class="reason">📢 广告贴</span>
+    <span class="date">1天前</span>
+  </div>
+  <div class="b1-body">
+    <div class="b1-detail">
+      <div class="b1-detail-row"><span class="b1-detail-label">处理结果</span><span style="color:#22c55e;font-weight:600;">✅ 已处理</span></div>
+    </div>
+  </div>
+</div>
+
+<hr style="margin:24px 0;">
+
+<h2 style="font-size:18px;font-weight:700;margin-bottom:16px;">📐 三方案对比</h2>
+<div class="cg">
+  <div class="cg-card">
+    <h4>A · 标签卡片化</h4>
+    <ul>
+      <li>卡片网格布局，每标签独立卡片</li>
+      <li>实时搜索过滤</li>
+      <li>分类切换（全部/作品/聊天）</li>
+      <li>hover 露出操作菜单</li>
+      <li>虚线添加输入框</li>
+    </ul>
+  </div>
+  <div class="cg-card">
+    <h4>B · 分组 + 热度</h4>
+    <ul>
+      <li>列表视图 + 热度颜色条</li>
+      <li>sticky 侧边栏统计数据</li>
+      <li>hover 露出编辑/删除按钮</li>
+      <li>标签合并功能（批量选中后合并）</li>
+      <li>热度分布图例</li>
+    </ul>
+  </div>
+  <div class="cg-card">
+    <h4>C · 举报卡片化</h4>
+    <ul>
+      <li>顶部统计卡片（总/待处理/已处理/驳回）</li>
+      <li>可展开/收起详情面板</li>
+      <li>状态指示圆点（黄色/绿色/灰色）</li>
+      <li>内联操作按钮组</li>
+      <li>搜索 + 状态标签页筛选</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<script>
+function showP(id){document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});document.getElementById('p-'+id).classList.add('active');document.querySelectorAll('.opt-btn').forEach(function(b){b.classList.remove('active');});document.querySelector('.opt-btn[onclick*="'+id+'"]').classList.add('active');}
+</script>
+</body>
+</html>

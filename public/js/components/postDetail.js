@@ -7,14 +7,58 @@ var ComponentsPostDetail = {
       this._currentPostAuthorId = post.created_by;
       var tags = (post.tags || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
       var tagsHtml = tags.length ? ' · ' + tags.map(function(t) { return '<span class="meta-tag">' + escapeHtml(t) + '</span>'; }).join(' ') : '';
-      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="post-detail"><div class="back-link" id="back-link">← 返回列表</div><div class="post-detail-cover" style="' + (post.cover_url ? "background-image:url('" + post.cover_url + "');background-size:cover;background-position:center;" : '') + '">' + (post.cover_url ? '' : '📄') + '</div><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;"><div><h1 class="post-detail-title">' + escapeHtml(post.title) + '</h1><div class="post-detail-meta">作者：<a href="#/users/' + post.created_by + '" class="user-link">' + escapeHtml(post.author) + '</a>' + this._renderLevelBadge((post.author_level || 1)) + ' · ' + formatDate(post.created_at) + (post.updated_at !== post.created_at ? '（编辑于 ' + formatDate(post.updated_at) + '）' : '') + ' · 👁 ' + (post.views || 0) + tagsHtml + '</div></div>' + (isAdmin ? '<div class="admin-actions"><button class="admin-btn" id="edit-post-btn">✏ 编辑</button><button class="admin-btn danger" id="delete-post-btn">🗑 删除</button><button class="admin-btn ' + (post.is_sticky ? 'active' : '') + '" id="sticky-toggle-btn">📌 ' + (post.is_sticky ? '已置顶' : '置顶') + '</button><button class="admin-btn ' + (post.is_featured ? 'active' : '') + '" id="featured-toggle-btn">⭐ ' + (post.is_featured ? '已精华' : '精华') + '</button><button class="admin-btn ' + (post.is_locked ? 'active' : '') + '" id="lock-toggle-btn">🔒 ' + (post.is_locked ? '已锁定' : '锁定') + '</button></div>' : '') + '</div>' +
-        '<div class="reaction-bar" id="reaction-bar" data-post-id="' + post.id + '"><button class="reaction-btn like-btn' + (d.user_reaction === 'like' ? ' active' : '') + '" data-type="like">👍 <span id="like-count">' + (post.like_count || 0) + '</span></button><button class="reaction-btn dislike-btn' + (d.user_reaction === 'dislike' ? ' active' : '') + '" data-type="dislike">👎 <span id="dislike-count">' + (post.dislike_count || 0) + '</span></button><button class="icon-btn" id="bookmark-btn" title="收藏">📖</button><button class="icon-btn" id="report-post-btn" title="举报" style="font-size:16px;">🚩</button></div>' +
-        (post.is_featured ? '<div class="featured-badge">⭐ 精华帖</div>' : '') + (post.description ? '<p class="post-detail-desc">' + escapeHtml(post.description) + '</p>' : '') +
+      var tagNames = tags.length ? tags.map(function(t) { return '<span class="detail-tag">' + escapeHtml(t) + '</span>'; }).join(' ') : '';
+      var adminHtml = isAdmin ? '<div class="admin-actions" style="margin-top:12px;"><button class="admin-btn" id="edit-post-btn">✏️ 编辑</button><button class="admin-btn danger" id="delete-post-btn">🗑️ 删除</button><button class="admin-btn ' + (post.is_sticky ? 'active' : '') + '" id="sticky-toggle-btn">📌 ' + (post.is_sticky ? '已置顶' : '置顶') + '</button><button class="admin-btn ' + (post.is_featured ? 'active' : '') + '" id="featured-toggle-btn">⭐ ' + (post.is_featured ? '已精华' : '精华') + '</button><button class="admin-btn ' + (post.is_locked ? 'active' : '') + '" id="lock-toggle-btn">🔒 ' + (post.is_locked ? '已锁定' : '锁定') + '</button></div>' : '';
+      var metaHtml = '<div class="post-detail-meta"><a href="#/users/' + post.created_by + '" class="user-link">' + escapeHtml(post.author) + '</a>' + this._renderLevelBadge((post.author_level || 1)) + ' · ' + formatDate(post.created_at) + (post.updated_at !== post.created_at ? '（编辑于 ' + formatDate(post.updated_at) + '）' : '') + ' · 👁 ' + (post.views || 0) + '</div>';
+      var coverHtml = post.cover_url ? 'background-image:url(' + post.cover_url + ');background-size:cover;background-position:center;' : '';
+      var coverIcon = post.cover_url ? '' : '📄';
+      var mainContent = (post.is_featured ? '<div class="featured-badge">⭐ 精华帖</div>' : '') + (post.description ? '<p class="post-detail-desc">' + escapeHtml(post.description) + '</p>' : '') +
         '<div class="content-blocks" id="content-blocks">' + (blocks.length === 0 ? '<div class="empty-state"><p>暂无内容</p></div>' : '') + '</div>' +
-        '<div class="comments-section" id="comments-section"><h2 class="comments-title">💬 评论</h2>' + (post.is_locked ? '<div class="locked-notice">🔒 该帖子已被锁定，无法回复</div>' : '<div class="comment-form-wrap"><textarea class="form-textarea" id="comment-input" placeholder="写下你的评论..." rows="3"></textarea><button class="comment-submit-btn" id="submit-comment-btn">发布评论</button></div>') + '<div class="comments-list" id="comments-list"><div class="loading-screen" style="padding:40px;"><div class="spinner"></div><p>加载评论中...</p></div></div></div></div></div>';
+        (tagNames ? '<div style="margin-top:24px;display:flex;gap:6px;flex-wrap:wrap;">' + tagNames + '</div>' : '');
+      var tocItems = blocks.filter(function(b) { return b.show_in_toc; }).map(function(b) { var label = b.label || (b.type === 'text' ? '📝 文本' : b.type === 'image' ? '🖼 图片' : b.type === 'video' ? '🎬 视频' : b.type === 'code' ? '💻 代码' : '📎 附件'); return '<div class="detail-toc-item" data-block-id="' + b.id + '">' + escapeHtml(label) + '</div>'; }).join('');
+      var tocHtml = tocItems ? '<div class="detail-sidebar-card"><h4>📑 目录</h4><div class="detail-toc-wrap">' + tocItems + '</div></div>' : '';
+      // 构建页面各区域 HTML
+      var authorHtml = '<div class="detail-sidebar-card"><h4>👤 作者</h4><div class="detail-author-card"><div class="detail-avatar">' +
+        (post.author_avatar ? '<img src="' + escapeHtml(post.author_avatar) + '" alt="">' : escapeHtml((post.author_nickname || post.author || ' ').charAt(0).toUpperCase())) +
+        '</div><div class="detail-author-info"><div class="detail-author-name"><a href="#/users/' + post.created_by + '" style="color:var(--text);text-decoration:none;">' +
+        escapeHtml(post.author_nickname || post.author) + '</a>' + this._renderLevelBadge((post.author_level || 1)) + (post.category === 'job' && post.author_job_rating ? ' <span class="meta-tag" style="background:rgba(245,158,11,.1);color:#f59e0b;">⭐ ' + post.author_job_rating + '</span>' : '') +
+        '</div><div class="detail-author-stats">⭐ ' + (post.author_points || 0) + ' 分</div></div></div></div>';
+
+      var reactHtml = '<div class="detail-sidebar-card"><h4>👍 反应</h4><div class="detail-react-group">' +
+        '<button class="detail-react-btn like-btn' + (d.user_reaction === 'like' ? ' active' : '') + '" data-type="like">👍 <span id="like-count">' + (post.like_count || 0) + '</span></button>' +
+        '<button class="detail-react-btn dislike-btn' + (d.user_reaction === 'dislike' ? ' active' : '') + '" data-type="dislike">👎 <span id="dislike-count">' + (post.dislike_count || 0) + '</span></button>' +
+        '<button class="detail-react-btn" id="bookmark-btn">📖 收藏</button>' +
+        '<button class="detail-react-btn" id="report-post-btn">🚩 举报</button></div></div>';
+
+      var commentsHtml = '<div class="comments-section" id="comments-section"><h2 class="comments-title">💬 评论</h2>' +
+        (post.is_locked ? '<div class="locked-notice">🔒 该帖子已被锁定，无法回复</div>' :
+          '<div class="comment-form-wrap"><textarea class="form-textarea" id="comment-input" placeholder="写下你的评论..." rows="3"></textarea>' +
+          '<button class="comment-submit-btn" id="submit-comment-btn">发布评论</button></div>') +
+        '<div class="comments-list" id="comments-list"><div class="loading-screen" style="padding:40px;"><div class="spinner"></div><p>加载评论中...</p></div></div></div>';
+
+      var locHtml = '';
+      if (post.category === 'job' && (post.job_location_city || post.job_location_type || post.job_salary_min)) {
+        var typeMap = { office:'🏢 坐班', remote:'🏠 远程', hybrid:'🔄 混合' };
+        locHtml = '<div class="detail-sidebar-card"><h4>📍 位置与薪资</h4>' +
+          (post.job_location_type ? '<div class="detail-toc-item" style="cursor:default;"><span style="color:var(--text-muted);">' + (typeMap[post.job_location_type] || post.job_location_type) + '</span></div>' : '') +
+          (post.job_location_city ? '<div class="detail-toc-item" style="cursor:default;"><span>📌 ' + escapeHtml(post.job_location_city) + (post.job_location_detail ? ' · ' + escapeHtml(post.job_location_detail) : '') + '</span></div>' : '') +
+          (post.job_salary_min ? '<div class="detail-toc-item" style="cursor:default;"><span>💰 ' + post.job_salary_min + (post.job_salary_max ? ' - ' + post.job_salary_max : '') + (post.job_type || '') + '</span></div>' : '') +
+          '</div>';
+      }
+
+      var tagSideHtml = tagNames ? '<div class="detail-sidebar-card"><h4>🏷️ 标签</h4><div>' + tagNames + '</div></div>' : '';
+
+      var sidebarHtml = authorHtml + locHtml + tocHtml + reactHtml + tagSideHtml;
+      var heroHtml = '<div class="back-link" id="back-link">← 返回列表</div>' +
+        '<div class="post-detail-cover" style="' + coverHtml + '">' + coverIcon + '</div>' +
+        '<h1 class="post-detail-title">' + escapeHtml(post.title) + '</h1>' + metaHtml + adminHtml + mainContent;
+
+      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="post-detail">' +
+        '<div class="detail-layout"><div class="detail-main">' + heroHtml + '</div>' +
+        '<div class="detail-sidebar">' + sidebarHtml + '</div></div>' + commentsHtml + '</div></div>';
       var bc = document.getElementById('content-blocks');
       blocks.forEach(function(b) {
-        var el = document.createElement('div'); el.className = 'content-block';
+        var el = document.createElement('div'); el.className = 'content-block'; if (b.show_in_toc) el.id = 'block-' + b.id;
 
         // Attachment block rendering
         if (b.attachment_file_id) {
@@ -35,7 +79,7 @@ var ComponentsPostDetail = {
             actionsHtml = '<div style="padding:12px;text-align:center;"><a href="' + downloadUrl + '" class="btn btn-primary btn-sm" download>⬇ 下载附件</a></div>';
           }
 
-          el.innerHTML = '<div class="content-block-label">📎 附件</div>' +
+          el.innerHTML = '<div class="content-block-label">' + escapeHtml(b.label || '📎 附件') + '</div>' +
             '<div style="border:1px solid var(--border);border-radius:8px;margin-top:8px;overflow:hidden;">' +
             '<div style="padding:12px;display:flex;align-items:center;gap:12px;background:var(--bg-card);">' +
             '<span style="font-size:32px;">' + (b.attachment_can_view ? '📎' : '🔒') + '</span>' +
@@ -46,7 +90,8 @@ var ComponentsPostDetail = {
           return;
         }
 
-        var h = '<div class="content-block-label">' + (b.type === 'text' ? '📝 文本' : b.type === 'image' ? '🖼 图片' : b.type === 'video' ? '🎬 视频' : b.type === 'file' ? '📎 附件' : '💻 代码') + '</div>';
+        var defaultLabel = b.type === 'text' ? '📝 文本' : b.type === 'image' ? '🖼 图片' : b.type === 'video' ? '🎬 视频' : b.type === 'file' ? '📎 附件' : '💻 代码';
+        var h = '<div class="content-block-label">' + escapeHtml(b.label || defaultLabel) + '</div>';
         if (b.type === 'text') h += '<div class="text-content">' + escapeHtml(b.value) + '</div>';
         else if (b.type === 'image') h += (b.file_url || b.value) ? '<img src="' + (b.file_url || b.value) + '" alt="图片">' : '<span style="color:var(--text-light)">图片不可用</span>';
         else if (b.type === 'video') h += (b.file_url || b.value) ? '<video controls><source src="' + (b.file_url || b.value) + '"' + (b.file_mime_type ? ' type="' + b.file_mime_type + '"' : '') + '></video>' : '<span style="color:var(--text-light)">视频不可用</span>';
@@ -99,6 +144,7 @@ var ComponentsPostDetail = {
       API.checkBookmark(post.id).then(function(c) { _updateBmBtn((c.collection_ids||[]).length > 0); }).catch(function(){});
       document.getElementById('bookmark-btn')?.addEventListener('click', async function() { try { playClickSound(); var cols = (await API.getBookmarkCollections()).collections || []; var check = await API.checkBookmark(post.id); var sel = new Set((check.collection_ids || []).map(Number)); var ov = document.createElement('div'); ov.className = 'custom-modal-overlay'; ov.innerHTML = '<div class="custom-modal-dialog" style="max-width:420px;padding:20px 0;"><div style="padding:0 24px 16px;border-bottom:1px solid var(--border);"><div style="font-size:17px;font-weight:700;">📌 管理收藏</div></div><div style="padding:8px 0;max-height:320px;overflow-y:auto;">' + (cols.length ? cols.map(function(c) { var s = sel.has(c.id); return '<div class="picker-col-item" data-id="' + c.id + '" data-selected="' + (s ? '1' : '0') + '" style="padding:12px 24px;cursor:pointer;display:flex;align-items:center;gap:12px;"><span style="font-size:18px;width:24px;text-align:center;">' + (s ? '☑' : '☐') + '</span><div><div style="font-weight:600;font-size:14px;">' + escapeHtml(c.name) + '</div><div style="font-size:12px;color:var(--text-secondary);">' + (c.count || 0) + ' 个收藏</div></div></div>'; }).join('') : '<div style="padding:20px;text-align:center;color:var(--text-secondary);">暂无收藏夹，点击下方新建</div>') + '</div><div style="padding:12px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:space-between;"><button class="btn btn-sm btn-outline" id="picker-new-col-btn">✚ 新建</button><div><button class="btn btn-sm btn-outline" id="picker-cancel-btn">取消</button><button class="btn btn-sm btn-primary" id="picker-confirm-btn" style="margin-left:8px;">保存</button></div></div></div>'; document.body.appendChild(ov); requestAnimationFrame(function(){ ov.classList.add('visible'); }); var cp = function(){ ov.classList.remove('visible'); ov.classList.add('closing'); setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 200); }; ov.querySelectorAll('.picker-col-item').forEach(function(it) { it.addEventListener('click', function() { var s = it.dataset.selected === '1'; it.dataset.selected = s ? '0' : '1'; it.style.borderLeft = s ? '' : '3px solid var(--primary)'; it.querySelector('span:first-child').textContent = s ? '☐' : '☑'; }); }); document.getElementById('picker-confirm-btn').addEventListener('click', async function() { var changed = 0, errors = 0; this.disabled = true; for (var i = 0; i < cols.length; i++) { var c = cols[i], el = ov.querySelector('.picker-col-item[data-id="' + c.id + '"]'); if (!el) continue; if ((el.dataset.selected === '1') !== sel.has(c.id)) { try { await API.toggleBookmark(post.id, c.id); changed++; } catch(e) { errors++; } } } cp(); if (errors > 0) showToast('部分操作失败（' + errors + ' 项），请重试', 'error'); else showToast(changed > 0 ? '已更新' : '未修改', 'success'); try { var c2 = await API.checkBookmark(post.id); _updateBmBtn((c2.collection_ids||[]).length > 0); } catch(e){} }); document.getElementById('picker-new-col-btn').addEventListener('click', async function() { var n = await showPrompt('新建收藏夹名称：', '', '我的收藏'); if (!n || !n.trim()) return; try { await API.createBookmarkCollection(n.trim()); showToast('已创建', 'success'); cp(); setTimeout(function() { document.getElementById('bookmark-btn').click(); }, 250); } catch(err) { showToast(err.message, 'error'); } }); document.getElementById('picker-cancel-btn').addEventListener('click', cp); ov.addEventListener('click', function(e) { if (e.target === ov) cp(); }); } catch(err) { showToast(err.message, 'error'); } });
       document.getElementById('report-post-btn')?.addEventListener('click', async function() { var r = await showPrompt('举报原因：', '', '违规内容'); if (!r || !r.trim()) return; try { await API.createReport('post', post.id, r.trim()); showToast('已提交', 'success'); } catch (err) { showToast(err.message, 'error'); } });
+      document.querySelectorAll('.detail-toc-item').forEach(function(el) { el.addEventListener('click', function() { var blockId = this.dataset.blockId; var target = document.getElementById('block-' + blockId); if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.querySelectorAll('.detail-toc-item').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active'); playClickSound(); } }); });
       await this._loadComments(postId); this._bindCommentForm(postId); this._bindCommentActions(postId);
       if (this._highlightCommentId) {
         var targetCommentId = this._highlightCommentId;
@@ -170,9 +216,10 @@ var ComponentsPostDetail = {
   },
 
   _bindReactionBar: function(postId) {
-    document.getElementById('reaction-bar')?.addEventListener('click', async function(e) {
-      var btn = e.target.closest('.reaction-btn'); if (!btn) return; playClickSound();
-      try { var r = await API.setReaction(postId, btn.classList.contains('active') ? null : btn.dataset.type); if (btn.dataset.type === 'like') App.refreshLevel(); document.getElementById('like-count').textContent = r.like_count; document.getElementById('dislike-count').textContent = r.dislike_count; document.querySelectorAll('.reaction-btn').forEach(function(b) { b.classList.remove('active'); }); if (r.type) document.querySelector('.reaction-btn[data-type="' + r.type + '"]').classList.add('active'); } catch (err) { showToast(err.message, 'error'); }
+    document.querySelectorAll('.detail-react-btn.like-btn, .detail-react-btn.dislike-btn').forEach(function(btn) {
+      btn.addEventListener('click', async function() { playClickSound();
+        try { var r = await API.setReaction(postId, this.classList.contains('active') ? null : this.dataset.type); if (this.dataset.type === 'like') App.refreshLevel(); document.querySelectorAll('#like-count').forEach(function(el) { el.textContent = r.like_count || 0; }); document.querySelectorAll('#dislike-count').forEach(function(el) { el.textContent = r.dislike_count || 0; }); document.querySelectorAll('.detail-react-btn.like-btn, .detail-react-btn.dislike-btn').forEach(function(b) { b.classList.remove('active'); }); if (r.type) document.querySelectorAll('.detail-react-btn[data-type="' + r.type + '"]').forEach(function(b) { b.classList.add('active'); }); } catch(err) { showToast(err.message, 'error'); }
+      });
     });
   },
 

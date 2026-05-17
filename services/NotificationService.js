@@ -27,6 +27,18 @@ const NotificationService = {
     return result ? result.count : 0;
   },
 
+  listAdmin() {
+    return all(
+      `SELECT n.id, n.user_id, n.actor_id, n.type, n.post_id, n.comment_id,
+              n.is_read, n.created_at, n.message, n.target_url,
+              a.username AS actor_name
+       FROM notifications n
+       JOIN users a ON n.actor_id = a.id
+       WHERE n.type IN ('admin_report','admin_application','admin_system')
+       ORDER BY n.created_at DESC LIMIT 50`
+    );
+  },
+
   markRead(notificationId, userId) {
     const notif = get('SELECT * FROM notifications WHERE id = ? AND user_id = ?', [notificationId, userId]);
     if (!notif) throw { status: 404, message: '通知不存在' };

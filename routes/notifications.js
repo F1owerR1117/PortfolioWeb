@@ -40,6 +40,18 @@ router.put('/notifications/:id/read', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/notifications/admin — admin notifications (reports, applications)
+router.get('/notifications/admin', requireAuth, async (req, res) => {
+  try {
+    if (req.session.role !== 'admin') return res.status(403).json({ error: '权限不足' });
+    const notifications = NotificationService.listAdmin();
+    res.json({ notifications });
+  } catch (err) {
+    logger.error('[Notifications] Admin list error:', err);
+    res.status(500).json({ error: '获取管理员通知失败' });
+  }
+});
+
 // PUT /api/notifications/read-all
 router.put('/notifications/read-all', requireAuth, async (req, res) => {
   try {

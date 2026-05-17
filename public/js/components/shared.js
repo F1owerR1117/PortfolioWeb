@@ -18,9 +18,10 @@ var ComponentsShared = {
     var cfg = this._levelConfigMap[level || 1];
     if (cfg && cfg.name) {
       var bgStyle = cfg.icon ? 'background-image:url(' + cfg.icon + ');background-size:cover;background-position:center;position:relative;overflow:hidden;' : '';
-      return '<span class="lvl-badge-sm" style="' + bgStyle + 'background-color:var(--primary);">' + (cfg.icon ? '<span style="position:absolute;inset:0;background:rgba(0,0,0,0.35);border-radius:8px;"></span>' : '') + '<span style="position:relative;z-index:1;mix-blend-mode:screen;font-weight:700;">LV.' + (level || 1) + '</span> <span style="position:relative;z-index:1;">' + escapeHtml(cfg.name) + '</span></span>';
+      var iconHtml = cfg.icon ? '<span style="position:absolute;inset:0;background:rgba(0,0,0,0.35);border-radius:8px;"></span>' : '';
+      return '<span class="lvl-badge-sm" style="' + bgStyle + 'background-color:var(--primary);">' + iconHtml + '<span style="position:relative;z-index:1;">⭐</span><span style="position:relative;z-index:1;font-weight:700;">LV.' + (level || 1) + '</span><span style="position:relative;z-index:1;">' + escapeHtml(cfg.name) + '</span></span>';
     }
-    return '<span class="lvl-badge-sm">Lv.' + (level || 1) + '</span>';
+    return '<span class="lvl-badge-sm">⭐ Lv.' + (level || 1) + '</span>';
   },
 
   renderLoading: function() { if (!this._levelConfigCache) this._initLevelCache(); document.getElementById('app').innerHTML = '<div class="loading-screen"><div class="spinner"></div><p>加载中...</p></div>'; },

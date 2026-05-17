@@ -6,7 +6,7 @@ const Post = {
     const offset = (page - 1) * limit;
     let whereClause = 'WHERE p.deleted_at IS NULL';
     const params = [];
-    if (category && (category === 'work' || category === 'chat')) {
+    if (category && ['work', 'chat', 'job'].includes(category)) {
       whereClause += ' AND p.category = ?';
       params.push(category);
     }
@@ -27,28 +27,44 @@ const Post = {
   findById(postId) {
     return get(
       `SELECT p.*, u.username as author, COALESCE(u.level, 1) as author_level,
+              COALESCE(u.xp, 0) as author_xp, COALESCE(u.points, 0) as author_points,
               COALESCE(p.like_count, 0) as like_count, COALESCE(p.dislike_count, 0) as dislike_count,
               COALESCE(p.is_sticky, 0) as is_sticky, COALESCE(p.is_featured, 0) as is_featured,
-              COALESCE(p.is_locked, 0) as is_locked
-       FROM posts p JOIN users u ON p.created_by = u.id
+              COALESCE(p.is_locked, 0) as is_locked,
+              up.avatar_url as author_avatar, up.nickname as author_nickname,
+              up.job_rating as author_job_rating, up.job_completed as author_job_completed
+       FROM posts p
+       JOIN users u ON p.created_by = u.id
+       LEFT JOIN user_profiles up ON up.user_id = u.id
        WHERE p.id = ? AND p.deleted_at IS NULL`,
       [postId]
     );
   },
 
   create(data) {
-    const { title, description, cover_url, cover_file_id, tags, category, created_by } = data;
+    const { title, description, cover_url, cover_file_id, tags, category, created_by,
+      job_location_type, job_location_city, job_location_detail, job_salary_min, job_salary_max, job_type } = data;
     return run(
-      'INSERT INTO posts (title, description, cover_url, cover_file_id, tags, category, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [title.trim(), description || '', cover_url || '', cover_file_id || null, tags || '', category, created_by]
+      `INSERT INTO posts (title, description, cover_url, cover_file_id, tags, category, created_by,
+        job_location_type, job_location_city, job_location_detail, job_salary_min, job_salary_max, job_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [title.trim(), description || '', cover_url || '', cover_file_id || null, tags || '', category, created_by,
+       job_location_type || null, job_location_city || null, job_location_detail || null,
+       job_salary_min || null, job_salary_max || null, job_type || null]
     );
   },
 
   update(postId, data) {
-    const { title, description, cover_url, cover_file_id, tags } = data;
+    const { title, description, cover_url, cover_file_id, tags,
+      job_location_type, job_location_city, job_location_detail, job_salary_min, job_salary_max, job_type } = data;
     run(
-      'UPDATE posts SET title = ?, description = ?, cover_url = ?, cover_file_id = ?, tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [title.trim(), description || '', cover_url || '', cover_file_id || null, tags || '', postId]
+      `UPDATE posts SET title = ?, description = ?, cover_url = ?, cover_file_id = ?, tags = ?,
+        job_location_type = ?, job_location_city = ?, job_location_detail = ?,
+        job_salary_min = ?, job_salary_max = ?, job_type = ?,
+        updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      [title.trim(), description || '', cover_url || '', cover_file_id || null, tags || '',
+       job_location_type || null, job_location_city || null, job_location_detail || null,
+       job_salary_min || null, job_salary_max || null, job_type || null, postId]
     );
   },
 
@@ -84,11 +100,12 @@ const Post = {
   addBlock(postId, block, sortOrder) {
     return run(
       `INSERT INTO content_blocks (post_id, type, value, file_id, allow_preview, sort_order,
-        attachment_file_id, attachment_name, attachment_size, min_level_view, unlock_points, download_points)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        attachment_file_id, attachment_name, attachment_size, min_level_view, unlock_points, download_points, label, show_in_toc)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [postId, block.type, block.value || '', block.file_id || null, block.allow_preview ? 1 : 0, sortOrder,
        block.attachment_file_id || null, block.attachment_name || '', block.attachment_size || 0,
-       block.min_level_view || 0, block.unlock_points || 0, block.download_points || 0]
+       block.min_level_view || 0, block.unlock_points || 0, block.download_points || 0,
+       block.label || null, block.show_in_toc ? 1 : 0]
     );
   },
 
@@ -96,12 +113,12 @@ const Post = {
     run(
       `UPDATE content_blocks SET type = ?, value = ?, file_id = ?, allow_preview = ?, sort_order = ?,
         attachment_file_id = ?, attachment_name = ?, attachment_size = ?,
-        min_level_view = ?, unlock_points = ?, download_points = ?
+        min_level_view = ?, unlock_points = ?, download_points = ?, label = ?, show_in_toc = ?
        WHERE id = ? AND post_id = ?`,
       [block.type, block.value || '', block.file_id || null, block.allow_preview ? 1 : 0, sortOrder,
        block.attachment_file_id || null, block.attachment_name || '', block.attachment_size || 0,
        block.min_level_view || 0, block.unlock_points || 0, block.download_points || 0,
-       blockId, postId]
+       block.label || null, block.show_in_toc ? 1 : 0, blockId, postId]
     );
   },
 

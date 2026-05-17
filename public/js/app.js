@@ -268,23 +268,12 @@ const App = {
           <div class="side-menu-item" data-route="/works" data-label="works" data-zone="work">📂 作品区</div>
           <div class="side-menu-item" data-route="/chats" data-label="chats" data-zone="chat">💬 聊天区</div>
           <div class="side-menu-item" data-route="/music" data-label="music" data-zone="music">🎵 我的音乐</div>
+          <div class="side-menu-item" data-route="/jobs" data-label="jobs" data-zone="job">💼 求职招聘</div>
           <div class="side-menu-item" data-route="/bookmarks" data-label="bookmark">🔖 收藏夹</div>
           <div class="side-menu-item" data-action="show-notices">📢 系统公告</div>`;
         if (App.user && App.user.role === 'admin') {
           menuHtml += `
-          <div class="side-menu-item collapsible" data-action="toggle-admin">
-            <span>⚙️ 后台管理</span>
-            <span class="collapse-arrow">▶</span>
-          </div>
-          <div class="side-menu-sub" id="admin-submenu">
-            <div class="side-menu-item" data-route="/tags" data-label="tags">🏷️ 标签管理</div>
-            <div class="side-menu-item" data-route="/admin/stats" data-label="admin">📊 区域统计</div>
-            <div class="side-menu-item" data-route="/admin/reports" data-label="admin">🚩 举报管理</div>
-            <div class="side-menu-item" data-route="/admin/users" data-label="admin">👥 用户管理</div>
-            <div class="side-menu-item" data-route="/admin/levels" data-label="admin">🏅 等级管理</div>
-            <div class="side-menu-item" data-route="/admin/login-notices" data-label="admin">📢 弹窗管理</div>
-            <div class="side-menu-item" data-route="/admin/ads" data-label="admin">📺 广告管理</div>
-          </div>`;
+          <div class="side-menu-item" data-route="/admin/stats" data-label="admin">⚙️ 后台管理</div>`;
         }
         menu.innerHTML = menuHtml;
         document.body.appendChild(menu);
@@ -430,14 +419,7 @@ const App = {
       if (!route) { el.classList.remove('active'); return; }
       el.classList.toggle('active', cur === route || cur.startsWith(route + '/'));
     });
-    // Auto-open admin submenu when on admin page
-    var toggle = document.querySelector('.side-menu-item[data-action="toggle-admin"]');
-    var sub = document.getElementById('admin-submenu');
-    if (toggle && sub) {
-      var shouldOpen = cur.startsWith('/admin') || cur === '/tags';
-      toggle.classList.toggle('open', shouldOpen);
-      sub.classList.toggle('open', shouldOpen);
-    }
+    // Admin submenu no longer needed — single entry point
   },
 
   _notifPollTimer: null,

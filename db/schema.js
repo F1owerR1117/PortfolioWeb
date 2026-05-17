@@ -33,6 +33,7 @@ function createTables(run) {
     allow_preview INTEGER DEFAULT 1,
     sort_order INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    label TEXT DEFAULT NULL,
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
   )`);
 
@@ -300,6 +301,20 @@ function createTables(run) {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (image_file_id) REFERENCES files(id)
+  )`);
+
+  // ===== Job Applications Table =====
+  run(`CREATE TABLE IF NOT EXISTS job_applications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('employer','seeker')),
+    reason TEXT DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
+    processed_by INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    processed_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (processed_by) REFERENCES users(id)
   )`);
 
   // Indexes

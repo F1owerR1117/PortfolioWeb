@@ -1,0 +1,564 @@
+
+.editor-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.editor-card {
+  background: var(--card-gradient);
+  border-radius: 20px;
+  padding: 32px;
+  border: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+.editor-card:hover {
+  border-color: var(--bg-focus-glow);
+}
+.editor-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 24px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary);
+}
+.blocks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.block-item {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.block-item:hover {
+  border-color: var(--bg-focus-glow);
+}
+.block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+.block-type-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+.block-type-badge.text { background: rgba(59,130,246,0.1); color: #93c5fd; }
+.block-type-badge.image { background: rgba(244,63,94,0.1); color: #f9a8d4; }
+.block-type-badge.video { background: rgba(251,191,36,0.1); color: #fcd34d; }
+.block-type-badge.code { background: rgba(163,230,53,0.1); color: var(--primary); }
+.block-type-badge.file { background: rgba(168,85,247,0.1); color: #c084fc; }
+
+/* ===== Editor Dual-Column Layout ===== */
+.edit-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 32px;
+  align-items: start;
+}
+.edit-main {
+  min-width: 0;
+}
+.edit-sidebar {
+  position: sticky;
+  top: 80px;
+}
+.edit-sidebar-card {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.edit-sidebar-card h4 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+/* ===== Block Wrap (editor) ===== */
+.block-wrap {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.block-wrap:hover {
+  border-color: rgba(163,230,53,0.1);
+}
+.block-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.15);
+  border-bottom: 1px solid var(--border);
+}
+.block-body {
+  padding: 14px 16px;
+}
+.block-body .code-input {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+}
+
+/* ===== Cover Upload ===== */
+.cover-area {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-input);
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+}
+.cover-area.has-image {
+  border-style: solid;
+  border-color: rgba(163,230,53,0.1);
+}
+.cover-preview-box {
+  width: 120px;
+  height: 68px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  position: relative;
+}
+.cover-preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cover-info {
+  flex: 1;
+  min-width: 0;
+}
+.cover-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.cover-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* ===== Form Section ===== */
+.form-section {
+  margin-bottom: 24px;
+}
+.form-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--bg-subtle);
+}
+
+/* ===== Add Block Bar ===== */
+.add-block-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+.add-block-btn {
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.add-block-btn:hover {
+  border-color: var(--bg-active);
+  color: var(--primary);
+  background: var(--bg-focus-glow);
+}
+
+.block-actions {
+  display: flex;
+  gap: 4px;
+}
+.block-actions button {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-on-bg);
+  transition: all 0.15s;
+}
+.block-actions button:hover {
+  background: var(--bg-subtle);
+  color: var(--text);
+}
+.block-actions .delete-btn:hover {
+  background: var(--danger-bg);
+  color: var(--error);
+  border-color: var(--danger-border);
+}
+.block-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.block-type-select {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.block-type-option {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  background: var(--bg-input);
+  color: var(--text-on-bg);
+  transition: all 0.2s;
+}
+.block-type-option.selected {
+  border-color: var(--border-active);
+  background: var(--bg-focus-glow);
+  color: var(--primary);
+}
+.block-type-option:hover {
+  border-color: var(--bg-active);
+}
+.block-preview-toggle {
+  margin-top: 8px;
+}
+.add-block-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.add-block-bar button {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-on-bg-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.add-block-bar button:hover {
+  border-color: var(--bg-active);
+  color: var(--primary);
+  background: var(--bg-focus-glow);
+}
+.file-upload-area {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-on-bg-muted);
+  font-size: 13px;
+}
+.file-upload-area:hover {
+  border-color: var(--border-active);
+  background: var(--bg-focus-glow);
+}
+.file-upload-area.has-file {
+  border-color: var(--success);
+  background: var(--success-bg);
+}
+.file-preview {
+  margin-top: 8px;
+  padding: 10px;
+  background: var(--bg-input);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-on-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Cover & block preview images */
+.cover-preview-img {
+  width: 120px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.block-preview-img {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+
+/* ===== Featured Badge ===== */
+
+.featured-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(251,191,36,0.1);
+  color: #fcd34d;
+  border: 1px solid rgba(251,191,36,0.1);
+  margin-bottom: 16px;
+}
+
+
+/* ===== Category Badge ===== */
+
+.category-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(8px);
+  color: var(--primary);
+  border: 1px solid var(--bg-focus-glow);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.category-badge.chat {
+  color: #60a5fa;
+  border-color: rgba(96,165,250,0.06);
+}
+
+.post-card-img {
+  position: relative;
+}
+
+
+/* ===== Load More ===== */
+
+.load-more-wrap {
+  text-align: center;
+  padding: 20px 0;
+}
+.load-more-wrap .btn {
+  padding: 10px 28px;
+  border-radius: 12px;
+}
+
+
+/* ===== Editor Page Header ===== */
+
+.editor-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-top: 20px;
+}
+.editor-page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* ===== Editor Actions ===== */
+
+.editor-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--bg-subtle);
+}
+
+/* ===== Tag Input UI (Editor) ===== */
+
+.tag-input-wrap {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tag-input-wrap .form-input {
+  flex: 1;
+}
+.tag-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.tag-chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: var(--bg-focus-glow);
+  border: 1px solid var(--bg-active);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.tag-chip-remove {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-subtle-hover);
+  color: var(--text-on-bg-muted);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.tag-chip-remove:hover {
+  background: var(--danger-bg);
+  color: #fff;
+}
+
+/* ===== Cover Upload ===== */
+
+.cover-upload-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cover-upload-row .cover-name {
+  font-size: 13px;
+  color: var(--text-on-bg-muted);
+}
+.cover-preview {
+  margin-top: 12px;
+}
+.cover-preview img {
+  max-width: 200px;
+  max-height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+
+.editor-block-type {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+/* Attachment settings inline in editor */
+.editor-attach-settings {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-input);
+  border-radius: 10px;
+}
+.editor-attach-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.editor-attach-field {
+  flex: 1;
+  min-width: 100px;
+}
+.editor-attach-field label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-on-bg-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.editor-attach-field input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+}
+.editor-attach-field input:focus {
+  border-color: var(--border-active);
+}
+
+
+/* ===== Attachment Styles ===== */
+
+.attach-settings {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-input);
+  border-radius: 10px;
+}
+.attach-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.attach-field {
+  flex: 1;
+  min-width: 140px;
+}
+.attach-field label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-on-bg-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.attach-field input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 12px;
+  outline: none;
+}
+.attach-field input:focus {
+  border-color: var(--border-active);
+}

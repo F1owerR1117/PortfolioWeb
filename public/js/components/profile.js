@@ -46,7 +46,24 @@ var ComponentsProfile = {
           '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">📅 注册天数</div></div></div>';
 
         // Recent posts HTML
-        var postsHtml = '<h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">📂 最近作品</h3>';
+        
+        // Job role application card
+        var jobRoleHtml = '';
+        if (p.job_role_approved) {
+          var roleLabel = p.job_role === 'employer' ? '💼 招聘者' : '🔍 求职者';
+          jobRoleHtml = '<div class="stat-card" style="background:var(--bg-active);border:1px solid rgba(163,230,53,.1);border-radius:var(--radius);padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">' +
+            '<span style="font-size:28px;">✅</span>' +
+            '<div style="flex:1;"><div style="font-size:14px;font-weight:600;">' + roleLabel + ' 身份</div><div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">📌 已通过审核，发布招聘/求职贴已开启' + (p.job_rating ? ' · ⭐ ' + p.job_rating + ' 信誉' : '') + (p.job_completed ? ' · ✅ ' + p.job_completed + ' 次完成' : '') + '</div></div></div>';
+        } else {
+          jobRoleHtml = '<div class="stat-card" style="background:var(--bg-input);border:1px dashed var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;">' +
+            '<div style="text-align:center;"><span style="font-size:24px;">🔑</span>' +
+            '<div style="font-size:13px;font-weight:600;margin-top:6px;">求职招聘身份</div>' +
+            '<div style="font-size:12px;color:var(--text-secondary);margin:4px 0 10px;">申请后可发布和回复求职招聘信息</div>' +
+            '<div style="display:flex;gap:8px;justify-content:center;">' +
+            '<button class="btn btn-primary btn-sm" id="apply-employer-btn">💼 申请招聘者</button>' +
+            '<button class="btn btn-outline btn-sm" id="apply-seeker-btn">🔍 申请求职者</button></div></div></div>';
+        }
+var postsHtml = '<h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">📂 最近作品</h3>';
         if (recentPosts.length === 0) {
           postsHtml += '<div class="empty-state" style="padding:20px 0;"><p>暂无作品</p></div>';
         } else {
@@ -92,7 +109,7 @@ var ComponentsProfile = {
           '</div>' +
           '<div class="profile-info">' +
           '<div class="profile-name">' + escapeHtml(p.nickname || p.username) + ' ⭐' + (p.level || 1) + '</div>' +
-          '<div class="profile-username">@' + escapeHtml(p.username) + ' · ' + (p.role === 'admin' ? '管理员' : '用户') + '</div>' +
+          '<div class="profile-username">@' + escapeHtml(p.username) + ' · ' + (p.role === 'admin' ? '管理员' : '用户') + (p.job_role === 'employer' ? ' · <span class="badge" style="background:rgba(245,158,11,.1);color:#f59e0b;font-size:10px;">💼 招聘者</span>' : p.job_role === 'seeker' ? ' · <span class="badge" style="background:rgba(96,165,250,.1);color:#60a5fa;font-size:10px;">🔍 求职者</span>' : '') + '</div>' +
           '<div class="profile-bio">' + escapeHtml(p.bio || '暂无简介') + '</div>' +
           (skills.length > 0 ? '<div class="about-skills" style="margin-bottom:16px;">' + skills.map(function(s) { return '<span class="about-skill-tag">' + escapeHtml(s) + '</span>'; }).join('') + '</div>' : '') +
           '<div class="profile-actions">' +
@@ -125,6 +142,16 @@ var ComponentsProfile = {
         document.getElementById('toggle-edit-profile').addEventListener('click', function() { playClickSound(); renderEdit(); });
         document.getElementById('toggle-edit-profile-btn').addEventListener('click', function() { playClickSound(); renderEdit(); });
         document.getElementById('preview-other-view')?.addEventListener('click', function() { playClickSound(); Router.navigate('#/users/' + App.user.id); });
+        document.getElementById('apply-employer-btn')?.addEventListener('click', async function() {
+            var reason = await showPrompt('申请招聘者身份', '', '请简单说明申请原因');
+            if (reason === null) return;
+            try { await API.submitApplication('employer', reason); showToast('申请已提交', 'success'); this.disabled = true; this.textContent = '已申请'; } catch(err) { showToast(err.message, 'error'); }
+          });
+          document.getElementById('apply-seeker-btn')?.addEventListener('click', async function() {
+            var reason = await showPrompt('申请求职者身份', '', '请简单说明申请原因');
+            if (reason === null) return;
+            try { await API.submitApplication('seeker', reason); showToast('申请已提交', 'success'); this.disabled = true; this.textContent = '已申请'; } catch(err) { showToast(err.message, 'error'); }
+          });
         document.querySelectorAll('#dashboard-post-grid .post-card')?.forEach(function(c) {
           c.addEventListener('click', function() { playClickSound(); Router.navigate('#/posts/' + c.dataset.postId); });
         });
@@ -167,27 +194,49 @@ var ComponentsProfile = {
       var sd;
       try { sd = await API.getUserStats(userId); } catch (e) { sd = { stats: {} }; }
       var stats = sd.stats || {};
+      var views = (stats.totalViews || stats.views || 0);
+      views = views > 1000 ? (views / 1000).toFixed(1) + 'k' : views;
 
-      var statsHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">' +
-        '<div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--primary);">' + (stats.postCount || 0) + '</div><div style="font-size:11px;color:var(--text-secondary);">作品</div></div>' +
-        '<div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--success);">' + (stats.commentReceived || 0) + '</div><div style="font-size:11px;color:var(--text-secondary);">评论</div></div>' +
-        '<div style="text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--warning);">' + (stats.totalLikes || 0) + '</div><div style="font-size:11px;color:var(--text-secondary);">获赞</div></div>' +
-        '<div style="text-align:center;"><div style="font-size:20px;font-weight:700;">' + (stats.memberDays || 1) + '</div><div style="font-size:11px;color:var(--text-secondary);">天数</div></div></div>';
+      var avatarHtml = p.avatar_url ? '<img src="' + escapeHtml(p.avatar_url) + '" alt="头像">' : escapeHtml((p.nickname || p.username || ' ').charAt(0).toUpperCase());
+      var onlineDot = '<div class="online-dot"></div>';
+      var levelBadge = this._renderLevelBadge(p.level || 1);
+      var usernameHtml = p.nickname ? '<span style="font-size:12px;color:var(--text-light);">@' + escapeHtml(p.username) + '</span> · ' : '';
+      var bannedHtml = p.is_banned ? '<span style="color:var(--error);font-weight:600;">🚫 已禁言</span>' : '';
+      var memberDate = formatDate(p.created_at);
 
-      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="about-page"><div class="about-card"><div class="about-avatar">' + (p.avatar_url ? '<img src="' + escapeHtml(p.avatar_url) + '" alt="头像">' : '👤') + '</div><h1 style="text-align:center;font-size:24px;font-weight:700;margin-bottom:4px;">' + escapeHtml(p.nickname || p.username) + '</h1><div style="text-align:center;font-size:13px;color:var(--text-secondary);margin-bottom:16px;">' + (p.nickname ? '<span style="font-size:12px;color:var(--text-light);">@' + escapeHtml(p.username) + '</span> · ' : '') + (p.role === 'admin' ? '管理员' : '用户') + ' · ' + this._renderLevelBadge(p.level || 1) + ' · ' + (p.xp || 0) + 'XP · ' + (p.points || 0) + '分 · 加入于 ' + formatDate(p.created_at) + (p.is_banned ? '<span style="margin-left:8px;color:var(--error);font-weight:600;">🚫 已禁言</span>' : '') + '</div><div class="about-bio">' + escapeHtml(p.bio || '暂无简介') + '</div>' + (p.skills && p.skills.length > 0 ? '<h3 style="margin-top:24px;font-size:16px;font-weight:600;">🛠 技能</h3><div class="about-skills">' + p.skills.map(function(s) { return '<span class="about-skill-tag">' + escapeHtml(s) + '</span>'; }).join('') + '</div>' : '') + (p.social && (p.social.github || p.social.weibo || p.social.email) ? '<h3 style="margin-top:24px;font-size:16px;font-weight:600;">🔗 社交</h3><div class="about-social">' + (p.social.github ? '<a href="' + escapeHtml(p.social.github) + '" target="_blank" rel="noopener">🐙 GitHub</a>' : '') + (p.social.weibo ? '<a href="' + escapeHtml(p.social.weibo) + '" target="_blank" rel="noopener">📢 微博</a>' : '') + (p.social.email ? '<a href="mailto:' + escapeHtml(p.social.email) + '">✉️ ' + escapeHtml(p.social.email) + '</a>' : '') + '</div>' : '') +
-        statsHtml +
-        '<div style="text-align:center;margin-top:20px;display:flex;gap:8px;justify-content:center;" id="friend-action-area"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div></div>' + (isOwn ? '' : '<div style="text-align:center;margin-top:8px;"><button class="btn btn-sm btn-outline" id="report-user-btn" style="color:var(--text-light);">🚩 举报用户</button></div>') +
-        '<h3 style="margin-top:32px;font-size:16px;font-weight:600;">📂 作品</h3>' + (posts.length === 0 ? '<div class="empty-state"><p>暂无作品</p></div>' : '<div class="post-grid" id="user-post-grid">' + posts.map(function(pt) { return '<div class="post-card" data-post-id="' + pt.id + '"><div class="post-card-img" style="' + (pt.cover_url ? "background-image:url('" + pt.cover_url + "');background-size:cover;background-position:center;" : '') + '">' + (pt.cover_url ? '' : '📄') + '</div><div class="post-card-body"><div class="post-card-title">' + escapeHtml(pt.title) + '</div><div class="post-card-desc">' + escapeHtml(pt.description || '暂无简介') + '</div><div class="post-card-footer"><div class="post-card-views">👁 ' + (pt.views || 0) + '</div></div></div></div>'; }).join('') + '</div>') + '<div id="public-playlists-area"></div></div></div></div>';
-      document.querySelectorAll('#user-post-grid .post-card')?.forEach(function(c) { c.addEventListener('click', function() { playClickSound(); Router.navigate('#/posts/' + c.dataset.postId); }); });
-      if (currentUser) {
-        API.getUserPublicPlaylists(userId).then(function(pd) { var pls = pd.playlists || []; var area = document.getElementById('public-playlists-area'); if (!area) return; if (pls.length === 0) { area.style.display = 'none'; return; } area.innerHTML = '<h3 style="margin-top:32px;font-size:16px;font-weight:600;">🎵 公开歌单</h3><div class="music-playlist-grid">' + pls.map(function(pl) { var pc = pl.cover_url ? '<img src="' + escapeHtml(pl.cover_url) + '" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">' : '<span class="music-playlist-card-cover-icon">📋</span>'; return '<div class="music-playlist-card" data-pid="' + pl.id + '" style="cursor:pointer;"><div class="music-playlist-card-cover" style="position:relative;height:100px;">' + pc + '</div><div class="music-playlist-card-body"><div class="music-playlist-name">' + escapeHtml(pl.name) + '</div><div class="music-playlist-count"><span class="music-playlist-count-badge">' + (pl.song_count || 0) + ' 首</span></div></div></div>'; }).join('') + '</div>'; area.querySelectorAll('.music-playlist-card').forEach(function(card) { card.addEventListener('click', function() { Router.navigate('#/music/playlist/' + this.dataset.pid); }); }); }).catch(function() {});
-        if (isOwn) { var fa = document.getElementById('friend-action-area'); if (fa) fa.innerHTML = '<span style="font-size:13px;color:var(--text-light);">这是你的个人主页（他人视角）</span><button class="btn btn-sm btn-outline" id="back-to-my-profile-btn" style="margin-left:8px;">← 返回我的主页</button>'; if (fa) fa.addEventListener('click', function(e) { if (e.target.id === 'back-to-my-profile-btn') { playClickSound(); Router.navigate('#/profile'); } }); } else { this._checkAndRenderFriendButton(userId); }
+      var skillsHtml = (p.skills && p.skills.length > 0) ? p.skills.map(function(s) { return '<span class="skill-tag">' + escapeHtml(s) + '</span>'; }).join(' ') : '';
+      var socialHtml = '';
+      if (p.social && (p.social.github || p.social.weibo || p.social.email)) {
+        socialHtml = (p.social.github ? '<a class="social-link" href="' + escapeHtml(p.social.github) + '" target="_blank" rel="noopener">🐙 GitHub</a>' : '') +
+          (p.social.weibo ? '<a class="social-link" href="' + escapeHtml(p.social.weibo) + '" target="_blank" rel="noopener">📢 微博</a>' : '') +
+          (p.social.email ? '<a class="social-link" href="mailto:' + escapeHtml(p.social.email) + '">✉️ ' + escapeHtml(p.social.email) + '</a>' : '');
       }
-      document.getElementById('report-user-btn')?.addEventListener('click', async function() { var r = await showPrompt('举报原因：', '', '违规内容'); if (!r || !r.trim()) return; try { await API.createReport('user', userId, r.trim()); showToast('已提交', 'success'); } catch(err) { showToast(err.message, 'error'); } });
+
+      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="profile-hero"><div class="profile-hero-bg"></div><div class="profile-hero-content"><div class="profile-avatar-wrap"><div class="profile-avatar-lg">' + avatarHtml + '</div>' + onlineDot + '</div><div class="profile-info-top"><div class="profile-name">' + escapeHtml(p.nickname || p.username) + ' ' + levelBadge + '</div><div class="profile-username">' + (usernameHtml || (p.role === 'admin' ? '@admin · ' : '')) + (p.role === 'admin' ? '管理员' : '') + '</div>' + (p.bio ? '<div class="profile-bio-inline">' + escapeHtml(p.bio) + '</div>' : '') + '</div><div class="profile-actions-hero" id="friend-action-area"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div></div></div></div>' +
+        '<div class="stat-row"><div class="stat-item primary"><div class="stat-num">' + (stats.postCount || 0) + '</div><div class="stat-label">📂 作品</div></div><div class="stat-item success"><div class="stat-num">' + (stats.commentReceived || 0) + '</div><div class="stat-label">💬 评论</div></div><div class="stat-item warning"><div class="stat-num">' + (stats.totalLikes || 0) + '</div><div class="stat-label">👍 获赞</div></div><div class="stat-item info"><div class="stat-num">' + views + '</div><div class="stat-label">👁 浏览</div></div></div>' +
+        '<div class="profile-layout"><div class="profile-main">' +
+        '<div style="font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;">📂 最近作品<span style="font-weight:400;color:var(--text-muted);font-size:12px;">' + posts.length + ' 篇</span></div>' +
+        (posts.length === 0 ? '<div class="empty-state"><p>暂无作品</p></div>' : '<div class="user-post-grid">' + posts.map(function(pt) { return '<div class="up-card" data-post-id="' + pt.id + '"><div class="up-card-img">' + (pt.cover_url ? '<img src="' + escapeHtml(pt.cover_url) + '" alt="">' : '📄') + '</div><div class="up-card-body"><div class="up-card-title">' + escapeHtml(pt.title) + '</div><div class="up-card-meta"><span>👁 ' + (pt.views || 0) + '</span><span>👍 ' + (pt.like_count || 0) + '</span></div></div></div>'; }).join('') + '</div>') +
+        '<div id="public-playlists-area"></div></div><div class="profile-sidebar">' +
+        '<div class="sidebar-card"><h4>🤝 关系</h4><div id="friend-action-sidebar"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div></div></div>' +
+        (skillsHtml ? '<div class="sidebar-card"><h4>🛠 技能</h4><div style="display:flex;gap:6px;flex-wrap:wrap;">' + skillsHtml + '</div></div>' : '') +
+        '<div class="sidebar-card" id="playlist-sidebar-card" style="display:none;"><h4>🎵 公开歌单</h4><div id="playlist-sidebar-list"></div></div>' +
+        (socialHtml ? '<div class="sidebar-card"><h4>🔗 社交</h4><div class="social-links">' + socialHtml + '</div></div>' : '') +
+        '</div></div></div>';
+      document.querySelectorAll('.up-card').forEach(function(c) { c.addEventListener('click', function() { playClickSound(); Router.navigate('#/posts/' + c.dataset.postId); }); });
+      if (currentUser) {
+        API.getUserPublicPlaylists(userId).then(function(pd) { var pls = pd.playlists || []; var card = document.getElementById('playlist-sidebar-card'); var list = document.getElementById('playlist-sidebar-list'); if (!card || !list) return; if (pls.length === 0) { card.style.display = 'none'; return; } card.style.display = 'block'; list.innerHTML = pls.map(function(pl) { var pc = pl.cover_url ? '<img src="' + escapeHtml(pl.cover_url) + '" alt="">' : '🎵'; return '<div class="pl-card" data-pid="' + pl.id + '"><div class="pl-cover">' + pc + '</div><div class="pl-info"><div class="pl-name">' + escapeHtml(pl.name) + '</div><div class="pl-count">' + (pl.song_count || 0) + ' 首</div></div></div>'; }).join(''); list.querySelectorAll('.pl-card').forEach(function(card) { card.addEventListener('click', function() { Router.navigate('#/music/playlist/' + this.dataset.pid); }); }); }).catch(function() {});
+        if (isOwn) {
+          ['friend-action-area', 'friend-action-sidebar'].forEach(function(id) { var fa = document.getElementById(id); if (fa) fa.innerHTML = '<span style="font-size:13px;color:var(--text-light);">这是你的个人主页（他人视角）</span><button class="btn btn-sm btn-outline" id="back-to-my-profile-btn" style="margin-left:8px;">← 返回我的主页</button>'; });
+          document.querySelectorAll('#back-to-my-profile-btn').forEach(function(el) { el.addEventListener('click', function() { playClickSound(); Router.navigate('#/profile'); }); });
+        } else {
+          this._checkAndRenderFriendButton(userId);
+        }
+      }
     } catch (err) { showToast(err.message, 'error'); this.renderPostList(); }
   },
 
   _checkAndRenderFriendButton: async function(userId) {
-    try { var d = await API.getFriendshipStatus(userId), area = document.getElementById('friend-action-area'); if (!area) return; var labels = { friends: '<span style="font-size:13px;color:var(--success);font-weight:600;">✅ 已是好友</span>', request_sent: '<span style="font-size:13px;color:var(--text-light);">⏳ 好友申请已发送</span>', request_received: '<button class="btn btn-sm btn-primary" id="accept-friend-btn">✅ 接受好友申请</button>', none: '<button class="btn btn-sm btn-outline" id="add-friend-btn">➕ 添加好友</button>' }; area.innerHTML = labels[d.status] || ''; document.getElementById('add-friend-btn')?.addEventListener('click', async function() { try { await API.sendFriendRequest(userId); showToast('已发送', 'success'); Components._checkAndRenderFriendButton(userId); } catch (err) { showToast(err.message, 'error'); } }); var ab = document.getElementById('accept-friend-btn'); if (ab) { try { var rd = await API.getFriendRequests(); var r = (rd.requests || []).find(function(x) { return x.from_user_id === userId; }); if (r) ab.addEventListener('click', async function() { try { await API.approveFriendRequest(r.id); showToast('已添加', 'success'); Components._checkAndRenderFriendButton(userId); } catch (err) { showToast(err.message, 'error'); } }); } catch(e) {} } } catch (e) {}
+    try { var d = await API.getFriendshipStatus(userId); var areas = ['friend-action-area', 'friend-action-sidebar'].map(function(id) { return document.getElementById(id); }).filter(Boolean); if (areas.length === 0) return; var labels = { friends: '<span style="font-size:13px;color:var(--success);font-weight:600;">✅ 已是好友</span>', request_sent: '<span style="font-size:13px;color:var(--text-light);">⏳ 好友申请已发送</span>', request_received: '<button class="btn btn-sm btn-primary" id="accept-friend-btn">✅ 接受好友申请</button>', none: '<button class="btn btn-sm btn-primary" id="add-friend-btn">➕ 添加好友</button>' }; var html = labels[d.status] || ''; areas.forEach(function(a) { a.innerHTML = html; }); document.getElementById('add-friend-btn')?.addEventListener('click', async function() { try { await API.sendFriendRequest(userId); showToast('已发送', 'success'); Components._checkAndRenderFriendButton(userId); } catch (err) { showToast(err.message, 'error'); } }); var ab = document.getElementById('accept-friend-btn'); if (ab) { try { var rd = await API.getFriendRequests(); var r = (rd.requests || []).find(function(x) { return x.from_user_id === userId; }); if (r) ab.addEventListener('click', async function() { try { await API.approveFriendRequest(r.id); showToast('已添加', 'success'); Components._checkAndRenderFriendButton(userId); } catch (err) { showToast(err.message, 'error'); } }); } catch(e) {} } } catch (e) {}
   }
 };

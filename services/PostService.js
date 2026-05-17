@@ -127,8 +127,8 @@ const PostService = {
   },
 
   create(data, userId) {
-    const { title, description, cover_url, cover_file_id, blocks, tags, category } = data;
-    const postCategory = category === 'chat' ? 'chat' : 'work';
+    const { title, description, cover_url, cover_file_id, blocks, tags, category, job_location_type, job_location_city, job_location_detail, job_salary_min, job_salary_max, job_type } = data;
+    const postCategory = category === 'chat' ? 'chat' : category === 'job' ? 'job' : 'work';
 
     if (postCategory === 'work') {
       const { get } = require('../db/init');
@@ -138,7 +138,7 @@ const PostService = {
 
     if (!title || title.trim().length === 0) throw { status: 400, message: '标题不能为空' };
 
-    const result = Post.create({ title, description, cover_url, cover_file_id, tags, category: postCategory, created_by: userId });
+    const result = Post.create({ title, description, cover_url, cover_file_id, tags, category: postCategory, created_by: userId, job_location_type, job_location_city, job_location_detail, job_salary_min, job_salary_max, job_type });
     const postId = result.lastID;
 
     if (Array.isArray(blocks) && blocks.length > 0) {
@@ -158,7 +158,8 @@ const PostService = {
     const existing = get('SELECT * FROM posts WHERE id = ?', [postId]);
     if (!existing) throw { status: 404, message: '作品不存在' };
 
-    const { title, description, cover_url, cover_file_id, blocks, deleted_block_ids, tags } = data;
+    const { title, description, cover_url, cover_file_id, blocks, deleted_block_ids, tags,
+      job_location_type, job_location_city, job_location_detail, job_salary_min, job_salary_max, job_type } = data;
     if (!title || title.trim().length === 0) throw { status: 400, message: '标题不能为空' };
 
     // Handle old cover file deletion
@@ -170,7 +171,8 @@ const PostService = {
       }
     }
 
-    Post.update(postId, { title, description, cover_url, cover_file_id, tags });
+    Post.update(postId, { title, description, cover_url, cover_file_id, tags,
+      job_location_type, job_location_city, job_location_detail, job_salary_min, job_salary_max, job_type });
     Post.syncTags(postId, tags);
 
     // Delete removed blocks

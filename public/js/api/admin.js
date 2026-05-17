@@ -72,6 +72,29 @@ API.toggleLoginNoticeStatus = function(id) {
 };
 
 // Admin Ads
+// Job applications
+API.getApplications = function(status) {
+  var url = '/applications';
+  if (status) url += '?status=' + encodeURIComponent(status);
+  return API.request('GET', url);
+};
+
+API.submitApplication = function(role, reason) {
+  return API.request('POST', '/applications', { role: role, reason: reason || '' });
+};
+
+API.reviewApplication = function(id, status) {
+  return API.request('PUT', '/applications/' + id, { status: status });
+};
+
+API.getJobStats = function() {
+  return API.request('GET', '/jobs-stats');
+};
+
+API.getAdminNotifications = function() {
+  return API.request('GET', '/notifications/admin');
+};
+
 API.getAdminAds = function(page, limit) {
   return API.request('GET', `/admin/ads?page=${page || 1}&limit=${limit || 20}`);
 };

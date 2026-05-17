@@ -6,26 +6,26 @@
   gap: 12px;
 }
 .contest-post-card {
-  background: rgba(23,23,23,0.7);
+  background: var(--bg-card-alt);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 16px 20px;
   transition: all 0.2s;
 }
 .contest-post-card:hover {
-  border-color: rgba(163,230,53,0.04);
+  border-color: var(--bg-focus-glow);
 }
 .contest-post-header {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: rgba(255,255,255,0.3);
+  color: var(--text-on-bg-muted);
   margin-bottom: 8px;
 }
 .contest-post-author-tag {
   font-size: 11px;
-  background: rgba(163,230,53,0.1);
+  background: var(--bg-active);
   color: var(--primary);
   padding: 1px 8px;
   border-radius: 4px;
@@ -35,10 +35,10 @@
   padding: 1px 8px;
   border-radius: 4px;
 }
-.contest-post-status.approved { background: rgba(34,197,94,0.1); color: #22c55e; }
-.contest-post-status.rejected { background: rgba(239,68,68,0.1); color: #ef4444; }
+.contest-post-status.approved { background: var(--success-bg); color: var(--success); }
+.contest-post-status.rejected { background: var(--danger-bg); color: var(--error); }
 .contest-post-title {
   font-size: 16px;
   font-weight: 700;
-  color: #e4e4ec;
+  color: var(--text);
 }

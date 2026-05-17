@@ -18,10 +18,21 @@ const Notification = {
     );
   },
 
-  create(userId, actorId, type, postId, commentId) {
+  create(userId, actorId, type, postId, commentId, message, targetUrl) {
     run(
-      'INSERT INTO notifications (user_id, actor_id, type, post_id, comment_id) VALUES (?, ?, ?, ?, ?)',
-      [userId, actorId, type, postId || null, commentId || null]
+      'INSERT INTO notifications (user_id, actor_id, type, post_id, comment_id, message, target_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, actorId, type, postId || null, commentId || null, message || '', targetUrl || '']
+    );
+  },
+
+  listAdmin() {
+    return all(
+      `SELECT n.*, u.username as actor_name, up.avatar_url as actor_avatar
+       FROM notifications n
+       JOIN users u ON n.actor_id = u.id
+       LEFT JOIN user_profiles up ON u.id = up.user_id
+       WHERE n.type IN ('admin_report','admin_application','admin_system')
+       ORDER BY n.created_at DESC`
     );
   },
 

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { run, get, all } = require('../db/init');
 const { requireAuth, requireAdmin, requireNotBanned } = require('../middleware/auth');
+const Notification = require('../models/Notification');
 const logger = require('../logger');
 
 // ===== Report System =====
@@ -32,6 +33,18 @@ router.post('/reports', requireAuth, requireNotBanned, (req, res) => {
 
     run('INSERT INTO reports (reporter_id, target_type, target_id, reason) VALUES (?, ?, ?, ?)',
       [req.session.userId, target_type, target_id, reason.trim()]);
+
+    // Notify all admins
+    const admins = all('SELECT id FROM users WHERE role = ?', ['admin']);
+    const targetRecord = get(target_type === 'post' ? 'SELECT title FROM posts WHERE id = ?' : 'SELECT username FROM users WHERE id = ?', [target_id]);
+    const targetName = targetRecord ? (targetRecord.title || targetRecord.username || '未知') : '未知';
+    const reporter = get('SELECT username FROM users WHERE id = ?', [req.session.userId]);
+    const msg = '🚩 新举报：用户「' + (reporter ? reporter.username : '?') + '」举报了 ' + (target_type === 'post' ? '帖子' : '用户') + '「' + targetName + '」';
+    for (const admin of admins) {
+      if (admin.id !== req.session.userId) {
+        Notification.create(admin.id, req.session.userId, 'admin_report', null, null, msg, '#/admin/reports');
+      }
+    }
 
     res.json({ message: '举报已提交，管理员将尽快处理' });
   } catch (err) {
@@ -103,12 +116,18 @@ router.get('/admin/stats', requireAdmin, (req, res) => {
     const chatPosts = get("SELECT COUNT(*) as count FROM posts WHERE category = 'chat' AND deleted_at IS NULL");
     const workReplies = get("SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.category = 'work' AND p.deleted_at IS NULL");
     const chatReplies = get("SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.category = 'chat' AND p.deleted_at IS NULL");
+    const musicPosts = get("SELECT COUNT(*) as count FROM posts WHERE category = 'music' AND deleted_at IS NULL");
+    const jobPosts = get("SELECT COUNT(*) as count FROM posts WHERE category = 'job' AND deleted_at IS NULL");
+    const musicReplies = get("SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.category = 'music' AND p.deleted_at IS NULL");
+    const jobReplies = get("SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.category = 'job' AND p.deleted_at IS NULL");
     const totalUsers = get('SELECT COUNT(*) as count FROM users');
     const totalReports = get("SELECT COUNT(*) as count FROM reports WHERE status = 'pending'");
 
     const zones = [
       { zone: 'works', label: '作品区', posts: workPosts.count, replies: workReplies.count },
       { zone: 'chat', label: '聊天区', posts: chatPosts.count, replies: chatReplies.count },
+      { zone: 'music', label: '音乐区', posts: musicPosts.count, replies: musicReplies.count },
+      { zone: 'jobs', label: '求职招聘', posts: jobPosts.count, replies: jobReplies.count },
     ];
 
     res.json({ zones, total_users: totalUsers.count, pending_reports: totalReports.count });

@@ -130,6 +130,112 @@ function runMigrations(run, get, all, forceSave) {
     try { run("DROP TABLE IF EXISTS content_blocks_new"); } catch (ex) {}
   }
 
+  // ===== Content blocks: label support =====
+  try {
+    const tableInfo2 = all("PRAGMA table_info(content_blocks)");
+    const hasLabelCol = tableInfo2.find(col => col.name === 'label');
+    if (!hasLabelCol) {
+      logger.log('[DB] Adding label column to content_blocks...');
+      run("ALTER TABLE content_blocks ADD COLUMN label TEXT DEFAULT NULL");
+      forceSave();
+      logger.log('[DB] Label column added.');
+    }
+  } catch (e) {
+    logger.log('[DB] Label migration error:', e.message);
+  }
+
+  // ===== Content blocks: show_in_toc support =====
+  try {
+    const tableInfo3 = all("PRAGMA table_info(content_blocks)");
+    const hasTocCol = tableInfo3.find(col => col.name === 'show_in_toc');
+    if (!hasTocCol) {
+      logger.log('[DB] Adding show_in_toc column to content_blocks...');
+      run("ALTER TABLE content_blocks ADD COLUMN show_in_toc INTEGER DEFAULT 0");
+      forceSave();
+      logger.log('[DB] show_in_toc column added.');
+    }
+  } catch (e) {
+    logger.log('[DB] show_in_toc migration error:', e.message);
+  }
+
+  // ===== Job Zone: add job_role to users =====
+  try {
+    const ui = all("PRAGMA table_info(users)");
+    if (!ui.find(c => c.name === 'job_role')) {
+      logger.log('[DB] Adding job_role column to users...');
+      run("ALTER TABLE users ADD COLUMN job_role TEXT DEFAULT NULL");
+      run("ALTER TABLE users ADD COLUMN job_role_approved INTEGER DEFAULT 0");
+      forceSave();
+      logger.log('[DB] Job role columns added.');
+    }
+  } catch (e) { logger.log('[DB] Job role migration error:', e.message); }
+
+  // ===== Job Zone: add location/salary to posts =====
+  try {
+    const pi = all("PRAGMA table_info(posts)");
+    const cols = ['job_location_type','job_location_city','job_location_detail','job_salary_min','job_salary_max','job_type'];
+    let changed = false;
+    for (const c of cols) {
+      if (!pi.find(col => col.name === c)) {
+        run("ALTER TABLE posts ADD COLUMN " + c + " TEXT DEFAULT NULL");
+        changed = true;
+      }
+    }
+    // job_salary_min/max are TEXT to allow flexible formats, stored as VARCHAR
+    if (changed) { forceSave(); logger.log('[DB] Job location/salary columns added.'); }
+  } catch (e) { logger.log('[DB] Job posts migration error:', e.message); }
+
+  // ===== Job Zone: add rating to user_profiles =====
+  try {
+    const upi = all("PRAGMA table_info(user_profiles)");
+    if (!upi.find(c => c.name === 'job_rating')) {
+      run("ALTER TABLE user_profiles ADD COLUMN job_rating REAL DEFAULT 0");
+      run("ALTER TABLE user_profiles ADD COLUMN job_completed INTEGER DEFAULT 0");
+      forceSave();
+      logger.log('[DB] Job rating columns added to user_profiles.');
+    }
+  } catch (e) { logger.log('[DB] Job rating migration error:', e.message); }
+
+  // ===== Job Zone: update level_config zones =====
+  try {
+    const rows = all("SELECT level, zones FROM level_config WHERE zones NOT LIKE '%job%'");
+    if (rows.length > 0) {
+      for (const row of rows) {
+        const z = JSON.parse(row.zones);
+        if (!z.includes('job')) {
+          z.push('job');
+          run("UPDATE level_config SET zones = ? WHERE level = ?", [JSON.stringify(z), row.level]);
+        }
+      }
+      forceSave();
+      logger.log('[DB] Level configs updated to include job zone.');
+    }
+  } catch (e) { logger.log('[DB] Level config update error:', e.message); }
+
+  // ===== Job Zone: update ads display_pages =====
+  try {
+    const ads = all("SELECT id, display_pages FROM ads WHERE display_pages NOT LIKE '%jobs%'");
+    for (const ad of ads) {
+      const pages = ad.display_pages.split(',').map(s => s.trim());
+      if (!pages.includes('jobs')) {
+        pages.push('jobs');
+        run("UPDATE ads SET display_pages = ? WHERE id = ?", [pages.join(','), ad.id]);
+      }
+    }
+    if (ads.length > 0) { forceSave(); logger.log('[DB] Ads updated to include jobs page.'); }
+  } catch (e) { logger.log('[DB] Ads update error:', e.message); }
+
+  // ===== Admin notifications: add message + target_url =====
+  try {
+    const ni = all("PRAGMA table_info(notifications)");
+    if (!ni.find(c => c.name === 'message')) {
+      run("ALTER TABLE notifications ADD COLUMN message TEXT DEFAULT ''");
+      run("ALTER TABLE notifications ADD COLUMN target_url TEXT DEFAULT ''");
+      forceSave();
+      logger.log('[DB] Admin notification fields added.');
+    }
+  } catch (e) { logger.log('[DB] Notification migration error:', e.message); }
+
   // Zone stats defaults
   try { run("INSERT OR IGNORE INTO zone_stats (zone_name, post_count, reply_count) VALUES ('works', 0, 0)"); } catch (e) {}
   try { run("INSERT OR IGNORE INTO zone_stats (zone_name, post_count, reply_count) VALUES ('chat', 0, 0)"); } catch (e) {}

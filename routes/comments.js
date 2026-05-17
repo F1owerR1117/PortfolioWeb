@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { run, get, all, addXP } = require('../db/init');
 const { requireAuth, requireNotBanned } = require('../middleware/auth');
+const { requireJobRole } = require('../middleware/zoneAccess');
 const logger = require('../logger');
 
 // Create notification when someone replies to a comment
@@ -52,9 +53,15 @@ router.post('/posts/:postId/comments', requireAuth, requireNotBanned, async (req
     if (!content || content.trim().length === 0) return res.status(400).json({ error: '评论内容不能为空' });
     if (content.length > 2000) return res.status(400).json({ error: '评论内容不能超过2000字' });
 
-    const post = get('SELECT id, is_locked, deleted_at FROM posts WHERE id = ?', [postId]);
+    const post = get('SELECT id, is_locked, deleted_at, category FROM posts WHERE id = ?', [postId]);
     if (!post || post.deleted_at) return res.status(404).json({ error: '作品不存在' });
     if (post.is_locked) return res.status(403).json({ error: '该帖子已被锁定，无法回复' });
+    if (post.category === 'job' && req.session.role !== 'admin') {
+      const user = get('SELECT job_role_approved FROM users WHERE id = ?', [req.session.userId]);
+      if (!user || !user.job_role_approved) {
+        return res.status(403).json({ error: '请先申请招聘者/求职者身份才能回复' });
+      }
+    }
 
     if (parent_id) {
       const parent = get('SELECT id, post_id FROM comments WHERE id = ?', [parent_id]);

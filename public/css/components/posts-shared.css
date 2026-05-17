@@ -1,0 +1,38 @@
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-on-bg-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tag-chip:hover {
+  border-color: var(--border-hover);
+  color: var(--text-secondary);
+}
+.tag-chip.active {
+  background: var(--bg-active);
+  border-color: var(--border-active);
+  color: var(--primary);
+}
+.tag-filter-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.tag-filter-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-on-bg-muted);
+  margin-right: 4px;
+}
+

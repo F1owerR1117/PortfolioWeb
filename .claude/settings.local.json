@@ -550,7 +550,9 @@
       "Bash(curl -s http://localhost:3000/js/components/musicLibrary.js)",
       "Bash(bash scripts/snapshot.sh \"播放器重构前备份\")",
       "Bash(curl -s http://localhost:3000/js/music.js)",
-      "Bash(bash scripts/snapshot.sh \"底部播放器优化：now-playing+np-*样式\")"
+      "Bash(bash scripts/snapshot.sh \"底部播放器优化：now-playing+np-*样式\")",
+      "Bash(cd \"f:/code/portfolio\" && cp public/js/components/musicLibrary.js public/js/components/musicLibrary.js.bak)",
+      "Bash(rm -f public/js/components/musicLibrary.js.bak)"
     ]
   }
 }

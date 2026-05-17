@@ -43,6 +43,10 @@ async function initDatabase() {
     db = new SQL.Database(buffer);
     console.log('[DB] Loaded existing database');
   } else {
+    console.log('[DB] ⚠ WARNING: Database file not found at ' + DB_PATH);
+    console.log('[DB] ⚠ A new empty database will be created. All existing data will be LOST!');
+    console.log('[DB] ⚠ To use an existing database, set DB_PATH env var:');
+    console.log('[DB] ⚠   set DB_PATH=F:\\path\\to\\database.db && node server.js');
     db = new SQL.Database();
     console.log('[DB] Created new database');
   }

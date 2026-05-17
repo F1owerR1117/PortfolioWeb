@@ -48,8 +48,8 @@
 /* ===== Collection Card ===== */
 
 .bm-card {
-  background: linear-gradient(135deg, rgba(23,23,23,0.9), rgba(41,37,36,0.85));
-  border: 1px solid rgba(255,255,255,0.04);
+  background: var(--card-gradient);
+  border: 1px solid var(--bg-subtle);
   border-radius: 16px;
   padding: 20px 24px;
   cursor: pointer;
@@ -58,11 +58,11 @@
 }
 .bm-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(163,230,53,0.06);
+  border-color: var(--bg-focus-glow);
   box-shadow: 0 12px 32px rgba(0,0,0,0.2);
 }
 .bm-card.active {
-  border-color: rgba(163,230,53,0.1);
+  border-color: var(--bg-active);
   cursor: default;
 }
 .bm-card.active:hover {
@@ -87,7 +87,7 @@
 }
 .bm-card-count {
   font-size: 13px;
-  color: rgba(255,255,255,0.35);
+  color: var(--text-on-bg-muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -99,7 +99,7 @@
 .bm-card-action {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.15);
+  color: var(--text-on-bg-dim);
   font-size: 14px;
   cursor: pointer;
   padding: 4px 8px;
@@ -107,15 +107,15 @@
   transition: all 0.2s;
 }
 .bm-card-action:hover {
-  color: rgba(239,68,68,0.6);
-  background: rgba(239,68,68,0.06);
+  color: var(--error);
+  background: var(--danger-bg);
 }
 
 /* ===== Collection Description ===== */
 
 .bm-card-desc {
   font-size: 13px;
-  color: rgba(255,255,255,0.25);
+  color: var(--text-light);
   margin-top: 4px;
   margin-bottom: 12px;
 }
@@ -130,8 +130,8 @@
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.04);
+  background: var(--bg-subtle);
+  border: 1px solid var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,7 +141,7 @@
 .bm-preview-item.more {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255,255,255,0.25);
+  color: var(--text-light);
 }
 
 /* ===== Items List (inside active card) ===== */
@@ -150,26 +150,26 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  background: rgba(255,255,255,0.02);
+  background: var(--bg-subtle);
   border-radius: 12px;
   overflow: hidden;
   margin-top: 16px;
-  border: 1px solid rgba(255,255,255,0.02);
+  border: 1px solid var(--bg-subtle);
 }
 .bm-item {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 12px 16px;
-  background: rgba(0,0,0,0.15);
+  background: var(--bg-input);
   cursor: pointer;
   transition: background 0.2s;
 }
 .bm-item:not(:last-child) {
-  border-bottom: 1px solid rgba(255,255,255,0.02);
+  border-bottom: 1px solid var(--bg-subtle);
 }
 .bm-item:hover {
-  background: rgba(163,230,53,0.03);
+  background: var(--bg-focus-glow);
 }
 .bm-item-icon {
   width: 36px;
@@ -179,7 +179,7 @@
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  background: rgba(163,230,53,0.04);
+  background: var(--bg-focus-glow);
   flex-shrink: 0;
 }
 .bm-item-info {
@@ -189,20 +189,20 @@
 .bm-item-title {
   font-size: 14px;
   font-weight: 500;
-  color: #e4e4ec;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .bm-item-meta {
   font-size: 12px;
-  color: rgba(255,255,255,0.25);
+  color: var(--text-light);
   margin-top: 2px;
 }
 .bm-item-del {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.15);
+  color: var(--text-on-bg-dim);
   font-size: 16px;
   cursor: pointer;
   padding: 4px 8px;
@@ -215,8 +215,8 @@
   opacity: 1;
 }
 .bm-item-del:hover {
-  background: rgba(239,68,68,0.1);
-  color: #ef4444;
+  background: var(--danger-bg);
+  color: var(--error);
 }
 
 /* ===== Batch Delete Bar ===== */
@@ -226,8 +226,8 @@
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  background: rgba(23,23,23,0.5);
-  border: 1px solid rgba(255,255,255,0.04);
+  background: var(--bg-card-alt);
+  border: 1px solid var(--bg-subtle);
   border-radius: 10px;
   margin-top: 12px;
 }
@@ -250,16 +250,16 @@
 .bm-pagination .page-btn {
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.04);
+  border: 1px solid var(--bg-subtle);
   background: transparent;
-  color: rgba(255,255,255,0.3);
+  color: var(--text-on-bg-muted);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 .bm-pagination .page-btn:hover:not(:disabled) {
-  border-color: rgba(163,230,53,0.08);
+  border-color: var(--bg-active);
   color: var(--primary);
 }
 .bm-pagination .page-btn:disabled {
@@ -268,7 +268,7 @@
 }
 .bm-pagination .page-info {
   font-size: 13px;
-  color: rgba(255,255,255,0.2);
+  color: var(--text-on-bg-dim);
 }
 
 /* ===== Empty State ===== */
@@ -284,7 +284,7 @@
 }
 .bm-empty-text {
   font-size: 14px;
-  color: rgba(255,255,255,0.2);
+  color: var(--text-on-bg-dim);
 }
 
 /* ===== No Collections ===== */
@@ -292,6 +292,6 @@
 .bm-no-cols {
   text-align: center;
   padding: 60px 20px;
-  color: rgba(255,255,255,0.2);
+  color: var(--text-on-bg-dim);
   font-size: 14px;
 }

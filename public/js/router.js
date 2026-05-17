@@ -50,8 +50,9 @@ const Router = {
     // Admin-only routes (standard create/edit)
     // /create/chat bypasses admin check
     const isCreateChat = path === '/create/chat';
+    const isCreateJob = path === '/create/job';
     const adminRoutes = ['/create', '/edit'];
-    const isAdminRoute = adminRoutes.some(r => path.startsWith(r)) && !isCreateChat;
+    const isAdminRoute = adminRoutes.some(r => path.startsWith(r)) && !isCreateChat && !isCreateJob;
     if (isAdminRoute && (!App.user || App.user.role !== 'admin')) {
       showToast('权限不足', 'error');
       this.navigate('#/works');
@@ -109,6 +110,8 @@ const Router = {
         return;
       }
       Components.renderAuth();
+    } else if (path === '/jobs') {
+      Components.renderPostList('job');
     } else if (path === '/posts') {
       Components.renderPostList();
     } else if (path.startsWith('/posts/')) {
@@ -120,6 +123,8 @@ const Router = {
       }
       Components._highlightCommentId = Components._extractCommentParam(path);
       Components.renderPostDetail(id);
+    } else if (path === '/create/job') {
+      Components.renderCreatePost('job');
     } else if (path === '/create/chat') {
       Components.renderCreatePost('chat');
     } else if (path === '/create') {
@@ -161,6 +166,13 @@ const Router = {
         return;
       }
       Components.renderLoginNotices();
+    } else if (path === '/admin/applications') {
+      if (!App.user || App.user.role !== 'admin') {
+        showToast('权限不足', 'error');
+        this.navigate('#/works');
+        return;
+      }
+      Components.renderAdminApplications();
     } else if (path === '/admin/ads') {
       if (!App.user || App.user.role !== 'admin') {
         showToast('权限不足', 'error');

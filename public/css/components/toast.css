@@ -11,14 +11,14 @@
   pointer-events: none;
 }
 .toast {
-  background: rgba(23,23,23,0.95);
-  color: #e4e4ec;
+  background: var(--bg-card);
+  color: var(--text);
   padding: 14px 20px;
   border-radius: 12px;
   font-size: 14px;
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
   animation: slideIn 0.3s ease-out;
   pointer-events: auto;
   max-width: 360px;

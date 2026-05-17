@@ -33,4 +33,21 @@ function requireZoneAccess(zone) {
   };
 }
 
-module.exports = { requireZoneAccess };
+function requireJobRole(role) {
+  return (req, res, next) => {
+    if (!req.session || !req.session.userId) {
+      return res.status(401).json({ error: '请先登录' });
+    }
+    if (req.session.role === 'admin') return next();
+    const user = require('../db/init').get('SELECT job_role, job_role_approved FROM users WHERE id = ?', [req.session.userId]);
+    if (!user || !user.job_role_approved) {
+      return res.status(403).json({ error: '请先申请招聘者/求职者身份' });
+    }
+    if (role && user.job_role !== role) {
+      return res.status(403).json({ error: '身份类型不匹配' });
+    }
+    next();
+  };
+}
+
+module.exports = { requireZoneAccess, requireJobRole };

@@ -200,6 +200,8 @@ const reportsRoutes = require('./routes/reports');
 const levelsRoutes = require('./routes/levels');
 const loginNoticeRoutes = require('./routes/loginNotices');
 const adsRoutes = require('./routes/ads');
+const applicationsRoutes = require('./routes/applications');
+const jobsStatsRoutes = require('./routes/jobs-stats');
 
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/posts', postsRoutes);
@@ -221,6 +223,8 @@ app.use('/api', reportsRoutes);
 app.use('/api', levelsRoutes);
 app.use('/api', loginNoticeRoutes);
 app.use('/api', adsRoutes);
+app.use('/api/applications', applicationsRoutes);
+app.use('/api', jobsStatsRoutes);
 
 // SPA fallback + API 404
 app.get('*', apiNotFound, (req, res) => {
@@ -247,6 +251,23 @@ async function start() {
       }
     });
 
+    // Database file existence check
+    var dbPath = path.resolve(process.env.DB_PATH || './database.db');
+    if (!fs.existsSync(dbPath)) {
+      if (process.env.ALLOW_NEW_DB) {
+        logger.warn('⚠️  ALLOW_NEW_DB 已设置，将创建新数据库');
+      } else {
+        logger.error('═══════════════════════════════════════════════════════');
+        logger.error('  ❌ 数据库文件不存在: ' + dbPath);
+        logger.error('  ⚠️  为避免数据丢失，服务器已停止启动');
+        logger.error('  💡 首次运行请设置环境变量绕过检查:');
+        logger.error('       set ALLOW_NEW_DB=1 && node server.js');
+        logger.error('  📁 如需使用已有数据库，请设置 DB_PATH:');
+        logger.error('       set DB_PATH=F:\\path\\to\\database.db && node server.js');
+        logger.error('═══════════════════════════════════════════════════════');
+        process.exit(1);
+      }
+    }
     // Initialize database
     await initDatabase();
 

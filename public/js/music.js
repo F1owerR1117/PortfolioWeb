@@ -10,6 +10,15 @@ const MusicPlayer = {
   volume: 0.7,
   _initDone: false,
   _stateSaveTimer: null,
+  _changeCallbacks: [],
+
+  onSongChange(callback) {
+    if (typeof callback === 'function') this._changeCallbacks.push(callback);
+  },
+
+  _notifySongChange() {
+    this._changeCallbacks.forEach(fn => fn(this.currentSong));
+  },
 
   init() {
     if (this._initDone) return;
@@ -52,6 +61,7 @@ const MusicPlayer = {
     this.queueIndex = this.queue.findIndex(s => s.id === song.id);
     if (this.queueIndex < 0) this.queueIndex = 0;
     this.currentSong = song;
+    this._notifySongChange();
     this._loadAndPlay();
   },
 
@@ -62,6 +72,7 @@ const MusicPlayer = {
     this.queueLabel = queueLabel || '';
     this.queueIndex = Math.max(0, Math.min(startIndex, queue.length - 1));
     this.currentSong = this.queue[this.queueIndex];
+    this._notifySongChange();
     this._loadAndPlay();
   },
 
@@ -82,22 +93,26 @@ const MusicPlayer = {
 
   // Sync the 'playing' indicator in the song list / playlist detail DOM
   _updatePlayingIndicator() {
-    // Remove 'playing' class and badge from all song items
+    // Remove 'playing' class and badge from all .music-song-item (playlist detail)
     document.querySelectorAll('.music-song-item.playing').forEach(el => {
       el.classList.remove('playing');
       const badge = el.querySelector('.music-song-playing');
       if (badge) badge.remove();
     });
-    // Also remove from music-card
-    document.querySelectorAll('.music-card.playing').forEach(el => {
+    // Remove 'playing' class from .song-row (music library list)
+    document.querySelectorAll('.song-row.playing').forEach(el => {
       el.classList.remove('playing');
+      const tag = el.querySelector('.now-playing-tag');
+      if (tag) tag.remove();
+      const indicator = el.querySelector('.play-indicator');
+      if (indicator) indicator.textContent = '▶';
     });
 
     // Add 'playing' class to the current song's item
     if (this.currentSong) {
-      const item = document.querySelector(
-        `.music-song-item[data-song-id="${this.currentSong.id}"]`
-      );
+      const id = this.currentSong.id;
+      // Highlight in playlist detail view
+      const item = document.querySelector(`.music-song-item[data-song-id="${id}"]`);
       if (item) {
         item.classList.add('playing');
         const nameRow = item.querySelector('.music-song-name-row');
@@ -108,9 +123,22 @@ const MusicPlayer = {
           nameRow.appendChild(badge);
         }
       }
-      // Also highlight the music-card grid item
-      const card = document.querySelector(`.music-card[data-song-id="${this.currentSong.id}"]`);
-      if (card) card.classList.add('playing');
+      // Highlight in music library song list
+      const row = document.querySelector(`.song-row[data-song-id="${id}"]`);
+      if (row) {
+        row.classList.add('playing');
+        // Update play indicator icon on cover
+        const indicator = row.querySelector('.play-indicator');
+        if (indicator) indicator.textContent = '♫';
+        // Add "播放中" tag to song name
+        const nameEl = row.querySelector('.song-name');
+        if (nameEl && !nameEl.querySelector('.now-playing-tag')) {
+          const tag = document.createElement('span');
+          tag.className = 'now-playing-tag';
+          tag.textContent = '♫ 播放中';
+          nameEl.appendChild(tag);
+        }
+      }
     }
   },
 
@@ -194,6 +222,20 @@ const MusicPlayer = {
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
     return m + ':' + (s < 10 ? '0' : '') + s;
+  },
+
+  _updateProgress() {
+    const progressEl = document.getElementById('np-progress-bar');
+    const currentEl = document.getElementById('np-current-time');
+    const totalEl = document.getElementById('np-total-time');
+    if (!progressEl) return;
+
+    const current = this.audio.currentTime || 0;
+    const duration = this.audio.duration || this.currentSong?.duration || 0;
+    const pct = duration > 0 ? (current / duration) * 100 : 0;
+    progressEl.style.width = pct + '%';
+    if (currentEl) currentEl.textContent = this._fmtTime(current);
+    if (totalEl) totalEl.textContent = duration > 0 ? this._fmtTime(duration) : '--:--';
   },
 
   _saveState() {
@@ -281,7 +323,9 @@ const MusicPlayer = {
       (song && song.artist ? '<div class="np-artist">' + escapeHtml(song.artist) + '</div>' : ''),
       (!song ? '<div class="np-artist">从音乐库中选择歌曲播放</div>' : ''),
       '    </div>',
+      '    <span class="np-time" id="np-current-time">0:00</span>',
       '    <div class="np-progress"><div class="np-progress-bar" id="np-progress-bar" style="width:0%;"></div></div>',
+      '    <span class="np-time" id="np-total-time">--:--</span>',
       '    <div class="np-controls">',
       '      <button class="np-btn np-mode ' + modeCls + '" id="music-mode-btn" title="播放模式：' + modeLabel + '">' + modeLabel + '</button>',
       '      <button class="np-btn" id="music-prev-btn" title="上一首"' + (this.queue.length <= 1 ? ' disabled' : '') + '>⏮</button>',

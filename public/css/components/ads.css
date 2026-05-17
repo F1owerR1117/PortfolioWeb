@@ -36,7 +36,7 @@
   flex: 1;
   min-height: 0;
   position: relative;
-  background: rgba(23,23,23,0.6);
+  background: var(--bg-card-alt);
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
@@ -47,7 +47,7 @@
 .ad-container:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
-  border-color: rgba(163,230,53,0.04);
+  border-color: var(--bg-focus-glow);
 }
 
 .ad-image {

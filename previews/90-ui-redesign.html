@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 UI 风格改造预览</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0a0a0f;color:#e4e4ec;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans SC',sans-serif;
+  padding:32px;max-width:1200px;margin:0 auto;line-height:1.6;
+}
+h1{font-size:26px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+h2{font-size:20px;font-weight:700;margin:32px 0 16px;display:flex;align-items:center;gap:8px;}
+p.sub{font-size:13px;color:var(--text-secondary);margin-bottom:24px;}
+hr{border:none;border-top:1px solid rgba(255,255,255,.06);margin:40px 0;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.tag{display:inline-block;padding:2px 10px;border-radius:6px;font-size:11px;font-weight:600;}
+
+/* ===== 当前风格 ===== */
+.current-box{
+  background:linear-gradient(135deg,rgba(23,23,23,.95),rgba(41,37,36,.9));
+  border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:28px;
+}
+.current-box .demo-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+.current-box .demo-meta{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:16px;}
+.current-box .demo-card{
+  background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;padding:16px;margin-bottom:10px;
+}
+.current-box .demo-stat{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;
+}
+.current-box .demo-stat div{
+  background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.04);
+  border-radius:10px;padding:12px;text-align:center;
+}
+.current-box .demo-stat .n{font-size:20px;font-weight:700;color:#a3e635;}
+.current-box .demo-stat .l{font-size:10px;color:rgba(255,255,255,.3);}
+
+/* ===== 新风格 ===== */
+.new-box{
+  background:linear-gradient(135deg,#1a1a2e,#16213e);
+  border-radius:16px;padding:28px;position:relative;overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+}
+.new-box::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(ellipse at 30% 20%,rgba(99,102,241,.08),transparent 50%),
+             radial-gradient(ellipse at 70% 80%,rgba(139,92,246,.05),transparent 50%);
+  pointer-events:none;
+}
+.new-box .demo-title{font-size:18px;font-weight:700;margin-bottom:4px;position:relative;z-index:1;}
+.new-box .demo-meta{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:16px;position:relative;z-index:1;}
+.new-box .demo-stat{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;position:relative;z-index:1;
+}
+.new-box .demo-stat div{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;padding:16px 12px;text-align:center;backdrop-filter:blur(10px);
+  transition:transform .2s,background .2s;
+}
+.new-box .demo-stat div:hover{transform:translateY(-2px);background:rgba(255,255,255,.06);}
+.new-box .demo-stat .n{font-size:24px;font-weight:700;
+  background:linear-gradient(135deg,#818cf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.new-box .demo-stat .l{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;}
+.new-box .demo-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;padding:16px;margin-bottom:10px;backdrop-filter:blur(10px);
+  position:relative;z-index:1;transition:transform .2s,border-color .2s;
+}
+.new-box .demo-card:hover{transform:translateY(-1px);border-color:rgba(129,140,248,.2);}
+
+/* 组件对比 */
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.comp-old,.comp-new{
+  background:var(--bg-card);border:1px solid rgba(255,255,255,.06);
+  border-radius:14px;padding:20px;
+}
+.comp-old h4,.comp-new h4{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.comp-old ul,.comp-new ul{padding-left:18px;font-size:12px;color:var(--text-secondary);line-height:1.9;}
+.badge{display:inline-block;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:600;}
+
+/* ===== 预览组件 ===== */
+.preview-section{
+  background:linear-gradient(135deg,#1a1a2e,#16213e);
+  border-radius:20px;padding:32px;margin-bottom:20px;overflow:hidden;position:relative;
+}
+.preview-section::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(ellipse at 30% 20%,rgba(99,102,241,.08),transparent 50%),
+             radial-gradient(ellipse at 70% 80%,rgba(139,92,246,.05),transparent 50%);
+  pointer-events:none;
+}
+
+/* 导航栏 */
+.nav-new{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);border-radius:14px;
+  margin-bottom:24px;backdrop-filter:blur(12px);position:relative;z-index:1;
+}
+.nav-brand{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,#818cf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-links{display:flex;gap:6px;align-items:center;}
+.nav-btn{
+  padding:7px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.04);color:rgba(255,255,255,.6);font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .2s;font-family:inherit;
+}
+.nav-btn:hover{background:rgba(255,255,255,.08);color:#e4e4ec;}
+.nav-btn.primary{
+  background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;border:none;
+}
+.nav-btn.primary:hover{opacity:.9;}
+.nav-user{
+  display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;
+  border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;
+}
+.nav-user .av{
+  width:26px;height:26px;border-radius:8px;
+  background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+}
+
+/* 帖子卡片 */
+.post-card-new{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  border-radius:14px;overflow:hidden;cursor:pointer;transition:all .3s;
+  backdrop-filter:blur(10px);position:relative;z-index:1;
+}
+.post-card-new:hover{transform:translateY(-4px);border-color:rgba(129,140,248,.2);box-shadow:0 12px 40px rgba(0,0,0,.3);}
+.post-card-new .thumb{
+  width:100%;aspect-ratio:16/10;background:rgba(255,255,255,.03);
+  display:flex;align-items:center;justify-content:center;font-size:36px;
+}
+.post-card-new .body{padding:16px;}
+.post-card-new .title{font-size:14px;font-weight:600;margin-bottom:4px;color:#e4e4ec;}
+.post-card-new .desc{font-size:12px;color:rgba(255,255,255,.4);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.6;margin-bottom:12px;}
+.post-card-new .foot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgba(255,255,255,.04);}
+.post-card-new .tags{display:flex;gap:4px;}
+.post-card-new .tag{font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(129,140,248,.1);color:#818cf8;}
+.post-card-new .stat{font-size:11px;color:rgba(255,255,255,.3);display:flex;gap:8px;}
+
+/* 按钮 */
+.btn-primary-new{
+  padding:9px 22px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;
+  font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s;font-family:inherit;
+}
+.btn-primary-new:hover{opacity:.9;}
+
+/* 输入框 */
+.input-new{
+  padding:10px 16px;border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;background:rgba(255,255,255,.04);
+  color:#e4e4ec;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;
+}
+.input-new:focus{border-color:rgba(129,140,248,.3);}
+
+/* 侧边栏卡片 */
+.sidebar-card-new{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;padding:18px;margin-bottom:12px;backdrop-filter:blur(10px);
+  position:relative;z-index:1;
+}
+.sidebar-card-new h4{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.35);margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<h1>🎨 UI 风格改造预览</h1>
+<p class="sub">参考设计 → 系统级 UI 风格转换</p>
+
+<div class="grid-2">
+  <div>
+    <h2 style="margin-top:0;font-size:16px;">🔵 参考设计</h2>
+    <div class="new-box" style="text-align:center;padding:20px;">
+      <img src="ref-style.webp" alt="参考设计" style="max-width:100%;border-radius:8px;">
+    </div>
+  </div>
+  <div>
+    <h2 style="margin-top:0;font-size:16px;">🟢 改造后风格</h2>
+    <div class="new-box">
+      <div class="demo-title">张三 <span class="tag" style="background:rgba(129,140,248,.15);color:#818cf8;font-size:10px;">Lv.8</span></div>
+      <div class="demo-meta">@admin · 管理员</div>
+      <div class="demo-stat">
+        <div><div class="n">12</div><div class="l">作品</div></div>
+        <div><div class="n">48</div><div class="l">评论</div></div>
+        <div><div class="n">236</div><div class="l">获赞</div></div>
+        <div><div class="n">89</div><div class="l">天数</div></div>
+      </div>
+      <div class="demo-card">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">基于 Three.js 的 3D 可视化</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;">使用 Three.js 和 WebGL 构建的交互式 3D 场景...</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.04);">
+          <div style="display:flex;gap:4px;">
+            <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(129,140,248,.1);color:#818cf8;">Three.js</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(129,140,248,.1);color:#818cf8;">WebGL</span>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.3);">👁 2.3k</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<h2>🔄 组件对比</h2>
+<div class="comp-grid">
+  <div class="comp-old">
+    <h4>🔴 当前风格</h4>
+    <ul>
+      <li>主色：<span class="badge" style="background:rgba(163,230,53,.15);color:#a3e635;">lime #a3e635</span></li>
+      <li>背景：纯黑 <code>#0a0a0f</code></li>
+      <li>卡片：深灰渐变</li>
+      <li>按钮：亮绿渐变</li>
+      <li>数据统计：纯色数字</li>
+      <li>导航：纯色背景</li>
+    </ul>
+  </div>
+  <div class="comp-new" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-color:rgba(129,140,248,.1);">
+    <h4>🟢 新风格</h4>
+    <ul style="color:rgba(255,255,255,.5);">
+      <li>主色：<span class="badge" style="background:rgba(129,140,248,.15);color:#818cf8;">indigo #818cf8</span></li>
+      <li>背景：<code>#1a1a2e → #16213e</code> 渐变</li>
+      <li>卡片：半透明磨砂玻璃 <code>backdrop-filter: blur</code></li>
+      <li>按钮：紫蓝渐变</li>
+      <li>数据统计：渐变文字</li>
+      <li>导航：毛玻璃效果</li>
+      <li>背景光晕：径向渐变光晕</li>
+    </ul>
+  </div>
+</div>
+
+<hr>
+
+<h2>📐 改造效果预览</h2>
+
+<div class="preview-section">
+  <!-- 导航 -->
+  <div class="nav-new">
+    <div class="nav-brand">✦ Reasonix</div>
+    <div class="nav-links">
+      <span class="nav-user"><span class="av">张</span> 张三</span>
+      <button class="nav-btn">📂 作品</button>
+      <button class="nav-btn">💬 聊天</button>
+      <button class="nav-btn">🎵 音乐</button>
+      <button class="nav-btn primary">✏️ 发布</button>
+    </div>
+  </div>
+
+  <!-- 内容区 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;position:relative;z-index:1;">
+    <div class="post-card-new">
+      <div class="thumb">📄</div>
+      <div class="body">
+        <div class="title">📌 基于 Three.js 的 3D 可视化</div>
+        <div class="desc">使用 Three.js 和 WebGL 构建的交互式 3D 场景...</div>
+        <div class="foot">
+          <div class="tags"><span class="tag">Three.js</span><span class="tag">WebGL</span></div>
+          <div class="stat"><span>👍 128</span><span>👁 2.3k</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="post-card-new">
+      <div class="thumb" style="background:linear-gradient(135deg,rgba(129,140,248,.04),rgba(139,92,246,.02));">📄</div>
+      <div class="body">
+        <div class="title">Flutter 跨平台应用开发</div>
+        <div class="desc">从零开始使用 Flutter 构建跨平台应用...</div>
+        <div class="foot">
+          <div class="tags"><span class="tag">Flutter</span><span class="tag">Dart</span></div>
+          <div class="stat"><span>👍 89</span><span>👁 1.5k</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表单预览 -->
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:24px;margin-top:24px;position:relative;z-index:1;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;">📝 编辑作品</div>
+      <input class="input-new" placeholder="输入作品标题..." value="基于 Three.js 的 3D 可视化">
+      <textarea class="input-new" rows="3" placeholder="简要描述..." style="resize:none;">使用 Three.js 构建的交互式 3D 场景</textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-primary-new">💾 保存</button>
+        <button class="btn-primary-new" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);">取消</button>
+      </div>
+    </div>
+    <div>
+      <div class="sidebar-card-new">
+        <h4>👤 作者</h4>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#818cf8,#a78bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">张</div>
+          <div><div style="font-size:13px;font-weight:600;">张三</div><div style="font-size:11px;color:rgba(255,255,255,.3);">⭐ 2,340 分</div></div>
+        </div>
+      </div>
+      <div class="sidebar-card-new">
+        <h4>🏷️ 标签</h4>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <span class="tag" style="background:rgba(129,140,248,.1);color:#818cf8;">Three.js</span>
+          <span class="tag" style="background:rgba(129,140,248,.1);color:#818cf8;">WebGL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<h2>🛠️ 实施要点</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:20px;">
+    <h4 style="font-size:13px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;">🎨 CSS 变量</h4>
+    <ul style="padding-left:16px;font-size:12px;color:rgba(255,255,255,.4);line-height:1.9;">
+      <li><code>--primary</code>: #818cf8</li>
+      <li><code>--primary-dark</code>: #6366f1</li>
+      <li><code>--bg</code>: #1a1a2e</li>
+      <li><code>--card-gradient</code>: 135deg, rgba(255,255,255,.04), transparent</li>
+      <li><code>--btn-gradient</code>: 135deg, #818cf8, #a78bfa</li>
+      <li><code>--glow</code>: radial-gradient 紫蓝光晕</li>
+    </ul>
+  </div>
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:20px;">
+    <h4 style="font-size:13px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px;">📄 需修改文件</h4>
+    <ul style="padding-left:16px;font-size:12px;color:rgba(255,255,255,.4);line-height:1.9;">
+      <li><code>base.css</code> — CSS 变量 / body 背景 / 光晕</li>
+      <li><code>nav.css</code> — 毛玻璃导航栏</li>
+      <li><code>posts.css</code> — 卡片磨砂玻璃效果</li>
+      <li><code>auth.css + profile.css</code> — 主题色替换</li>
+      <li><code>admin.css</code> — 管理后台风格统一</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

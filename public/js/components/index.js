@@ -13,6 +13,11 @@ var Components = Object.assign(
   ComponentsMusicLibrary,
   ComponentsFriends,
   ComponentsChat,
+  ComponentsAdminTags,
+  ComponentsAdminStats,
+  ComponentsAdminReports,
+  ComponentsAdminUsers,
+  ComponentsAdminAppend,
   ComponentsAdmin,
   ComponentsAds,
   {

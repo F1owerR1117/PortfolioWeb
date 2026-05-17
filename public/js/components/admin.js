@@ -3,6 +3,7 @@ var ComponentsAdmin = {
   _adminNavTabs: [
     { id: 'stats', icon: '📊', label: '概览' },
     { id: 'reports', icon: '🚩', label: '举报' },
+    { id: 'applications', icon: '📋', label: '申请' },
     { id: 'users', icon: '👥', label: '用户' },
     { id: 'levels', icon: '⭐', label: '等级' },
     { id: 'notices', icon: '📢', label: '公告' },
@@ -29,123 +30,10 @@ var ComponentsAdmin = {
         else if (tab === 'levels') Components.renderAdminLevels();
         else if (tab === 'notices') Components.renderLoginNotices();
         else if (tab === 'ads') Components.renderAdminAds();
+        else if (tab === 'applications') Components.renderAdminApplications();
         else if (tab === 'tags') Components.renderTagManager();
       });
     });
-  },
-
-  renderTagManager: async function() { this._tagCategory = 'all'; this.renderLoading(); try { await this._renderTagList(); } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); } },
-
-  _renderTagList: async function() {
-    var app = document.getElementById('app'), isAdmin = App.user && App.user.role === 'admin';
-    var tags = (await API.getTags(this._tagCategory === 'all' ? '' : this._tagCategory)).tags || [];
-    app.innerHTML = '<div class="page-fade-in"><div class="admin-page">' + Components._renderAdminNav('tags') +
-      '<div class="admin-card"><div class="admin-card-title">🏷️ 标签管理</div><div class="sort-bar" style="margin-bottom:12px;"><button class="sort-btn ' + (this._tagCategory === 'all' ? 'active' : '') + '" data-tag-cat="all">📋 全部</button><button class="sort-btn ' + (this._tagCategory === 'work' ? 'active' : '') + '" data-tag-cat="work">📂 作品区</button><button class="sort-btn ' + (this._tagCategory === 'chat' ? 'active' : '') + '" data-tag-cat="chat">💬 聊天区</button></div><div class="search-bar" style="margin-bottom:16px;"><input class="search-input" id="tag-search" type="text" placeholder="搜索标签..." autocomplete="off"></div><div id="tag-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">' + tags.map(function(t) { return '<span class="tag-manager-item"><span class="tag-manager-name">' + escapeHtml(t.name) + '</span><span class="tag-manager-count">' + t.count + ' 帖</span>' + (isAdmin ? '<span class="tag-manager-remove" data-id="' + t.id + '" data-name="' + escapeHtml(t.name) + '">&times;</span>' : '') + '</span>'; }).join('') + '</div><div class="tag-add-row" style="display:flex;gap:8px;margin-top:12px;"><input class="form-input" id="new-tag-input" type="text" placeholder="新标签名称..." style="flex:1;"><button class="btn btn-primary" id="add-tag-btn">添加</button></div></div></div></div>';
-    var self = this;
-    Components._bindAdminNav();
-    document.querySelectorAll('.sort-btn[data-tag-cat]').forEach(function(b) { b.addEventListener('click', function() { playClickSound(); self._tagCategory = b.dataset.tagCat; self._renderTagList(); }); });
-    document.getElementById('add-tag-btn').addEventListener('click', async function() { var n = document.getElementById('new-tag-input').value.trim(); if (!n) { showToast('请输入标签名', 'error'); return; } try { await API.createTag(n); showToast('已添加', 'success'); self._renderTagList(); } catch (err) { showToast(err.message, 'error'); } });
-    if (isAdmin) document.getElementById('tag-list').addEventListener('click', async function(e) { var rb = e.target.closest('.tag-manager-remove'); if (!rb) return; if (!(await showConfirm('确定删除？'))) return; try { await API.deleteTag(parseInt(rb.dataset.id)); showToast('已删除', 'success'); self._renderTagList(); } catch (err) { showToast(err.message, 'error'); } });
-  },
-
-  renderAdminStats: async function() {
-    this.renderLoading();
-    try {
-      var d = await API.getAdminStats(), zones = d.zones || [];
-      var totalUsers = d.total_users || 0, pendingReports = d.pending_reports || 0;
-      var maxPosts = Math.max.apply(null, [1].concat(zones.map(function(z) { return z.posts; })));
-      var maxReplies = Math.max.apply(null, [1].concat(zones.map(function(z) { return z.replies; })));
-      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
-        Components._renderAdminNav('stats') +
-        '<div class="admin-page-header"><div><h1>📊 系统概览</h1><div class="admin-subtitle">数据概览与统计</div></div></div>' +
-        '<div class="admin-stats-grid">' +
-        '<div class="admin-stat-box"><div class="admin-stat-icon">👥</div><div class="admin-stat-num">' + totalUsers + '</div><div class="admin-stat-label">总用户</div></div>' +
-        '<div class="admin-stat-box"><div class="admin-stat-icon">📄</div><div class="admin-stat-num">' + (zones.reduce(function(s,z){return s+(z.posts||0);},0)) + '</div><div class="admin-stat-label">帖子</div></div>' +
-        '<div class="admin-stat-box"><div class="admin-stat-icon">💬</div><div class="admin-stat-num">' + (zones.reduce(function(s,z){return s+(z.replies||0);},0)) + '</div><div class="admin-stat-label">评论</div></div>' +
-        '<div class="admin-stat-box"><div class="admin-stat-icon">🚩</div><div class="admin-stat-num' + (pendingReports > 0 ? ' alert' : '') + '">' + pendingReports + '</div><div class="admin-stat-label">待处理举报</div></div>' +
-        '</div>' +
-        '<div class="admin-card"><div class="admin-card-title">📊 分区统计</div>' +
-        zones.map(function(z) {
-          var postPct = Math.round(z.posts / maxPosts * 100);
-          var replyPct = Math.round(z.replies / maxReplies * 100);
-          return '<div style="margin-bottom:16px;"><div class="admin-progress-row"><span>' + (z.zone === 'works' ? '📂' : '💬') + ' ' + escapeHtml(z.label) + '</span><span>' + z.posts + ' 帖子</span></div><div class="admin-progress-bar"><div class="admin-progress-fill primary" style="width:' + postPct + '%;"></div></div></div>' +
-            '<div style="margin-bottom:4px;"><div class="admin-progress-row"><span>回复数</span><span>' + z.replies + '</span></div><div class="admin-progress-bar"><div class="admin-progress-fill accent" style="width:' + replyPct + '%;"></div></div></div>';
-        }).join('') +
-        '<button class="btn btn-outline btn-sm" id="refresh-stats-btn" style="margin-top:12px;">🔄 刷新数据</button>' +
-        '</div></div></div>';
-      document.getElementById('refresh-stats-btn').addEventListener('click', function() { Components.renderAdminStats(); });
-      Components._bindAdminNav();
-    } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
-  },
-
-  renderAdminReports: async function() {
-    this.renderLoading();
-    try {
-      var status = this._reportStatus || 'pending';
-      var d = await API.getAdminReports(1, 20, status), reports = d.reports || [], pag = d.pagination || {};
-      var tabs = [{ id: 'pending', label: '待处理' }, { id: 'resolved', label: '已处理' }, { id: 'dismissed', label: '已驳回' }];
-      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
-        Components._renderAdminNav('reports') +
-        '<div class="admin-card"><div class="admin-card-title">🚩 举报管理</div><div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">' + tabs.map(function(t) { return '<button class="btn btn-sm ' + (t.id === status ? 'btn-primary' : 'btn-outline') + ' report-tab-btn" data-status="' + t.id + '">' + t.label + '</button>'; }).join('') + '</div>' +
-        (reports.length === 0 ? '<p style="color:var(--text-secondary);padding:20px;text-align:center;">暂无举报</p>' :
-        '<div style="overflow-x:auto;">' + reports.map(function(r) {
-          var dateStr = formatDate(r.created_at);
-          return '<div class="report-item" style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;"><div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><span class="report-type-badge" style="font-size:11px;padding:1px 6px;border-radius:4px;background:var(--bg);color:var(--text-secondary);flex-shrink:0;">' + (r.target_type === 'post' ? '📄帖子' : '👤用户') + '</span><span class="report-target-link" data-type="' + r.target_type + '" data-id="' + r.target_id + '" style="cursor:pointer;color:var(--primary);font-weight:600;">' + escapeHtml(r.target_name || '未知') + '</span></div><div style="font-size:12px;color:var(--text-secondary);margin-top:4px;display:flex;align-items:center;gap:6px;"><span class="report-reporter-link" data-id="' + r.reporter_id + '" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:var(--primary);">' + (r.reporter_avatar ? '<img src="' + r.reporter_avatar + '" style="width:18px;height:18px;border-radius:50%;object-fit:cover;">' : '<span style="display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--primary);color:#fff;align-items:center;justify-content:center;font-size:10px;font-weight:600;">' + escapeHtml((r.reporter_name || '?').charAt(0).toUpperCase()) + '</span>') + escapeHtml(r.reporter_name) + '</span> · ' + dateStr + '</div><div style="font-size:13px;margin-top:4px;padding:4px 8px;background:var(--bg);border-radius:4px;">' + escapeHtml(r.reason) + '</div></div>' + (r.status === 'pending' ? '<div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;">' + (r.target_type === 'user' ? '<button class="btn btn-sm btn-outline report-mute-btn" data-id="' + r.target_id + '" data-banned="' + (r.target_is_banned ? '1' : '0') + '" style="color:var(--warning);">🔇 ' + (r.target_is_banned ? '已禁言' : '禁言') + '</button>' : '') + (r.target_type === 'post' ? '<button class="btn btn-sm btn-outline report-lock-btn" data-id="' + r.target_id + '" data-locked="' + (r.target_is_locked ? '1' : '0') + '" style="color:var(--warning);">🔒 ' + (r.target_is_locked ? '已锁定' : '锁定') + '</button><button class="btn btn-sm btn-outline report-delete-post-btn" data-id="' + r.target_id + '" style="color:var(--error);">🗑 删除</button>' : '') + '<button class="btn btn-sm btn-primary resolve-report-btn" data-id="' + r.id + '">✅ 处理</button><button class="btn btn-sm btn-outline dismiss-report-btn" data-id="' + r.id + '" style="color:var(--error);">❌ 驳回</button></div>' : '<span style="font-size:12px;color:var(--text-secondary);padding:4px 8px;background:var(--bg);border-radius:4px;">' + (r.status === 'resolved' ? '✅ 已处理' : '❌ 已驳回') + '</span>') + '</div></div>';
-        }).join('') + '</div>') +
-        (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;gap:6px;padding:12px 0;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" data-rp="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>上一页</button><span style="padding:4px 8px;font-size:13px;color:var(--text-secondary);">' + pag.page + '/' + pag.totalPages + '</span><button class="btn btn-sm btn-outline" data-rp="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页</button></div>' : '') +
-        '</div></div></div>';
-      Components._bindAdminNav();
-      document.querySelectorAll('.report-tab-btn').forEach(function(b) { b.addEventListener('click', function() { Components._reportStatus = this.dataset.status; Components.renderAdminReports(); }); });
-      document.querySelectorAll('.resolve-report-btn').forEach(function(b) { b.addEventListener('click', async function() { var id = parseInt(this.dataset.id); try { await API.resolveReport(id, 'resolved'); showToast('已处理', 'success'); Components.renderAdminReports(); } catch(err) { showToast(err.message, 'error'); } }); });
-      document.querySelectorAll('.dismiss-report-btn').forEach(function(b) { b.addEventListener('click', async function() { var id = parseInt(this.dataset.id); try { await API.resolveReport(id, 'dismissed'); showToast('已驳回', 'success'); Components.renderAdminReports(); } catch(err) { showToast(err.message, 'error'); } }); });
-      document.querySelectorAll('.report-target-link').forEach(function(el) { el.addEventListener('click', function() { playClickSound(); var t = this.dataset.type, id = parseInt(this.dataset.id); if (t === 'user') Router.navigate('#/users/' + id); else if (t === 'post') Router.navigate('#/posts/' + id); }); });
-      document.querySelectorAll('.report-reporter-link').forEach(function(el) { el.addEventListener('click', function() { playClickSound(); Router.navigate('#/users/' + parseInt(this.dataset.id)); }); });
-      document.querySelectorAll('.report-mute-btn').forEach(function(b) { b.addEventListener('click', async function() { var id = parseInt(this.dataset.id), isBanned = this.dataset.banned === '1'; try { if (isBanned) { await API.adminBanUser(id, false); showToast('已解除禁言', 'success'); Components.renderAdminReports(); } else { var hours = await showPrompt('禁言时长（小时），留空为永久禁言：', '', '例如: 24'); if (hours === null) return; var duration = hours.trim() ? parseInt(hours.trim()) : null; if (hours.trim() && (!duration || duration < 1)) { showToast('请输入有效的小时数', 'error'); return; } await API.adminBanUser(id, true, duration, '举报处理 - 违规禁言'); showToast('已禁言', 'success'); Components.renderAdminReports(); } } catch(err) { showToast(err.message, 'error'); } }); });
-      document.querySelectorAll('.report-lock-btn').forEach(function(b) { b.addEventListener('click', async function() { var id = parseInt(this.dataset.id), isLocked = this.dataset.locked === '1'; try { await API.lockPost(id, !isLocked); showToast(isLocked ? '已解锁' : '已锁定', 'success'); Components.renderAdminReports(); } catch(err) { showToast(err.message, 'error'); } }); });
-      document.querySelectorAll('.report-delete-post-btn').forEach(function(b) { b.addEventListener('click', async function() { var id = parseInt(this.dataset.id); if (!(await showConfirm('确定删除此帖子？'))) return; try { await API.deletePost(id); showToast('已删除', 'success'); Components.renderAdminReports(); } catch(err) { showToast(err.message, 'error'); } }); });
-    } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
-  },
-
-  renderAdminUsers: async function() {
-    this.renderLoading();
-    try {
-      var page = 1, search = '';
-      var render = async function(p, s) {
-        var d = await API.getAdminUsers(p, 20, s), users = d.users || [], pag = d.pagination || {};
-        document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
-          Components._renderAdminNav('users') +
-          '<div class="admin-card"><div class="admin-card-title">👥 用户管理 <span style="font-size:12px;color:var(--text-secondary);font-weight:400;">共 ' + (pag.total || users.length) + ' 位用户</span></div>' +
-          '<div class="search-bar" style="margin-bottom:16px;max-width:400px;display:flex;gap:6px;"><input class="search-input" id="admin-user-search" type="text" placeholder="搜索用户名..." value="' + escapeHtml(s) + '" style="flex:1;"><button class="btn btn-primary btn-sm" id="admin-user-search-btn" style="border-radius:8px;padding:6px 14px;">🔍 搜索</button></div>' +
-          (users.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">暂无用户</div></div>' :
-          '<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>用户</th><th>角色</th><th>等级</th><th>XP</th><th>积分</th><th>状态</th><th>操作</th></tr></thead><tbody>' + users.map(function(u) {
-            var avatarHtml = u.avatar_url ? '<img src="' + u.avatar_url + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;">' : '<span style="display:inline-flex;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#6366f1);color:#fff;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;">' + escapeHtml((u.nickname || u.username).charAt(0).toUpperCase()) + '</span>';
-            var roleBadge = u.role === 'admin' ? '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:#e0e7ff;color:#4338ca;">管理员</span>' : '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:#f0fdf4;color:#16a34a;">用户</span>';
-            var statusBadge = u.is_banned ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:#dc2626;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#dc2626;"></span>已禁言</span>' : '<span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:#16a34a;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#16a34a;"></span>正常</span>';
-            var canManage = u.username !== 'admin';
-            return '<tr style="border-bottom:1px solid var(--border);transition:background 0.15s;"><td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:10px;"><span class="admin-user-avatar" data-uid="' + u.id + '">' + avatarHtml + '</span><div><div class="admin-user-name" data-uid="' + u.id + '" style="cursor:pointer;color:var(--primary);font-weight:600;font-size:14px;">' + escapeHtml(u.nickname || u.username) + '</div>' + (u.nickname ? '<div style="font-size:11px;color:var(--text-light);">@' + escapeHtml(u.username) + '</div>' : '') + '</div></div></td>' +
-              '<td style="padding:10px 14px;">' + roleBadge + '</td>' +
-              '<td style="padding:10px 14px;"><input class="form-input admin-edit-level" data-uid="' + u.id + '" type="number" value="' + (u.level || 1) + '" style="width:52px;font-size:13px;padding:4px 6px;text-align:center;border-radius:6px;"></td>' +
-              '<td style="padding:10px 14px;"><input class="form-input admin-edit-xp" data-uid="' + u.id + '" type="number" value="' + (u.xp || 0) + '" style="width:72px;font-size:13px;padding:4px 6px;text-align:center;border-radius:6px;"></td>' +
-              '<td style="padding:10px 14px;"><input class="form-input admin-edit-points" data-uid="' + u.id + '" type="number" value="' + (u.points || 0) + '" style="width:72px;font-size:13px;padding:4px 6px;text-align:center;border-radius:6px;"></td>' +
-              '<td style="padding:10px 14px;">' + statusBadge + '</td>' +
-              '<td style="padding:10px 14px;"><div style="display:flex;gap:4px;flex-wrap:nowrap;">' +
-              (canManage ? '<button class="admin-ban-btn" data-id="' + u.id + '" data-banned="' + u.is_banned + '" style="padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid ' + (u.is_banned ? 'var(--success)' : 'var(--error)') + ';background:transparent;color:' + (u.is_banned ? 'var(--success)' : 'var(--error)') + ';cursor:pointer;white-space:nowrap;">' + (u.is_banned ? '解除禁言' : '禁言') + '</button>' : '') +
-              '<button class="admin-save-level-btn" data-uid="' + u.id + '" style="padding:5px 12px;font-size:12px;border-radius:6px;border:none;background:var(--primary);color:#fff;cursor:pointer;white-space:nowrap;">保存</button>' +
-              '</div></td></tr>';
-          }).join('') + '</tbody></table></div>') +
-          (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;align-items:center;gap:8px;padding:16px 0 4px;"><button class="btn btn-sm btn-outline" data-up="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>← 上一页</button><span style="font-size:13px;color:var(--text-secondary);font-weight:500;">第 ' + pag.page + '/' + pag.totalPages + ' 页</span><button class="btn btn-sm btn-outline" data-up="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页 →</button></div>' : '') +
-          '</div></div>';
-        Components._bindAdminNav();
-        var doSearch = function() { var v = (document.getElementById('admin-user-search').value || '').trim(); page = 1; render(1, v); };
-        document.getElementById('admin-user-search').addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(); });
-        document.getElementById('admin-user-search-btn').addEventListener('click', doSearch);
-        document.querySelectorAll('[data-up]').forEach(function(b) { b.addEventListener('click', function() { var dir = this.dataset.up; if (dir === 'prev' && pag.page > 1) page = pag.page - 1; else if (dir === 'next' && pag.page < pag.totalPages) page = pag.page + 1; else return; render(page, s); }); });
-        document.querySelectorAll('.admin-user-avatar, .admin-user-name').forEach(function(el) { el.addEventListener('click', function() { playClickSound(); Router.navigate('#/users/' + parseInt(this.dataset.uid)); }); });
-        document.querySelectorAll('.admin-ban-btn').forEach(function(b) { b.addEventListener('click', async function() { var uid = parseInt(this.dataset.id), banned = this.dataset.banned === 'true'; if (banned) { try { await API.adminBanUser(uid, false); showToast('已解除禁言', 'success'); render(page, s); } catch(err) { showToast(err.message, 'error'); } } else { var reason = await showPrompt('禁言原因（可选）：', '', ''); if (reason === null) return; var duration = await showPrompt('禁言时长（小时，留空=永久）：', '', ''); if (duration === null) return; try { await API.adminBanUser(uid, true, duration ? parseInt(duration) : null, reason || ''); showToast('已禁言', 'success'); render(page, s); } catch(err) { showToast(err.message, 'error'); } } }); });
-        document.querySelectorAll('.admin-save-level-btn').forEach(function(b) { b.addEventListener('click', async function() { var uid = parseInt(this.dataset.uid), row = this.closest('tr'); var level = parseInt(row.querySelector('.admin-edit-level').value) || 1; var xp = parseInt(row.querySelector('.admin-edit-xp').value) || 0; var points = parseInt(row.querySelector('.admin-edit-points').value) || 0; try { await API.updateUserLevel(uid, { level: level, xp: xp, points: points }); showToast('已更新', 'success'); render(page, s); } catch(err) { showToast(err.message, 'error'); } }); });
-      };
-      render(page, search);
-    } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
   },
 
   renderAdminLevels: async function() {
@@ -155,7 +43,8 @@ var ComponentsAdmin = {
       var allZones = [
         { id: 'work', label: '作品区', icon: '📂' },
         { id: 'chat', label: '聊天区', icon: '💬' },
-        { id: 'music', label: '音乐区', icon: '🎵' }
+        { id: 'music', label: '音乐区', icon: '🎵' },
+        { id: 'job', label: '求职招聘', icon: '💼' }
       ];
       document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
         Components._renderAdminNav('levels') +
@@ -319,7 +208,7 @@ var ComponentsAdmin = {
               '<div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px;">' +
               (a.image_file_id ? '<img src="/api/file/' + a.image_file_id + '" style="width:60px;height:40px;object-fit:cover;border-radius:4px;">' : '<div style="width:60px;height:40px;background:var(--bg);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;">🖼</div>') +
               '<div><div style="font-weight:600;">' + escapeHtml(a.title) + '</div>' +
-              '<div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">' + posLabel + ' | 排序:' + a.sort_order + ' | ' + (a.is_active ? '✅ 启用' : '❌ 禁用') + ' | 👁 ' + (a.click_count || 0) + ' | 📄 ' + escapeHtml(a.display_pages || 'works,chats') + '</div></div></div>' +
+              '<div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">' + posLabel + ' | 排序:' + a.sort_order + ' | ' + (a.is_active ? '✅ 启用' : '❌ 禁用') + ' | 👁 ' + (a.click_count || 0) + ' | 📄 ' + escapeHtml(a.display_pages || 'works,chats,jobs') + '</div></div></div>' +
               '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
               '<button class="btn btn-sm btn-outline edit-ad-btn" data-id="' + a.id + '">编辑</button>' +
               '<button class="btn btn-sm ' + (a.is_active ? 'btn-outline' : 'btn-primary') + ' toggle-ad-btn" data-id="' + a.id + '">' + (a.is_active ? '禁用' : '启用') + '</button>' +

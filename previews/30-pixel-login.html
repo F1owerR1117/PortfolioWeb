@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录注册 · 像素粒子动画</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #0a0a0f;
+  color: #e4e4ec;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+canvas#particleCanvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+/* ===== 进场遮罩 ===== */
+#introOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #0a0a0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  transition: opacity 1s ease 4.5s, visibility 0s 5.5s;
+}
+#introOverlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+.intro-title {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  background: linear-gradient(135deg, #a3e635, #65a30d, #a3e635);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 2s ease-in-out infinite;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: titleIn 1.2s ease forwards, shimmer 2s ease-in-out infinite 1.2s;
+}
+@keyframes titleIn {
+  0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.intro-sub {
+  margin-top: 12px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 2px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards 0.6s;
+}
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== 表单容器 ===== */
+.auth-container {
+  position: fixed;
+  z-index: 10;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 480px;
+  padding: 0 28px;
+  opacity: 0;
+  animation: formSlideIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 2.2s;
+}
+@keyframes formSlideIn {
+  0% { opacity: 0; transform: translate(-50%, -50%) translateX(-40px); }
+  100% { opacity: 1; transform: translate(-50%, -50%) translateX(0); }
+}
+.auth-card {
+  background: linear-gradient(135deg, rgba(23,23,23,0.95), rgba(41,37,36,0.9));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 24px;
+  padding: 40px 36px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+}
+.auth-tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.auth-tab {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+  transition: color 0.3s;
+  background: none; border: none; font-family: inherit; padding: 0;
+}
+.auth-tab.active { color: #a3e635; }
+.auth-tab:hover:not(.active) { color: rgba(255,255,255,0.5); }
+
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.4); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-input {
+  width: 100%; padding: 14px 18px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  background: rgba(0,0,0,0.3);
+  color: #e4e4ec;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.form-input:focus { border-color: rgba(163,230,53,0.2); }
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.3s;
+  font-family: inherit;
+  margin-top: 4px;
+}
+.btn-primary:hover { opacity: 0.9; }
+
+/* ===== 粒子画像说明 ===== */
+#portraitLabel {
+  position: fixed;
+  z-index: 10;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: 1px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease forwards 3.5s;
+  pointer-events: none;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<!-- 进场遮罩 -->
+<div id="introOverlay">
+  <div class="intro-title">REASONIX</div>
+  <div class="intro-sub">✦ 像素粒子构建中 · 请稍候 ✦</div>
+</div>
+
+<canvas id="particleCanvas"></canvas>
+
+<!-- 表单 -->
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab active">登录</button>
+      <button class="auth-tab">注册</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">用户名</label>
+      <input class="form-input" placeholder="输入用户名..." value="admin">
+    </div>
+    <div class="form-group">
+      <label class="form-label">密码</label>
+      <input class="form-input" type="password" placeholder="输入密码..." value="••••••••">
+    </div>
+    <button class="btn-primary">✦ 进入系统</button>
+  </div>
+</div>
+
+<div id="portraitLabel">◈ 像素粒子画像 · 鼠标靠近使粒子散开 ◈</div>
+
+<script>
+// =============================================================
+//  像素粒子系统
+// =============================================================
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ---------- 像素粒子画像 ----------
+// 用文本绘制一个头像轮廓 (40x50 像素图)
+// . = 0 (空), X = 1 (粒子)
+
+const PIXEL_SIZE = 7; // 每个像素格大小
+const PIXEL_COLS = 40;
+const PIXEL_ROWS = 50;
+
+// 简笔画风格头像（40×50）
+const headMap = [
+  '....XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX....',
+  '..XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX..',
+  '.XXXXXXXXXX............XXXXXXXXXXXXX.',
+  'XXXXXXXXX..................XXXXXXXXX',
+  'XXXXXXXX....................XXXXXXXX',
+  'XXXXXXX......................XXXXXXX',
+  'XXXXXX........................XXXXXX',
+  'XXXXXX........................XXXXXX',
+  'XXXXX..........................XXXXX',
+  'XXXXX..........................XXXXX',
+  'XXXXXX...................XXXX..XXXXX',
+  'XXXXXX...........XXXXX..XXXXXX.XXXXX',
+  'XXXXXXX.....XXXXXXXXXXXXXXX...XXXXXX',
+  'XXXXXXXX..XXXXXXXXXXXXXXXX..XXXXXXXX',
+  'XXXXXXXXX.XXXXXXXXXXXXXXX.XXXXXXXXXX',
+  '....XXXXXXXXXXXXXXXXXXXXXXXXX.......',
+  '....XXXX..XXXXXXXXXXXXX..XXXX.......',
+  '...XXXX....XXXXXXXXX....XXXXX......',
+  '...XXXX....XXXXXXXXX....XXXXX......',
+  '..XXXXX....XXXXXXXXX....XXXXX.....',
+  '..XXXXX....XXXXXXXXX....XXXXX.....',
+  '..XXXXX....XXXXXXXXX....XXXXX.....',
+  '..XXXXX....XXXXXXXXX....XXXXX.....',
+  '...XXXX....XXXXXXXXX....XXXXX......',
+  '...XXXX....XXXXXXXXX....XXXXX......',
+  '....XXXX..XXXXXXXXXXX..XXXX.......',
+  '....XXXXXXXXXXXXXXXXXXXXXXXXX......',
+  '.....XXXXXXXXXXXXXXXXXXXXXXX.......',
+  '......XXXXXXXXXXXXXXXXXXXXX........',
+  '.......XXXXXXXXXXXXXXXXXXX.........',
+  '........XXXXXXXXXXXXXXXXX..........',
+  '.........XXXXXXXXXXXXXXX...........',
+  '..........XXXXXXXXXXXXX............',
+  '...........XXXXXXXXXXX............',
+  '............XXXXXXXXX.............',
+  '.............XXXXXXXXX............',
+  '..............XXXXXXX.............',
+  '...............XXXXX..............',
+  '................XXX...............',
+  '.................X................',
+  '...............................',
+  '...............................',
+  '...............................',
+  '...............................',
+  '...............................',
+  '...............................',
+  '...............................',
+  '...............................',
+  '...............................',
+  '...............................',
+];
+
+// 解析像素图 => 粒子数组
+function buildPortrait() {
+  const particles = [];
+  const pw = PIXEL_COLS * PIXEL_SIZE;
+  const ph = PIXEL_ROWS * PIXEL_SIZE;
+  // 粒子画位置：画面右侧，距右边缘 80px，垂直居中
+  const ox = W - pw - 100;
+  const oy = (H - ph) / 2;
+
+  for (let r = 0; r < PIXEL_ROWS && r < headMap.length; r++) {
+    const row = headMap[r];
+    for (let c = 0; c < PIXEL_COLS && c < row.length; c++) {
+      if (row[c] === 'X') {
+        const px = ox + c * PIXEL_SIZE + PIXEL_SIZE / 2;
+        const py = oy + r * PIXEL_SIZE + PIXEL_SIZE / 2;
+        particles.push({
+          x: px, y: py,          // 当前位置
+          ox: px, oy: py,        // 初始位置（目标）
+          vx: 0, vy: 0,          // 速度
+          size: PIXEL_SIZE * 0.85,
+          color: `hsl(${90 + Math.random() * 30}, ${60 + Math.random() * 30}%, ${40 + Math.random() * 30}%)`,
+        });
+      }
+    }
+  }
+  return particles;
+}
+
+let particles = buildPortrait();
+
+// ---------- 鼠标交互 ----------
+let mouse = { x: -9999, y: -9999, radius: 120 };
+let mouseOnCanvas = false;
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = e.clientX - rect.left;
+  mouse.y = e.clientY - rect.top;
+  mouseOnCanvas = true;
+});
+canvas.addEventListener('mouseleave', () => {
+  mouseOnCanvas = false;
+  mouse.x = -9999;
+  mouse.y = -9999;
+});
+
+// ---------- 物理更新 ----------
+const SPRING = 0.035;   // 回弹弹性系数
+const DAMP = 0.88;      // 速度阻尼
+const REPEL = 280;      // 排斥力
+
+function updateParticles() {
+  for (const p of particles) {
+    // 弹性回复力 (弹簧模型)
+    const dx = p.ox - p.x;
+    const dy = p.oy - p.y;
+    p.vx += dx * SPRING;
+    p.vy += dy * SPRING;
+
+    // 鼠标排斥
+    if (mouseOnCanvas) {
+      const mdx = p.x - mouse.x;
+      const mdy = p.y - mouse.y;
+      const dist = Math.sqrt(mdx * mdx + mdy * mdy);
+      if (dist < mouse.radius && dist > 0.1) {
+        const force = (mouse.radius - dist) / mouse.radius * REPEL;
+        const nx = mdx / dist;
+        const ny = mdy / dist;
+        p.vx += nx * force;
+        p.vy += ny * force;
+      }
+    }
+
+    // 阻尼
+    p.vx *= DAMP;
+    p.vy *= DAMP;
+
+    // 更新位置
+    p.x += p.vx;
+    p.y += p.vy;
+
+    // 粒子不超过边缘
+    const margin = p.size;
+    if (p.x < margin) p.x = margin;
+    if (p.x > W - margin) p.x = W - margin;
+    if (p.y < margin) p.y = margin;
+    if (p.y > H - margin) p.y = H - margin;
+  }
+}
+
+// ---------- 渲染 ----------
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // 画背景微光
+  const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.7);
+  grad.addColorStop(0, 'rgba(163,230,53,0.02)');
+  grad.addColorStop(1, 'rgba(10,10,15,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // 画粒子
+  for (const p of particles) {
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = 'rgba(163,230,53,0.15)';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+}
+
+// ---------- 动画循环 ----------
+function animate() {
+  updateParticles();
+  draw();
+  requestAnimationFrame(animate);
+}
+
+// ---------- 窗口 resize 重新构建 ----------
+window.addEventListener('resize', () => {
+  resize();
+  particles = buildPortrait();
+});
+
+// ---------- 进场动画 ----------
+setTimeout(() => {
+  document.getElementById('introOverlay').classList.add('hidden');
+  // 粒子散开再聚拢的入场效果
+  let count = 0;
+  const burstInterval = setInterval(() => {
+    if (count > 40) { clearInterval(burstInterval); return; }
+    for (const p of particles) {
+      if (Math.random() < 0.08) {
+        p.vx += (Math.random() - 0.5) * 12;
+        p.vy += (Math.random() - 0.5) * 12;
+      }
+    }
+    count++;
+  }, 30);
+}, 1200);
+
+// 启动
+animate();
+
+// ---------- 表单切换 ----------
+document.querySelectorAll('.auth-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

@@ -234,6 +234,14 @@ const API = {
     return this.request('DELETE', `/tags/${id}`);
   },
 
+  renameTag(id, name) {
+    return this.request('PUT', `/tags/${id}`, { name });
+  },
+
+  mergeTags(targetId, sourceIds) {
+    return this.request('POST', '/tags/merge', { target_id: targetId, source_ids: sourceIds });
+  },
+
   // Reactions (like / dislike)
   setReaction(postId, type) {
     return this.request('POST', `/posts/${postId}/reaction`, { type });

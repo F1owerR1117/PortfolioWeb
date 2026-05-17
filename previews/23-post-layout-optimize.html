@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📄 帖子界面 · 布局优化建议预览</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --primary:#a3e635; --primary-dark:#65a30d;
+    --bg:#0a0a0f; --bg-card:rgba(23,23,23,0.9); --bg-card2:rgba(30,30,40,0.85);
+    --bg-subtle:rgba(255,255,255,0.04); --bg-active:rgba(163,230,53,0.08);
+    --text:#e4e4ec; --text-secondary:rgba(255,255,255,0.4); --text-muted:rgba(255,255,255,0.25);
+    --border:rgba(255,255,255,0.06); --radius:12px; --radius-sm:8px;
+    --shadow:0 1px 3px rgba(0,0,0,0.3); --shadow-lg:0 10px 30px rgba(0,0,0,0.4);
+    --card-gradient:linear-gradient(135deg,rgba(23,23,23,0.95),rgba(41,37,36,0.9));
+    --btn-primary-gradient:linear-gradient(135deg,#a3e635,#65a30d);
+  }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans SC',sans-serif;
+    background:var(--bg);color:var(--text);padding:32px;
+    max-width:1200px;margin:0 auto;line-height:1.7;
+  }
+  h2{font-size:20px;font-weight:700;margin:40px 0 16px;display:flex;align-items:center;gap:8px;}
+  h2 small{font-size:13px;font-weight:400;color:var(--text-secondary);}
+  hr{border:none;border-top:1px solid var(--border);margin:40px 0;}
+  .tag{display:inline-block;background:rgba(163,230,53,0.08);color:var(--primary);padding:1px 10px;border-radius:6px;font-size:11px;font-weight:600;}
+
+  /* ===== 预览选项卡片 ===== */
+  .option-nav{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
+  .option-btn{
+    padding:10px 24px;border-radius:var(--radius);border:1px solid var(--border);
+    background:var(--bg-card);color:var(--text-secondary);font-size:14px;font-weight:500;
+    cursor:pointer;transition:all .2s;font-family:inherit;
+  }
+  .option-btn:hover{border-color:var(--primary);color:var(--primary);}
+  .option-btn.active{background:var(--bg-active);border-color:var(--primary);color:var(--primary);font-weight:600;}
+  .option-panel{display:none;}
+  .option-panel.active{display:block;}
+
+  /* ================================================================
+     A — 沉浸式阅读
+     ================================================================ */
+  .a-wrap{max-width:740px;margin:0 auto;}
+  .a-back{color:var(--text-secondary);font-size:13px;margin-bottom:20px;display:inline-block;cursor:pointer;}
+  .a-back:hover{color:var(--primary);}
+
+  .a-cover{
+    width:100%;aspect-ratio:2/1;border-radius:20px;overflow:hidden;
+    background:linear-gradient(135deg,rgba(163,230,53,0.06),rgba(101,163,13,0.03));
+    display:flex;align-items:center;justify-content:center;font-size:64px;
+    margin-bottom:32px;position:relative;
+  }
+  .a-cover img{width:100%;height:100%;object-fit:cover;}
+  .a-cover .a-cat-badge{
+    position:absolute;top:16px;left:16px;
+    padding:6px 16px;border-radius:10px;font-size:12px;font-weight:600;
+    background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.06);color:var(--primary);
+  }
+
+  .a-title{font-size:32px;font-weight:700;line-height:1.3;margin-bottom:16px;letter-spacing:-0.02em;}
+  .a-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--text-secondary);padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:28px;}
+  .a-author{display:flex;align-items:center;gap:10px;}
+  .a-avatar{width:36px;height:36px;border-radius:12px;background:var(--btn-primary-gradient);color:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;}
+  .a-author-name{font-weight:600;color:var(--primary);}
+  .a-sticky-reaction{
+    position:sticky;top:20px;z-index:10;
+    display:flex;gap:8px;padding:12px 0;margin-bottom:24px;
+  }
+  .a-react-btn{
+    display:inline-flex;align-items:center;gap:6px;padding:8px 20px;
+    border-radius:10px;border:1px solid var(--border);background:var(--bg-card);
+    color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit;
+  }
+  .a-react-btn:hover{border-color:var(--bg-active);color:var(--primary);}
+
+  .a-content{font-size:15px;line-height:2;color:rgba(255,255,255,0.55);}
+  .a-content p{margin-bottom:20px;}
+  .a-content .a-block{
+    background:var(--bg-card);border-radius:16px;padding:24px;border:1px solid var(--border);
+    margin:24px 0;white-space:pre-wrap;font-family:'JetBrains Mono','Fira Code',monospace;font-size:13px;line-height:1.8;color:var(--text-secondary);overflow-x:auto;
+  }
+  .a-content .a-img-block{
+    border-radius:16px;overflow:hidden;margin:24px 0;
+  }
+  .a-content .a-img-block img{width:100%;border-radius:16px;}
+  .a-content .a-img-block .caption{font-size:12px;color:var(--text-muted);text-align:center;margin-top:8px;}
+
+  .a-tags{display:flex;gap:8px;flex-wrap:wrap;margin:32px 0 24px;}
+  .a-tag{padding:4px 14px;border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--text-secondary);}
+
+  .a-related{background:var(--bg-card);border-radius:16px;border:1px solid var(--border);padding:24px;margin-top:32px;}
+  .a-related h3{font-size:15px;font-weight:600;margin-bottom:12px;}
+  .a-related-item{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+  .a-related-item:last-child{border:none;}
+  .a-related-item:hover .a-related-title{color:var(--primary);}
+  .a-related-thumb{width:60px;height:45px;border-radius:8px;background:var(--bg-subtle);flex-shrink:0;overflow:hidden;}
+  .a-related-thumb img{width:100%;height:100%;object-fit:cover;}
+  .a-related-info{flex:1;min-width:0;}
+  .a-related-title{font-size:13px;font-weight:600;transition:color .15s;}
+  .a-related-meta{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+  /* ================================================================
+     B — 双栏布局
+     ================================================================ */
+  .b-layout{display:grid;grid-template-columns:1fr 300px;gap:32px;align-items:start;}
+  .b-main{min-width:0;}
+  .b-sidebar{position:sticky;top:20px;}
+
+  .b-cover{
+    width:100%;aspect-ratio:2.2/1;border-radius:16px;overflow:hidden;
+    background:linear-gradient(135deg,rgba(163,230,53,0.04),rgba(101,163,13,0.02));
+    display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:24px;
+  }
+  .b-cover img{width:100%;height:100%;object-fit:cover;}
+  .b-back{color:var(--text-secondary);font-size:12px;margin-bottom:16px;display:inline-block;cursor:pointer;}
+  .b-back:hover{color:var(--primary);}
+  .b-title{font-size:26px;font-weight:700;line-height:1.35;margin-bottom:12px;}
+  .b-meta{font-size:12px;color:var(--text-secondary);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .b-meta a{color:var(--primary);}
+
+  .b-content{font-size:14px;line-height:1.9;color:rgba(255,255,255,0.5);}
+  .b-content p{margin-bottom:16px;}
+  .b-content .b-block{
+    background:var(--bg-card);border-radius:12px;padding:20px;border:1px solid var(--border);
+    margin:20px 0;font-family:monospace;font-size:12px;color:var(--text-secondary);overflow-x:auto;
+  }
+  .b-sidebar-card{
+    background:var(--bg-card);border-radius:14px;border:1px solid var(--border);
+    padding:20px;margin-bottom:16px;
+  }
+  .b-sidebar-card h4{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.3px;}
+  .b-author-card{display:flex;align-items:center;gap:12px;}
+  .b-avatar{width:44px;height:44px;border-radius:14px;background:var(--btn-primary-gradient);color:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;}
+  .b-author-info{flex:1;min-width:0;}
+  .b-author-name{font-size:14px;font-weight:600;}
+  .b-author-stats{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+  .b-react-group{display:flex;flex-direction:column;gap:6px;}
+  .b-react-btn{
+    display:flex;align-items:center;gap:8px;padding:8px 14px;
+    border-radius:8px;border:1px solid var(--border);background:transparent;
+    color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all .15s;font-family:inherit;
+  }
+  .b-react-btn:hover{border-color:var(--bg-active);color:var(--primary);}
+
+  .b-toc-item{padding:6px 0;font-size:12px;color:var(--text-secondary);cursor:pointer;border-bottom:1px solid var(--bg-subtle);}
+  .b-toc-item:hover{color:var(--primary);}
+
+  /* ================================================================
+     C — 杂志式布局
+     ================================================================ */
+  .c-wrap{max-width:800px;margin:0 auto;}
+  .c-hero{
+    position:relative;width:100%;height:380px;border-radius:24px;overflow:hidden;
+    margin-bottom:0;display:flex;align-items:flex-end;
+    background:linear-gradient(135deg,rgba(163,230,53,0.08),rgba(101,163,13,0.04));
+  }
+  .c-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .c-hero-overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(transparent 40%, rgba(10,10,15,0.95));
+  }
+  .c-hero-content{position:relative;z-index:1;padding:40px 36px;width:100%;}
+  .c-hero-cat{
+    display:inline-block;padding:4px 14px;border-radius:8px;font-size:12px;font-weight:600;
+    background:rgba(163,230,53,0.15);color:var(--primary);margin-bottom:12px;
+  }
+  .c-hero-title{font-size:36px;font-weight:700;line-height:1.25;letter-spacing:-0.02em;max-width:90%;}
+
+  .c-author-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:16px 0;margin:0 0 28px;border-bottom:1px solid var(--border);flex-wrap:wrap;
+  }
+  .c-author-left{display:flex;align-items:center;gap:12px;}
+  .c-avatar{width:40px;height:40px;border-radius:14px;background:var(--btn-primary-gradient);color:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;}
+  .c-author-name{font-size:14px;font-weight:600;}
+  .c-pub-date{font-size:12px;color:var(--text-muted);}
+  .c-reactions{display:flex;gap:8px;}
+  .c-react{display:inline-flex;align-items:center;gap:4px;padding:6px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s;}
+  .c-react:hover{border-color:var(--bg-active);color:var(--primary);}
+
+  .c-content{font-size:16px;line-height:2;color:rgba(255,255,255,0.55);}
+  .c-content p{margin-bottom:20px;}
+  .c-content .c-first-p{font-size:18px;color:var(--text);}
+  .c-content .c-first-p::first-letter{font-size:56px;font-weight:700;float:left;line-height:1;margin-right:10px;margin-top:4px;color:var(--primary);}
+  .c-content .c-block{
+    background:var(--bg-card);border-radius:16px;padding:24px;border:1px solid var(--border);
+    border-left:3px solid var(--primary);margin:24px 0;font-family:monospace;font-size:13px;line-height:1.8;color:var(--text-secondary);
+  }
+  .c-content .c-pullquote{
+    font-size:22px;font-weight:600;line-height:1.5;color:var(--primary);text-align:center;
+    padding:28px 40px;margin:28px 0;border-top:2px solid var(--bg-active);border-bottom:2px solid var(--bg-active);
+    font-style:italic;
+  }
+  .c-content .c-img-block{border-radius:16px;overflow:hidden;margin:24px 0;}
+  .c-content .c-img-block img{width:100%;border-radius:16px;display:block;}
+  .c-content .c-img-block .caption{font-size:12px;color:var(--text-muted);text-align:center;margin-top:8px;}
+
+  .c-tags{display:flex;gap:8px;margin:32px 0;}
+  .c-tag{padding:4px 14px;border-radius:8px;background:var(--bg-subtle);color:var(--text-secondary);font-size:12px;}
+
+  /* ===== 评论区 ===== */
+  .c-comments{margin-top:40px;padding-top:28px;border-top:1px solid var(--border);}
+  .c-comments h3{font-size:17px;font-weight:600;margin-bottom:20px;}
+  .c-comment-form{display:flex;gap:12px;margin-bottom:24px;}
+  .c-comment-form textarea{
+    flex:1;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius);
+    background:var(--bg-card);color:var(--text);font-size:14px;font-family:inherit;resize:none;min-height:60px;outline:none;
+  }
+  .c-comment-form textarea:focus{border-color:rgba(163,230,53,0.15);}
+  .c-submit-btn{
+    align-self:flex-end;padding:10px 24px;border-radius:10px;border:none;
+    background:var(--btn-primary-gradient);color:#0a0a0f;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;
+  }
+  .c-comment{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--bg-subtle);}
+  .c-comment:last-child{border:none;}
+  .c-comment-avatar{width:40px;height:40px;border-radius:12px;background:var(--btn-primary-gradient);color:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;}
+  .c-comment-body{flex:1;min-width:0;}
+  .c-comment-header{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;}
+  .c-comment-author{font-size:13px;font-weight:600;}
+  .c-comment-date{font-size:11px;color:var(--text-muted);}
+  .c-comment-text{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7;}
+
+  /* 评论区气泡版 (C 方案) */
+  .c-bubble{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;}
+  .c-bubble .c-comment{border-bottom:1px solid var(--bg-subtle);}
+  .c-bubble .c-comment-text{background:var(--bg-subtle);padding:10px 16px;border-radius:12px;margin-top:6px;}
+
+</style>
+</head>
+<body>
+
+<h1 style="font-size:24px;font-weight:700;margin-bottom:8px;">📄 帖子界面 · 三种布局优化方案</h1>
+<p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px;">点击下方按钮切换查看不同方案</p>
+
+<div class="option-nav">
+  <button class="option-btn active" onclick="showOpt('a')">A · 沉浸式阅读</button>
+  <button class="option-btn" onclick="showOpt('b')">B · 双栏布局</button>
+  <button class="option-btn" onclick="showOpt('c')">C · 杂志式布局</button>
+</div>
+
+<!-- ================================================================
+     A · 沉浸式阅读
+     ================================================================ -->
+<div class="option-panel active" id="panel-a">
+<div class="a-wrap">
+
+  <div class="a-back">← 返回列表</div>
+
+  <div class="a-cover">
+    <img src="https://picsum.photos/seed/post1/1480/740" alt="">
+    <span class="a-cat-badge">📂 作品区</span>
+  </div>
+
+  <div class="sticky" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0;">
+    <div class="a-sticky-reaction">
+      <button class="a-react-btn">👍 128</button>
+      <button class="a-react-btn">👎 3</button>
+      <button class="a-react-btn">📖 收藏</button>
+    </div>
+  </div>
+
+  <h1 class="a-title">基于 Three.js 的 3D 交互式可视化作品集开发实战</h1>
+
+  <div class="a-meta">
+    <div class="a-author">
+      <div class="a-avatar">张</div>
+      <div>
+        <span class="a-author-name">张三</span>
+        <span class="tag">Lv.8</span>
+      </div>
+    </div>
+    <span>2024-03-15</span>
+    <span>👁 2.3k</span>
+    <span>📂 作品</span>
+  </div>
+
+  <div class="a-content">
+    <p>本文记录了使用 Three.js 构建 3D 交互式可视化作品集的全过程。从基础场景搭建到高级渲染效果，涵盖粒子系统、光照、后期处理等核心话题。</p>
+
+    <div class="a-img-block">
+      <img src="https://picsum.photos/seed/scene1/800/450" alt="">
+      <div class="caption">图1：场景最终渲染效果</div>
+    </div>
+
+    <h3 style="font-size:18px;font-weight:600;margin:28px 0 12px;color:var(--text);">场景搭建</h3>
+    <p>首先创建基础场景 ... Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+
+    <div class="a-block">
+      // 基础 Three.js 场景
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(w, h);
+      document.body.appendChild(renderer.domElement);
+    </div>
+
+    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+    <div class="a-tags">
+      <span class="a-tag">Three.js</span>
+      <span class="a-tag">WebGL</span>
+      <span class="a-tag">JavaScript</span>
+    </div>
+  </div>
+
+  <!-- 评论区 -->
+  <div style="margin-top:40px;padding-top:28px;border-top:1px solid var(--border);">
+    <h3 style="font-size:17px;font-weight:600;margin-bottom:20px;">💬 评论 (3)</h3>
+    <div style="display:flex;gap:12px;margin-bottom:24px;">
+      <textarea placeholder="写下你的评论..." style="flex:1;padding:12px 16px;border:1px solid var(--border);border-radius:12px;background:var(--bg-card);color:var(--text);font-size:14px;font-family:inherit;resize:none;min-height:60px;outline:none;"></textarea>
+      <button style="align-self:flex-end;padding:10px 24px;border-radius:10px;border:none;background:var(--btn-primary-gradient);color:#0a0a0f;font-size:13px;font-weight:600;cursor:pointer;">发布</button>
+    </div>
+    <div class="c-comment">
+      <div class="c-comment-avatar">李</div>
+      <div class="c-comment-body">
+        <div class="c-comment-header"><span class="c-comment-author">李四 <span class="tag">Lv.5</span></span><span class="c-comment-date">3小时前</span></div>
+        <div class="c-comment-text">太棒了！特别是粒子系统的部分，学到了很多。</div>
+      </div>
+    </div>
+    <div class="c-comment">
+      <div class="c-comment-avatar">王</div>
+      <div class="c-comment-body">
+        <div class="c-comment-header"><span class="c-comment-author">王五 <span class="tag">Lv.3</span></span><span class="c-comment-date">2小时前</span></div>
+        <div class="c-comment-text">能分享一下性能优化的经验吗？我遇到了一些卡顿问题。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="a-related">
+    <h3>📎 相关推荐</h3>
+    <div class="a-related-item">
+      <div class="a-related-thumb"><img src="https://picsum.photos/seed/r1/120/90" alt=""></div>
+      <div class="a-related-info">
+        <div class="a-related-title">WebGL 性能优化实战指南</div>
+        <div class="a-related-meta">👁 1.8k · 2024-03-10</div>
+      </div>
+    </div>
+    <div class="a-related-item">
+      <div class="a-related-thumb"><img src="https://picsum.photos/seed/r2/120/90" alt=""></div>
+      <div class="a-related-info">
+        <div class="a-related-title">React + Three.js 项目架构最佳实践</div>
+        <div class="a-related-meta">👁 1.2k · 2024-03-08</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ================================================================
+     B · 双栏布局
+     ================================================================ -->
+<div class="option-panel" id="panel-b">
+<div class="b-layout">
+
+  <div class="b-main">
+    <div class="b-back">← 返回列表</div>
+    <div class="b-cover"><img src="https://picsum.photos/seed/post2/1000/450" alt=""></div>
+    <h1 class="b-title">基于 Three.js 的 3D 交互式可视化作品集开发实战</h1>
+    <div class="b-meta">作者：<a href="#">张三</a> <span class="tag">Lv.8</span> · 2024-03-15 · 👁 2.3k</div>
+    <div class="b-content">
+      <p>本文记录了使用 Three.js 构建 3D 交互式可视化作品集的全过程。从基础场景搭建到高级渲染效果，涵盖粒子系统、光照、后期处理等核心话题。</p>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+      <div class="b-block">
+// 基础 Three.js 场景
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 1000);
+renderer.setSize(w, h);
+      </div>
+      <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.</p>
+    </div>
+  </div>
+
+  <div class="b-sidebar">
+    <div class="b-sidebar-card">
+      <h4>👤 作者</h4>
+      <div class="b-author-card">
+        <div class="b-avatar">张</div>
+        <div class="b-author-info">
+          <div class="b-author-name">张三</div>
+          <div class="b-author-stats">⭐ Lv.8 · 2,340 分</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="b-sidebar-card">
+      <h4>👍 反应</h4>
+      <div class="b-react-group">
+        <button class="b-react-btn">👍 128</button>
+        <button class="b-react-btn">👎 3</button>
+        <button class="b-react-btn">📖 收藏</button>
+      </div>
+    </div>
+
+    <div class="b-sidebar-card">
+      <h4>📑 目录</h4>
+      <div class="b-toc-item">场景搭建</div>
+      <div class="b-toc-item">粒子系统</div>
+      <div class="b-toc-item">光照与阴影</div>
+      <div class="b-toc-item">后期处理</div>
+      <div class="b-toc-item">性能优化</div>
+    </div>
+
+    <div class="b-sidebar-card">
+      <h4>🏷️ 标签</h4>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="tag">Three.js</span>
+        <span class="tag">WebGL</span>
+        <span class="tag">JavaScript</span>
+        <span class="tag">3D</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ================================================================
+     C · 杂志式布局
+     ================================================================ -->
+<div class="option-panel" id="panel-c">
+<div class="c-wrap">
+
+  <div class="c-hero">
+    <img src="https://picsum.photos/seed/post3/1600/760" alt="">
+    <div class="c-hero-overlay"></div>
+    <div class="c-hero-content">
+      <div class="c-hero-cat">📂 作品区</div>
+      <h1 class="c-hero-title">基于 Three.js 的 3D 交互式可视化作品集开发实战</h1>
+    </div>
+  </div>
+
+  <div class="c-author-bar">
+    <div class="c-author-left">
+      <div class="c-avatar">张</div>
+      <div>
+        <div class="c-author-name">张三 <span class="tag">Lv.8</span></div>
+        <div class="c-pub-date">2024-03-15 · 👁 2.3k</div>
+      </div>
+    </div>
+    <div class="c-reactions">
+      <button class="c-react">👍 128</button>
+      <button class="c-react">👎 3</button>
+      <button class="c-react">📖</button>
+    </div>
+  </div>
+
+  <div class="c-content">
+    <p class="c-first-p">本文记录了使用 Three.js 构建 3D 交互式可视化作品集的全过程。从基础场景搭建到高级渲染效果，涵盖粒子系统、光照、后期处理等核心话题。整个项目历时三周，最终实现了一个可流畅运行的交互式 3D 场景。</p>
+
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+
+    <div class="c-pullquote">"Three.js 的强大之处在于它让 Web 端 3D 渲染变得前所未有的简单"</div>
+
+    <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+    <div class="c-block">
+      // 基础 Three.js 场景
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(w, h);
+      document.body.appendChild(renderer.domElement);
+    </div>
+
+    <div class="c-img-block">
+      <img src="https://picsum.photos/seed/scene2/800/450" alt="">
+      <div class="caption">最终渲染效果截图</div>
+    </div>
+
+    <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+  </div>
+
+  <div class="c-tags">
+    <span class="c-tag">Three.js</span>
+    <span class="c-tag">WebGL</span>
+    <span class="c-tag">JavaScript</span>
+  </div>
+
+  <!-- 评论区（气泡风格） -->
+  <div class="c-comments">
+    <h3>💬 评论 (3)</h3>
+    <div class="c-comment-form">
+      <textarea placeholder="写下你的评论..."></textarea>
+      <button class="c-submit-btn">发布</button>
+    </div>
+    <div class="c-bubble">
+      <div class="c-comment">
+        <div class="c-comment-avatar">李</div>
+        <div class="c-comment-body">
+          <div class="c-comment-header"><span class="c-comment-author">李四 <span class="tag">Lv.5</span></span><span class="c-comment-date">3小时前</span></div>
+          <div class="c-comment-text" style="background:var(--bg-subtle);padding:10px 16px;border-radius:12px;margin-top:6px;">太棒了！特别是粒子系统的部分，学到了很多。</div>
+        </div>
+      </div>
+      <div class="c-comment">
+        <div class="c-comment-avatar">王</div>
+        <div class="c-comment-body">
+          <div class="c-comment-header"><span class="c-comment-author">王五 <span class="tag">Lv.3</span></span><span class="c-comment-date">2小时前</span></div>
+          <div class="c-comment-text" style="background:var(--bg-subtle);padding:10px 16px;border-radius:12px;margin-top:6px;">能分享一下性能优化的经验吗？我遇到了一些卡顿问题。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<hr>
+
+<h2>📐 三种方案对比</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:12px;">
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+    <h4 style="font-size:15px;font-weight:700;margin-bottom:10px;">A · 沉浸式阅读</h4>
+    <ul style="padding-left:16px;font-size:13px;color:var(--text-secondary);line-height:1.8;">
+      <li>窄栏居中（740px 最优阅读宽度）</li>
+      <li>sticky 粘性反应栏</li>
+      <li>大标题 32px · 宽幅封面</li>
+      <li>底部相关推荐</li>
+      <li>适合长文深度阅读</li>
+    </ul>
+  </div>
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+    <h4 style="font-size:15px;font-weight:700;margin-bottom:10px;">B · 双栏布局</h4>
+    <ul style="padding-left:16px;font-size:13px;color:var(--text-secondary);line-height:1.8;">
+      <li>内容 + 300px 侧边栏</li>
+      <li>侧边栏：作者卡 + 反应 + 目录 + 标签</li>
+      <li>充分利用宽屏空间</li>
+      <li>粘性侧边栏（滚动跟随）</li>
+      <li>适合信息型 / 教程类帖子</li>
+    </ul>
+  </div>
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+    <h4 style="font-size:15px;font-weight:700;margin-bottom:10px;">C · 杂志式</h4>
+    <ul style="padding-left:16px;font-size:13px;color:var(--text-secondary);line-height:1.8;">
+      <li>380px Hero 封面图 + 标题叠加</li>
+      <li>首字下沉 + 引文区块</li>
+      <li>作者栏在封面下方</li>
+      <li>评论气泡风格</li>
+      <li>适合创意 / 作品展示类帖子</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function showOpt(id) {
+  document.querySelectorAll('.option-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.querySelector('.option-btn[onclick*="' + id + '"]').classList.add('active');
+}
+</script>
+</body>
+</html>
