@@ -1,9 +1,289 @@
 /* ===== Admin Pages ===== */
 
 .admin-page {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
 }
+
+/* ===== Admin Nav ===== */
+
+.admin-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  background: rgba(23,23,23,0.5);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 14px;
+  padding: 6px;
+  flex-wrap: wrap;
+}
+.admin-nav-item {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.35);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-nav-item:hover {
+  color: rgba(255,255,255,0.5);
+}
+.admin-nav-item.active {
+  background: rgba(163,230,53,0.08);
+  color: var(--primary);
+}
+
+/* ===== Stats Grid ===== */
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.admin-stat-box {
+  background: linear-gradient(135deg, rgba(23,23,23,0.85), rgba(41,37,36,0.8));
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 14px;
+  padding: 22px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.admin-stat-box:hover {
+  border-color: rgba(163,230,53,0.06);
+}
+.admin-stat-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+.admin-stat-num {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #e4e4ec, #a3e635);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.admin-stat-num.alert {
+  color: #ef4444;
+  -webkit-text-fill-color: #ef4444;
+  background: none;
+}
+.admin-stat-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 4px;
+}
+
+/* ===== Admin Card ===== */
+
+.admin-card {
+  background: linear-gradient(135deg, rgba(23,23,23,0.85), rgba(41,37,36,0.8));
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+.admin-card:hover {
+  border-color: rgba(163,230,53,0.04);
+}
+.admin-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== Progress Bars ===== */
+
+.admin-progress-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.admin-progress-row span:last-child {
+  font-weight: 600;
+}
+.admin-progress-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.admin-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+.admin-progress-fill.primary {
+  background: linear-gradient(90deg, #a3e635, #65a30d);
+}
+.admin-progress-fill.accent {
+  background: linear-gradient(90deg, #818cf8, #6366f1);
+}
+
+/* ===== Admin Table ===== */
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.admin-table th {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-weight: 600;
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.admin-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.admin-table td:first-child {
+  min-width: 180px;
+}
+
+/* ===== Badges ===== */
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.admin-badge.admin-role {
+  background: rgba(99,102,241,0.1);
+  color: #818cf8;
+}
+.admin-badge.user-role {
+  background: rgba(163,230,53,0.06);
+  color: var(--primary);
+}
+.admin-badge.status-normal {
+  background: rgba(34,197,94,0.08);
+  color: #22c55e;
+}
+.admin-badge.status-banned {
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+}
+
+/* ===== Level Config ===== */
+
+.admin-level-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: background 0.2s;
+}
+.admin-level-row:hover {
+  background: rgba(163,230,53,0.02);
+}
+.admin-level-name {
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 100px;
+}
+.admin-level-range {
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+  flex: 1;
+}
+.admin-level-del {
+  background: none;
+  border: none;
+  color: rgba(239,68,68,0.4);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.admin-level-del:hover {
+  color: #ef4444;
+  background: rgba(239,68,68,0.1);
+}
+.admin-level-add-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ===== Notification Badge (inline) ===== */
+
+.inline-notif-badge {
+  display: inline-flex;
+  font-size: 12px;
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+  padding: 1px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* ===== Page Header + Subtitle ===== */
+
+.admin-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-top: 20px;
+}
+.admin-page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+}
+.admin-subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+  margin-top: 4px;
+}
+
+/* ===== Avatar small inline ===== */
+
+.admin-user-avatar-inline {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 .admin-batch-bar {
   display: flex;
   align-items: center;

@@ -1,12 +1,48 @@
 // Admin component: stats, reports, users, levels, tags
 var ComponentsAdmin = {
+  _adminNavTabs: [
+    { id: 'stats', icon: '📊', label: '概览' },
+    { id: 'reports', icon: '🚩', label: '举报' },
+    { id: 'users', icon: '👥', label: '用户' },
+    { id: 'levels', icon: '⭐', label: '等级' },
+    { id: 'notices', icon: '📢', label: '公告' },
+    { id: 'ads', icon: '📰', label: '广告' },
+    { id: 'tags', icon: '🏷️', label: '标签' }
+  ],
+
+  _renderAdminNav: function(current) {
+    return '<div class="admin-nav">' +
+      this._adminNavTabs.map(function(t) {
+        return '<button class="admin-nav-item' + (t.id === current ? ' active' : '') + '" data-admin-tab="' + t.id + '">' + t.icon + ' ' + t.label + '</button>';
+      }).join('') + '</div>';
+  },
+
+  _bindAdminNav: function() {
+    var self = this;
+    document.querySelectorAll('[data-admin-tab]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        playClickSound();
+        var tab = this.dataset.adminTab;
+        if (tab === 'stats') Components.renderAdminStats();
+        else if (tab === 'reports') Components.renderAdminReports();
+        else if (tab === 'users') Components.renderAdminUsers();
+        else if (tab === 'levels') Components.renderAdminLevels();
+        else if (tab === 'notices') Components.renderLoginNotices();
+        else if (tab === 'ads') Components.renderAdminAds();
+        else if (tab === 'tags') Components.renderTagManager();
+      });
+    });
+  },
+
   renderTagManager: async function() { this._tagCategory = 'all'; this.renderLoading(); try { await this._renderTagList(); } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); } },
 
   _renderTagList: async function() {
     var app = document.getElementById('app'), isAdmin = App.user && App.user.role === 'admin';
     var tags = (await API.getTags(this._tagCategory === 'all' ? '' : this._tagCategory)).tags || [];
-    app.innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card"><h2 style="font-size:22px;font-weight:700;margin-bottom:8px;">🏷️ 标签管理</h2><div class="sort-bar" style="margin-bottom:12px;"><button class="sort-btn ' + (this._tagCategory === 'all' ? 'active' : '') + '" data-tag-cat="all">📋 全部</button><button class="sort-btn ' + (this._tagCategory === 'work' ? 'active' : '') + '" data-tag-cat="work">📂 作品区</button><button class="sort-btn ' + (this._tagCategory === 'chat' ? 'active' : '') + '" data-tag-cat="chat">💬 聊天区</button></div><div class="search-bar" style="margin-bottom:16px;"><input class="search-input" id="tag-search" type="text" placeholder="搜索标签..." autocomplete="off"></div><div id="tag-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">' + tags.map(function(t) { return '<span class="tag-manager-item"><span class="tag-manager-name">' + escapeHtml(t.name) + '</span><span class="tag-manager-count">' + t.count + ' 帖</span>' + (isAdmin ? '<span class="tag-manager-remove" data-id="' + t.id + '" data-name="' + escapeHtml(t.name) + '">&times;</span>' : '') + '</span>'; }).join('') + '</div><div class="tag-add-row" style="display:flex;gap:8px;margin-top:12px;"><input class="form-input" id="new-tag-input" type="text" placeholder="新标签名称..." style="flex:1;"><button class="btn btn-primary" id="add-tag-btn">添加</button></div></div></div></div>';
+    app.innerHTML = '<div class="page-fade-in"><div class="admin-page">' + Components._renderAdminNav('tags') +
+      '<div class="admin-card"><div class="admin-card-title">🏷️ 标签管理</div><div class="sort-bar" style="margin-bottom:12px;"><button class="sort-btn ' + (this._tagCategory === 'all' ? 'active' : '') + '" data-tag-cat="all">📋 全部</button><button class="sort-btn ' + (this._tagCategory === 'work' ? 'active' : '') + '" data-tag-cat="work">📂 作品区</button><button class="sort-btn ' + (this._tagCategory === 'chat' ? 'active' : '') + '" data-tag-cat="chat">💬 聊天区</button></div><div class="search-bar" style="margin-bottom:16px;"><input class="search-input" id="tag-search" type="text" placeholder="搜索标签..." autocomplete="off"></div><div id="tag-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">' + tags.map(function(t) { return '<span class="tag-manager-item"><span class="tag-manager-name">' + escapeHtml(t.name) + '</span><span class="tag-manager-count">' + t.count + ' 帖</span>' + (isAdmin ? '<span class="tag-manager-remove" data-id="' + t.id + '" data-name="' + escapeHtml(t.name) + '">&times;</span>' : '') + '</span>'; }).join('') + '</div><div class="tag-add-row" style="display:flex;gap:8px;margin-top:12px;"><input class="form-input" id="new-tag-input" type="text" placeholder="新标签名称..." style="flex:1;"><button class="btn btn-primary" id="add-tag-btn">添加</button></div></div></div></div>';
     var self = this;
+    Components._bindAdminNav();
     document.querySelectorAll('.sort-btn[data-tag-cat]').forEach(function(b) { b.addEventListener('click', function() { playClickSound(); self._tagCategory = b.dataset.tagCat; self._renderTagList(); }); });
     document.getElementById('add-tag-btn').addEventListener('click', async function() { var n = document.getElementById('new-tag-input').value.trim(); if (!n) { showToast('请输入标签名', 'error'); return; } try { await API.createTag(n); showToast('已添加', 'success'); self._renderTagList(); } catch (err) { showToast(err.message, 'error'); } });
     if (isAdmin) document.getElementById('tag-list').addEventListener('click', async function(e) { var rb = e.target.closest('.tag-manager-remove'); if (!rb) return; if (!(await showConfirm('确定删除？'))) return; try { await API.deleteTag(parseInt(rb.dataset.id)); showToast('已删除', 'success'); self._renderTagList(); } catch (err) { showToast(err.message, 'error'); } });
@@ -19,22 +55,26 @@ var ComponentsAdmin = {
       var totalUsers = d.total_users || 0, pendingReports = d.pending_reports || 0;
       var maxPosts = Math.max.apply(null, [1].concat(zones.map(function(z) { return z.posts; })));
       var maxReplies = Math.max.apply(null, [1].concat(zones.map(function(z) { return z.replies; })));
-      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page">' +
-        '<div class="settings-card"><h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">📊 区域统计</h2>' +
-        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px;">' +
-        '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:32px;margin-bottom:4px;">👥</div><div style="font-size:28px;font-weight:700;">' + totalUsers + '</div><div style="font-size:13px;color:var(--text-secondary);">总用户数</div></div>' +
-        '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;"><div style="font-size:32px;margin-bottom:4px;">🚩</div><div style="font-size:28px;font-weight:700;' + (pendingReports > 0 ? 'color:var(--error);' : '') + '">' + pendingReports + '</div><div style="font-size:13px;color:var(--text-secondary);">待处理举报</div></div>' +
+      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
+        Components._renderAdminNav('stats') +
+        '<div class="admin-page-header"><div><h1>📊 系统概览</h1><div class="admin-subtitle">数据概览与统计</div></div></div>' +
+        '<div class="admin-stats-grid">' +
+        '<div class="admin-stat-box"><div class="admin-stat-icon">👥</div><div class="admin-stat-num">' + totalUsers + '</div><div class="admin-stat-label">总用户</div></div>' +
+        '<div class="admin-stat-box"><div class="admin-stat-icon">📄</div><div class="admin-stat-num">' + (zones.reduce(function(s,z){return s+(z.posts||0);},0)) + '</div><div class="admin-stat-label">帖子</div></div>' +
+        '<div class="admin-stat-box"><div class="admin-stat-icon">💬</div><div class="admin-stat-num">' + (zones.reduce(function(s,z){return s+(z.replies||0);},0)) + '</div><div class="admin-stat-label">评论</div></div>' +
+        '<div class="admin-stat-box"><div class="admin-stat-icon">🚩</div><div class="admin-stat-num' + (pendingReports > 0 ? ' alert' : '') + '">' + pendingReports + '</div><div class="admin-stat-label">待处理举报</div></div>' +
         '</div>' +
+        '<div class="admin-card"><div class="admin-card-title">📊 分区统计</div>' +
         zones.map(function(z) {
           var postPct = Math.round(z.posts / maxPosts * 100);
           var replyPct = Math.round(z.replies / maxReplies * 100);
-          return '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px;"><h3 style="font-size:18px;font-weight:700;margin-bottom:12px;">' + (z.zone === 'works' ? '📂' : '💬') + ' ' + escapeHtml(z.label) + '</h3>' +
-            '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px;"><span>帖子数</span><span style="font-weight:600;">' + z.posts + '</span></div><div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + postPct + '%;background:var(--primary);border-radius:4px;transition:width 0.3s;"></div></div></div>' +
-            '<div><div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px;"><span>回复数</span><span style="font-weight:600;">' + z.replies + '</span></div><div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + replyPct + '%;background:var(--accent, #8b5cf6);border-radius:4px;transition:width 0.3s;"></div></div></div></div>';
+          return '<div style="margin-bottom:16px;"><div class="admin-progress-row"><span>' + (z.zone === 'works' ? '📂' : '💬') + ' ' + escapeHtml(z.label) + '</span><span>' + z.posts + ' 帖子</span></div><div class="admin-progress-bar"><div class="admin-progress-fill primary" style="width:' + postPct + '%;"></div></div></div>' +
+            '<div style="margin-bottom:4px;"><div class="admin-progress-row"><span>回复数</span><span>' + z.replies + '</span></div><div class="admin-progress-bar"><div class="admin-progress-fill accent" style="width:' + replyPct + '%;"></div></div></div>';
         }).join('') +
-        '<div style="text-align:center;margin-top:20px;"><button class="btn btn-outline" id="refresh-stats-btn">🔄 刷新数据</button></div>' +
-        '</div></div>';
+        '<button class="btn btn-outline btn-sm" id="refresh-stats-btn" style="margin-top:12px;">🔄 刷新数据</button>' +
+        '</div></div></div>';
       document.getElementById('refresh-stats-btn').addEventListener('click', function() { Components.renderAdminStats(); });
+      Components._bindAdminNav();
     } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
   },
 
@@ -44,7 +84,9 @@ var ComponentsAdmin = {
       var status = this._reportStatus || 'pending';
       var d = await API.getAdminReports(1, 20, status), reports = d.reports || [], pag = d.pagination || {};
       var tabs = [{ id: 'pending', label: '待处理' }, { id: 'resolved', label: '已处理' }, { id: 'dismissed', label: '已驳回' }];
-      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card"><h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">🚩 举报管理</h2><div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">' + tabs.map(function(t) { return '<button class="btn btn-sm ' + (t.id === status ? 'btn-primary' : 'btn-outline') + ' report-tab-btn" data-status="' + t.id + '">' + t.label + '</button>'; }).join('') + '</div>' +
+      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
+        Components._renderAdminNav('reports') +
+        '<div class="admin-card"><div class="admin-card-title">🚩 举报管理</div><div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">' + tabs.map(function(t) { return '<button class="btn btn-sm ' + (t.id === status ? 'btn-primary' : 'btn-outline') + ' report-tab-btn" data-status="' + t.id + '">' + t.label + '</button>'; }).join('') + '</div>' +
         (reports.length === 0 ? '<p style="color:var(--text-secondary);padding:20px;text-align:center;">暂无举报</p>' :
         '<div style="overflow-x:auto;">' + reports.map(function(r) {
           var dateStr = formatDate(r.created_at);
@@ -52,6 +94,7 @@ var ComponentsAdmin = {
         }).join('') + '</div>') +
         (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;gap:6px;padding:12px 0;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" data-rp="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>上一页</button><span style="padding:4px 8px;font-size:13px;color:var(--text-secondary);">' + pag.page + '/' + pag.totalPages + '</span><button class="btn btn-sm btn-outline" data-rp="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页</button></div>' : '') +
         '</div></div></div>';
+      Components._bindAdminNav();
       document.querySelectorAll('.report-tab-btn').forEach(function(b) { b.addEventListener('click', function() { Components._reportStatus = this.dataset.status; Components.renderAdminReports(); }); });
       document.querySelectorAll('.resolve-report-btn').forEach(function(b) { b.addEventListener('click', async function() { var id = parseInt(this.dataset.id); try { await API.resolveReport(id, 'resolved'); showToast('已处理', 'success'); Components.renderAdminReports(); } catch(err) { showToast(err.message, 'error'); } }); });
       document.querySelectorAll('.dismiss-report-btn').forEach(function(b) { b.addEventListener('click', async function() { var id = parseInt(this.dataset.id); try { await API.resolveReport(id, 'dismissed'); showToast('已驳回', 'success'); Components.renderAdminReports(); } catch(err) { showToast(err.message, 'error'); } }); });
@@ -69,19 +112,12 @@ var ComponentsAdmin = {
       var page = 1, search = '';
       var render = async function(p, s) {
         var d = await API.getAdminUsers(p, 20, s), users = d.users || [], pag = d.pagination || {};
-        document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-users-page" style="max-width:1200px;margin:0 auto;padding:20px 16px;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;"><h2 style="font-size:24px;font-weight:700;margin:0;">👥 用户管理</h2><span style="font-size:13px;color:var(--text-secondary);">共 ' + (pag.total || users.length) + ' 位用户</span></div>' +
+        document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
+          Components._renderAdminNav('users') +
+          '<div class="admin-card"><div class="admin-card-title">👥 用户管理 <span style="font-size:12px;color:var(--text-secondary);font-weight:400;">共 ' + (pag.total || users.length) + ' 位用户</span></div>' +
           '<div class="search-bar" style="margin-bottom:16px;max-width:400px;display:flex;gap:6px;"><input class="search-input" id="admin-user-search" type="text" placeholder="搜索用户名..." value="' + escapeHtml(s) + '" style="flex:1;"><button class="btn btn-primary btn-sm" id="admin-user-search-btn" style="border-radius:8px;padding:6px 14px;">🔍 搜索</button></div>' +
-          (users.length === 0 ? '<div class="empty-state" style="padding:60px;"><div class="empty-state-icon">👥</div><p class="empty-state-text">暂无用户</p></div>' :
-          '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--bg);">' +
-          '<th style="padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;color:var(--text-secondary);white-space:nowrap;">用户</th>' +
-          '<th style="padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;color:var(--text-secondary);white-space:nowrap;">角色</th>' +
-          '<th style="padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;color:var(--text-secondary);white-space:nowrap;">等级</th>' +
-          '<th style="padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;color:var(--text-secondary);white-space:nowrap;">XP</th>' +
-          '<th style="padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;color:var(--text-secondary);white-space:nowrap;">积分</th>' +
-          '<th style="padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;color:var(--text-secondary);white-space:nowrap;">状态</th>' +
-          '<th style="padding:12px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;color:var(--text-secondary);white-space:nowrap;">操作</th>' +
-          '</tr></thead><tbody>' + users.map(function(u) {
+          (users.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-text">暂无用户</div></div>' :
+          '<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>用户</th><th>角色</th><th>等级</th><th>XP</th><th>积分</th><th>状态</th><th>操作</th></tr></thead><tbody>' + users.map(function(u) {
             var avatarHtml = u.avatar_url ? '<img src="' + u.avatar_url + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;">' : '<span style="display:inline-flex;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#6366f1);color:#fff;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;">' + escapeHtml((u.nickname || u.username).charAt(0).toUpperCase()) + '</span>';
             var roleBadge = u.role === 'admin' ? '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:#e0e7ff;color:#4338ca;">管理员</span>' : '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:#f0fdf4;color:#16a34a;">用户</span>';
             var statusBadge = u.is_banned ? '<span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:#dc2626;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#dc2626;"></span>已禁言</span>' : '<span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:#16a34a;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#16a34a;"></span>正常</span>';
@@ -97,8 +133,9 @@ var ComponentsAdmin = {
               '<button class="admin-save-level-btn" data-uid="' + u.id + '" style="padding:5px 12px;font-size:12px;border-radius:6px;border:none;background:var(--primary);color:#fff;cursor:pointer;white-space:nowrap;">保存</button>' +
               '</div></td></tr>';
           }).join('') + '</tbody></table></div>') +
-          (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;align-items:center;gap:8px;padding:16px 0 4px;"><button class="btn btn-sm btn-outline" data-up="prev"' + (pag.page <= 1 ? ' disabled' : '') + ' style="padding:6px 14px;border-radius:8px;">← 上一页</button><span style="font-size:13px;color:var(--text-secondary);font-weight:500;">第 ' + pag.page + '/' + pag.totalPages + ' 页</span><button class="btn btn-sm btn-outline" data-up="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + ' style="padding:6px 14px;border-radius:8px;">下一页 →</button></div>' : '') +
-          '</div>';
+          (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;align-items:center;gap:8px;padding:16px 0 4px;"><button class="btn btn-sm btn-outline" data-up="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>← 上一页</button><span style="font-size:13px;color:var(--text-secondary);font-weight:500;">第 ' + pag.page + '/' + pag.totalPages + ' 页</span><button class="btn btn-sm btn-outline" data-up="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页 →</button></div>' : '') +
+          '</div></div>';
+        Components._bindAdminNav();
         var doSearch = function() { var v = (document.getElementById('admin-user-search').value || '').trim(); page = 1; render(1, v); };
         document.getElementById('admin-user-search').addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(); });
         document.getElementById('admin-user-search-btn').addEventListener('click', doSearch);
@@ -120,8 +157,9 @@ var ComponentsAdmin = {
         { id: 'chat', label: '聊天区', icon: '💬' },
         { id: 'music', label: '音乐区', icon: '🎵' }
       ];
-      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div style="max-width:900px;margin:0 auto;padding:20px 16px;">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;"><h2 style="font-size:24px;font-weight:700;margin:0;">🏆 等级配置管理</h2><span style="font-size:13px;color:var(--text-secondary);">共 ' + configs.length + ' 个等级</span></div>' +
+      document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
+        Components._renderAdminNav('levels') +
+        '<div class="admin-card"><div class="admin-card-title">⭐ 等级配置 <span style="font-size:12px;color:var(--text-secondary);font-weight:400;">共 ' + configs.length + ' 个等级</span></div>' +
         '<div id="level-config-list">' + configs.map(function(c, i) {
           var zones = []; try { zones = JSON.parse(c.zones || '[]'); } catch(e) {}
           var zoneCbs = allZones.map(function(zone) {
@@ -139,7 +177,8 @@ var ComponentsAdmin = {
             '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><span style="font-size:12px;color:var(--text-secondary);">头衔图标:</span><button class="btn btn-sm btn-outline lvl-cfg-icon-btn" data-index="' + i + '" style="border-radius:6px;padding:4px 10px;font-size:12px;">' + (c.title_icon ? '📷 更换' : '📷 上传') + '</button>' + (c.title_icon ? '<img src="' + c.title_icon + '" style="width:26px;height:26px;border-radius:6px;object-fit:cover;border:1px solid var(--border);">' : '<span style="font-size:12px;color:var(--text-light);">未设置</span>') + '</div></div></div></div>';
         }).join('') + '</div>' +
         '<div style="display:flex;justify-content:center;margin-top:20px;"><button class="btn btn-primary" id="save-level-config-btn" style="padding:10px 32px;border-radius:10px;font-size:15px;font-weight:600;">💾 保存所有等级配置</button></div>' +
-        '</div></div>';
+        '</div></div></div>';
+      Components._bindAdminNav();
       document.getElementById('save-level-config-btn').addEventListener('click', async function() {
         var btn = this; btn.disabled = true; btn.textContent = '⏳ 保存中...';
         var newConfigs = []; document.querySelectorAll('.level-config-item').forEach(function(item) {
@@ -188,9 +227,10 @@ var ComponentsAdmin = {
         var result = await API.getAdminLoginNotices(p, 20);
         var notices = result.notices || [];
         var pag = result.pagination || {};
-        document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
-          '<h2 style="font-size:22px;font-weight:700;">📢 登录弹窗管理</h2>' +
+        document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
+          Components._renderAdminNav('notices') +
+          '<div class="admin-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+          '<div class="admin-card-title" style="margin-bottom:0;">📢 登录弹窗管理</div>' +
           '<button class="btn btn-primary" id="add-notice-btn">✚ 新建弹窗</button></div>' +
           (notices.length === 0 ? '<p style="color:var(--text-secondary);text-align:center;padding:40px;">暂无登录弹窗</p>' :
           '<div style="display:flex;flex-direction:column;gap:8px;">' + notices.map(function(n) {
@@ -208,6 +248,7 @@ var ComponentsAdmin = {
           }).join('') + '</div>') +
           (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;gap:4px;padding:12px 0;"><button class="btn btn-sm btn-outline" data-np="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>上一页</button><span style="padding:4px 8px;">' + pag.page + '/' + pag.totalPages + '</span><button class="btn btn-sm btn-outline" data-np="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页</button></div>' : '') +
           '</div></div></div>';
+        Components._bindAdminNav();
         // Bind events
         document.getElementById('add-notice-btn').addEventListener('click', function() { self._showNoticeForm(); });
         document.querySelectorAll('.edit-notice-btn').forEach(function(b) { b.addEventListener('click', function() { self._showNoticeForm(parseInt(b.dataset.id)); }); });
@@ -228,8 +269,8 @@ var ComponentsAdmin = {
     var isEdit = !!notice;
     var imageUrl = notice ? (notice.image_url || '') : '';
     var app = document.getElementById('app');
-    app.innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card">' +
-      '<h2 style="font-size:22px;font-weight:700;margin-bottom:16px;">' + (isEdit ? '编辑' : '新建') + '登录弹窗</h2>' +
+    app.innerHTML = '<div class="page-fade-in"><div class="admin-page"><div class="admin-card">' +
+      '<div class="admin-card-title">' + (isEdit ? '编辑' : '新建') + '登录弹窗</div>' +
       '<form id="notice-form">' +
       '<div class="form-group"><label class="form-label">标题 *</label><input class="form-input" id="notice-title" value="' + escapeHtml(notice ? notice.title : '') + '" required></div>' +
       '<div class="form-group"><label class="form-label">内容 *</label><textarea class="form-textarea" id="notice-content" rows="3" required>' + escapeHtml(notice ? notice.content : '') + '</textarea></div>' +
@@ -266,9 +307,10 @@ var ComponentsAdmin = {
         var result = await API.getAdminAds(p, 20);
         var ads = result.ads || [];
         var pag = result.pagination || {};
-        document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="settings-page"><div class="settings-card">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
-          '<h2 style="font-size:22px;font-weight:700;">📺 广告管理</h2>' +
+        document.getElementById('app').innerHTML = '<div class="page-fade-in"><div class="admin-page">' +
+          Components._renderAdminNav('ads') +
+          '<div class="admin-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">' +
+          '<div class="admin-card-title" style="margin-bottom:0;">📺 广告管理</div>' +
           '<button class="btn btn-primary" id="add-ad-btn">✚ 新建广告</button></div>' +
           (ads.length === 0 ? '<p style="color:var(--text-secondary);text-align:center;padding:40px;">暂无广告</p>' :
           '<div style="display:flex;flex-direction:column;gap:8px;">' + ads.map(function(a) {
@@ -285,6 +327,7 @@ var ComponentsAdmin = {
           }).join('') + '</div>') +
           (pag.totalPages > 1 ? '<div style="display:flex;justify-content:center;gap:4px;padding:12px 0;"><button class="btn btn-sm btn-outline" data-ap="prev"' + (pag.page <= 1 ? ' disabled' : '') + '>上一页</button><span style="padding:4px 8px;">' + pag.page + '/' + pag.totalPages + '</span><button class="btn btn-sm btn-outline" data-ap="next"' + (pag.page >= pag.totalPages ? ' disabled' : '') + '>下一页</button></div>' : '') +
           '</div></div></div>';
+        Components._bindAdminNav();
         document.getElementById('add-ad-btn').addEventListener('click', function() { self._showAdForm(); });
         document.querySelectorAll('.edit-ad-btn').forEach(function(b) { b.addEventListener('click', function() { self._showAdForm(parseInt(b.dataset.id)); }); });
         document.querySelectorAll('.toggle-ad-btn').forEach(function(b) { b.addEventListener('click', async function() { try { await API.toggleAdStatus(parseInt(b.dataset.id)); showToast('已更新', 'success'); render(p); } catch(err) { showToast(err.message, 'error'); } }); });

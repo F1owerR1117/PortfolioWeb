@@ -529,7 +529,9 @@
       "Bash(curl -s http://localhost:3000/js/components/postDetail.js)",
       "Bash(bash scripts/snapshot.sh \"帖子详情优化：返回链接+meta标签+admin-actions类\")",
       "Bash(curl -s http://localhost:3000/js/components/postEditor.js)",
-      "Bash(bash scripts/snapshot.sh \"编辑器优化：卡片布局+标签芯片+block-item结构\")"
+      "Bash(bash scripts/snapshot.sh \"编辑器优化：卡片布局+标签芯片+block-item结构\")",
+      "Bash(curl -s http://localhost:3000/js/components/admin.js)",
+      "Bash(bash scripts/snapshot.sh \"管理员界面优化：导航标签+统计卡片+表格+等级行\")"
     ]
   }
 }
