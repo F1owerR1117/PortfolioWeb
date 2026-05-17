@@ -1,5 +1,10 @@
 /* ===== Responsive ===== */
 
+/* Fixed navbar offset */
+.container {
+  margin-top: 64px;
+}
+
 @media (max-width: 900px) {
   .post-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -11,14 +16,14 @@
 @media (max-width: 600px) {
   .post-grid { grid-template-columns: 1fr; }
   .nav-inner { padding: 0 12px; }
-  .container { padding: 16px 12px; }
+  .container { padding: 16px 12px; margin-top: 56px; }
   .editor-card, .auth-card, .settings-card { padding: 20px; }
   .post-detail-cover { max-height: 200px; }
   .form-row { grid-template-columns: 1fr; }
   .auth-page { margin: 30px auto; }
   .page-title { font-size: 22px; }
   .nav-links { gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .nav-btn { padding: 6px 10px; font-size: 13px; }
+  .nav-btn { padding: 6px 10px; font-size: 12px; }
   .nav-user { padding: 2px 8px; font-size: 12px; }
   .block-header { flex-wrap: wrap; }
   .comment[data-depth="1"] { padding-left: 20px; }
@@ -27,12 +32,13 @@
   .comment[data-depth="4"],
   .comment[data-depth="5"],
   .comment[data-depth="6"] { padding-left: 68px; }
+  .navbar { min-height: 56px; height: 56px; }
+  .nav-inner { min-height: 56px; }
+  .hamburger-btn { height: 56px; }
 }
 @media (max-width: 480px) {
-  .nav-brand { font-size: 16px; }
-  .hamburger-btn { padding: 0 10px; font-size: 20px; min-height: 50px; height: auto; }
-  .nav-inner { min-height: 50px; height: auto; }
-  .navbar { min-height: 50px; }
+  .nav-brand { font-size: 15px; }
+  .hamburger-btn { padding: 0 10px; font-size: 20px; }
 }
 
 

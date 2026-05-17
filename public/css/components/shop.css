@@ -6,12 +6,13 @@
   gap: 12px;
   padding: 14px 16px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   margin-bottom: 8px;
-  transition: background 0.15s;
+  background: rgba(23,23,23,0.5);
+  transition: all 0.2s;
 }
-.shop-item:hover { background: var(--bg); }
-.shop-item.owned { opacity: 0.7; }
+.shop-item:hover { background: rgba(163,230,53,0.02); border-color: rgba(163,230,53,0.04); }
+.shop-item.owned { opacity: 0.6; }
 .shop-item-info { flex: 1; min-width: 0; }
 .shop-item-name {
   font-weight: 600;
@@ -20,11 +21,10 @@
 }
 .shop-item-desc {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.35);
   margin-bottom: 4px;
 }
 .shop-item-meta {
   font-size: 12px;
-  color: var(--text-light);
+  color: rgba(255,255,255,0.2);
 }
-

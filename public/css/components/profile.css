@@ -5,22 +5,25 @@
   margin: 0 auto;
 }
 .about-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
+  background: var(--card-gradient);
+  border-radius: 20px;
   padding: 40px;
-  box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+.about-card:hover {
+  border-color: rgba(163,230,53,0.06);
 }
 .about-avatar {
   width: 120px;
   height: 120px;
-  border-radius: 50%;
-  background: var(--primary-gradient);
+  border-radius: 24px;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  color: white;
+  color: #0a0a0f;
   margin: 0 auto 24px;
   overflow: hidden;
 }
@@ -30,9 +33,9 @@
   object-fit: cover;
 }
 .about-bio {
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.8;
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.4);
   text-align: center;
   margin-bottom: 28px;
   white-space: pre-wrap;
@@ -42,7 +45,8 @@
   font-weight: 600;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 2px solid var(--primary);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: #e4e4ec;
 }
 
 .about-skills {
@@ -53,15 +57,12 @@
 }
 .about-skill-tag {
   padding: 6px 16px;
-  border-radius: 20px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-[data-theme="dark"] .about-skill-tag {
-  background: #1e3a5f;
-  color: #93c5fd;
+  background: rgba(163,230,53,0.06);
+  color: var(--primary);
+  border: 1px solid rgba(163,230,53,0.08);
 }
 .about-social {
   display: flex;
@@ -79,7 +80,7 @@
 .about-edit-area {
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255,255,255,0.04);
 }
 .about-edit-area textarea {
   min-height: 80px;
@@ -95,14 +96,11 @@
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  border-radius: 16px;
+  border-radius: 8px;
   font-size: 13px;
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-[data-theme="dark"] .about-edit-skill-item {
-  background: #1e3a5f;
-  color: #93c5fd;
+  background: rgba(163,230,53,0.06);
+  color: var(--primary);
+  border: 1px solid rgba(163,230,53,0.08);
 }
 .about-edit-skill-item .remove-skill {
   cursor: pointer;
@@ -119,12 +117,12 @@
 }
 .about-add-skill-input input {
   flex: 1;
-  padding: 6px 12px;
-  border: 1.5px solid var(--border);
+  padding: 8px 12px;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 13px;
   color: var(--text);
-  background: var(--bg-card);
+  background: rgba(0,0,0,0.3);
 }
 .about-social-editor {
   display: flex;
@@ -139,36 +137,32 @@
 }
 .about-social-row input {
   flex: 1;
-  padding: 6px 12px;
-  border: 1.5px solid var(--border);
+  padding: 8px 12px;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 13px;
   color: var(--text);
-  background: var(--bg-card);
+  background: rgba(0,0,0,0.3);
 }
 .about-social-row label {
   font-size: 13px;
   font-weight: 500;
   min-width: 60px;
-  color: var(--text-secondary);
-}
-.load-more-wrap {
-  text-align: center;
-  padding: 20px 0;
+  color: rgba(255,255,255,0.4);
 }
 
 
 /* ===== User Info Bar ===== */
 
 .user-info-bar {
-  background: linear-gradient(135deg, #1e293b, #334155);
-  color: #e2e8f0;
+  background: rgba(23,23,23,0.85);
+  color: rgba(255,255,255,0.5);
   padding: 8px 16px;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 .user-info-bar-inner {
   display: flex;
@@ -184,14 +178,14 @@
   white-space: nowrap;
 }
 .user-info-item strong {
-  color: #facc15;
+  color: var(--primary);
   font-size: 14px;
 }
 .signin-btn {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #fff;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 4px 14px;
   font-size: 12px;
   font-weight: 600;
@@ -200,7 +194,7 @@
 }
 .signin-btn:hover { opacity: 0.85; }
 .signin-btn:disabled {
-  background: #475569;
+  background: rgba(255,255,255,0.1);
   cursor: default;
   opacity: 0.6;
 }
@@ -209,18 +203,18 @@
 /* ===== Avatar Upload & Crop ===== */
 
 .avatar-upload-area {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
   padding: 20px;
   text-align: center;
   cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 14px;
+  color: rgba(255,255,255,0.3);
+  font-size: 13px;
   transition: border-color 0.2s, background 0.2s;
 }
 .avatar-upload-area:hover {
-  border-color: var(--primary);
-  background: rgba(37,99,235,0.04);
+  border-color: rgba(163,230,53,0.12);
+  background: rgba(163,230,53,0.02);
 }
 
 .avatar-crop-section {
@@ -303,4 +297,3 @@
     max-width: 100%;
   }
 }
-

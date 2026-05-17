@@ -516,7 +516,12 @@
       "Bash(curl -s http://localhost:3000/js/api/admin.js)",
       "Bash(bash scripts/snapshot.sh \"结构优化：CSS/api.js/db.init 三拆完成\")",
       "Bash(mkdir -p f:/code/portfolio/previews)",
-      "Bash(bash scripts/snapshot.sh \"重构前备份：CSS暗色动效重构前状态\")"
+      "Bash(bash scripts/snapshot.sh \"重构前备份：CSS暗色动效重构前状态\")",
+      "Bash(curl -s http://localhost:3000/css/components/auth.css)",
+      "Bash(curl -s http://localhost:3000/css/components/posts.css)",
+      "Bash(curl -s http://localhost:3000/css/components/footer.css)",
+      "Bash(curl -s http://localhost:3000/css/components/admin.css)",
+      "Bash(bash scripts/snapshot.sh \"CSS重构完成：暗色动效主题实施\")"
     ]
   }
 }

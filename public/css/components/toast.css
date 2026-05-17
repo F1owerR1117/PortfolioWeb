@@ -11,12 +11,14 @@
   pointer-events: none;
 }
 .toast {
-  background: var(--bg-nav);
-  color: white;
+  background: rgba(23,23,23,0.95);
+  color: #e4e4ec;
   padding: 14px 20px;
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   animation: slideIn 0.3s ease-out;
   pointer-events: auto;
   max-width: 360px;
@@ -36,4 +38,3 @@
 @keyframes slideOut {
   to { transform: translateX(100%); opacity: 0; }
 }
-

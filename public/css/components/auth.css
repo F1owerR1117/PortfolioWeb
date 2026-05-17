@@ -5,50 +5,72 @@
   margin: 60px auto;
 }
 .auth-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  padding: 40px;
+  background: var(--card-gradient);
+  border-radius: 24px;
+  padding: 48px 40px;
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.auth-card:hover {
+  border-color: rgba(163,230,53,0.08);
+}
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(163,230,53,0.3), transparent);
 }
 .auth-title {
   font-size: 24px;
   font-weight: 700;
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  background: linear-gradient(135deg, #f0f0f5, #a3e635);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .auth-subtitle {
   text-align: center;
   color: var(--text-secondary);
-  margin-bottom: 28px;
-  font-size: 14px;
+  margin-bottom: 32px;
+  font-size: 13px;
 }
 .auth-tabs {
   display: flex;
   gap: 0;
-  margin-bottom: 24px;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  border: 1.5px solid var(--border);
+  margin-bottom: 28px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid rgba(255,255,255,0.04);
 }
 .auth-tab {
   flex: 1;
   padding: 10px;
   text-align: center;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  background: var(--bg);
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
   border: none;
-  transition: all 0.2s;
-  color: var(--text-secondary);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  color: rgba(255,255,255,0.3);
 }
 .auth-tab.active {
-  background: var(--primary);
-  color: white;
+  background: rgba(163,230,53,0.1);
+  color: var(--primary);
+  box-shadow: 0 0 20px rgba(163,230,53,0.04);
 }
 .auth-tab:hover:not(.active) {
-  background: #e2e8f0;
+  color: rgba(255,255,255,0.5);
 }
 .auth-link {
   text-align: center;
@@ -56,5 +78,4 @@
   font-size: 14px;
   color: var(--text-secondary);
 }
-.auth-link a { cursor: pointer; font-weight: 500; }
-
+.auth-link a { cursor: pointer; font-weight: 500; color: var(--primary); }

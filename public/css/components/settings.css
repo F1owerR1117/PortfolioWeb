@@ -8,29 +8,34 @@
   max-width: 960px;
 }
 .settings-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
+  background: var(--card-gradient);
+  border-radius: 20px;
   padding: 32px;
-  box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+.settings-card:hover {
+  border-color: rgba(163,230,53,0.04);
 }
 .settings-item {
   padding: 20px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 .settings-item:last-child { border-bottom: none; }
 .settings-item-title {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 8px;
+  color: #e4e4ec;
 }
 .settings-item-desc {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: rgba(255,255,255,0.35);
   margin-bottom: 12px;
 }
 .volume-slider {
   width: 100%;
   accent-color: var(--primary);
+  height: 4px;
+  border-radius: 2px;
 }
-

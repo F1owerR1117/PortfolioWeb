@@ -1,17 +1,20 @@
 /* ===== Comments ===== */
 
 .comments-section {
-  margin-top: 48px;
+  margin-top: 40px;
   padding-top: 32px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255,255,255,0.04);
 }
 .comments-title {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .comment-form-wrap {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -29,12 +32,16 @@
 }
 .comment {
   display: flex;
-  gap: 12px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--border);
+  gap: 14px;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: all 0.2s;
 }
 .comment:last-child {
   border-bottom: none;
+}
+.comment:hover {
+  padding-left: 8px;
 }
 .comment-reply {
   border-left: 3px solid var(--border);
@@ -50,14 +57,14 @@
 .comment-avatar {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
-  background: var(--primary-gradient);
-  color: white;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   flex-shrink: 0;
 }
 .comment-body {
@@ -67,18 +74,18 @@
 .comment-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 6px;
   flex-wrap: wrap;
 }
 .comment-author {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: #e4e4ec;
 }
 .comment-date {
-  font-size: 12px;
-  color: var(--text-light);
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
 }
 .comment-edited {
   font-size: 11px;
@@ -92,24 +99,24 @@
 }
 .comment-content {
   font-size: 14px;
-  line-height: 1.7;
-  color: var(--text);
+  line-height: 1.8;
+  color: rgba(255,255,255,0.45);
   white-space: pre-wrap;
   word-break: break-word;
 }
 .comment-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 14px;
+  margin-top: 6px;
 }
 .comment-action-btn {
   background: none;
   border: none;
   font-size: 12px;
-  color: var(--text-light);
+  color: rgba(255,255,255,0.25);
   cursor: pointer;
-  padding: 2px 4px;
-  transition: color 0.15s;
+  padding: 4px 0;
+  transition: color 0.2s;
 }
 .comment-action-btn:hover {
   color: var(--primary);
@@ -135,37 +142,34 @@
 
 .reaction-bar {
   display: flex;
-  gap: 12px;
-  margin: 16px 0;
-  padding: 12px 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  margin: 20px 0;
+  padding: 20px 0;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 .reaction-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 16px;
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  background: var(--bg-card);
-  color: var(--text-secondary);
-  font-size: 14px;
+  gap: 6px;
+  padding: 8px 22px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
   font-family: inherit;
+  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.4);
+  transition: all 0.2s ease;
 }
 .reaction-btn:hover {
-  border-color: var(--primary-light);
-  background: var(--bg);
+  border-color: rgba(163,230,53,0.08);
+  color: var(--primary);
+  background: rgba(163,230,53,0.04);
 }
 .reaction-btn.active {
-  border-color: var(--primary);
-  background: rgba(37,99,235,0.08);
+  background: rgba(163,230,53,0.06);
+  border-color: rgba(163,230,53,0.1);
   color: var(--primary);
-  font-weight: 600;
 }
-[data-theme="dark"] .reaction-btn.active {
-  background: rgba(37,99,235,0.15);
-}
-
