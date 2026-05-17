@@ -521,7 +521,8 @@
       "Bash(curl -s http://localhost:3000/css/components/posts.css)",
       "Bash(curl -s http://localhost:3000/css/components/footer.css)",
       "Bash(curl -s http://localhost:3000/css/components/admin.css)",
-      "Bash(bash scripts/snapshot.sh \"CSS重构完成：暗色动效主题实施\")"
+      "Bash(bash scripts/snapshot.sh \"CSS重构完成：暗色动效主题实施\")",
+      "Bash(bash scripts/snapshot.sh \"收藏夹优化前：bookmarks 重构前状态\")"
     ]
   }
 }
