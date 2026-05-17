@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案六：Brutalist · 粗野主义</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Space Mono','SF Mono','Courier New',monospace;
+  background:#fff;color:#000;
+  min-height:100vh;line-height:1.5;
+  font-size:14px;overflow-x:hidden;
+}
+::selection{background:#000;color:#fff}
+.preview-badge{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  background:#fff;border:2px solid #000;
+  padding:6px 24px;font-size:9px;letter-spacing:1px;
+  text-transform:uppercase;color:#000;z-index:100;
+  font-weight:700;margin-top:-1px;
+}
+
+/* Nav — brutal */
+.navbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:#fff;border-bottom:3px solid #000;
+  padding:0 32px;height:64px;
+  display:flex;align-items:center;
+}
+.nav-inner{max-width:1200px;width:100%;margin:0 auto;display:flex;align-items:center}
+.nav-brand{font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000}
+.nav-links{margin-left:auto;display:flex;align-items:center}
+.nav-btn{
+  padding:8px 16px;border:none;background:transparent;
+  color:#999;font-size:11px;font-weight:700;cursor:pointer;
+  text-transform:uppercase;letter-spacing:0.5px;
+  transition:all 0.1s ease;border-radius:0;
+}
+.nav-btn:hover{color:#000;background:#eee}
+.nav-btn.primary{
+  background:#000;color:#fff;padding:8px 20px;font-weight:700;
+}
+.nav-btn.primary:hover{background:#333}
+.nav-user{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 12px 4px 4px;background:#f5f5f5;
+  font-size:11px;color:#666;font-weight:400;
+}
+.nav-user .avatar{
+  width:26px;height:26px;background:#000;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;
+}
+
+/* Level */
+.level-display{
+  display:inline-flex;align-items:center;
+  padding:4px 12px;background:#f5f5f5;font-size:11px;font-weight:400;
+  gap:8px;
+}
+.level-display .lvl-badge{
+  width:24px;height:24px;background:#000;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;
+}
+
+/* Hero — oversized */
+.hero{
+  margin-top:64px;border-bottom:3px solid #000;
+  background:#fafafa;
+}
+.hero-inner{max-width:1200px;margin:0 auto;padding:80px 32px 60px;position:relative}
+.hero-eyebrow{
+  display:inline-block;font-size:10px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  color:#999;margin-bottom:16px;border:2px solid #eee;padding:4px 12px;
+}
+.hero h1{
+  font-size:80px;font-weight:700;line-height:0.85;
+  text-transform:uppercase;letter-spacing:-4px;
+  color:#000;margin-bottom:24px;
+}
+.hero h1 .outline{color:#fff;-webkit-text-stroke:3px #000;text-stroke:3px #000}
+.hero p{
+  font-size:11px;color:#666;line-height:1.8;max-width:400px;
+  margin-bottom:32px;font-weight:400;
+}
+.hero-actions{display:flex;gap:0}
+.hero-btn{
+  padding:12px 28px;font-family:'Space Mono',monospace;
+  font-size:10px;font-weight:700;cursor:pointer;
+  letter-spacing:1px;text-transform:uppercase;
+  transition:all 0.1s ease;
+}
+.hero-btn.primary{background:#000;color:#fff;border:2px solid #000}
+.hero-btn.primary:hover{background:#fff;color:#000}
+.hero-btn.secondary{background:#fff;color:#000;border:2px solid #000}
+.hero-btn.secondary:hover{background:#000;color:#fff}
+
+/* Layout */
+.layout{max-width:1200px;margin:0 auto;padding:60px 32px 100px}
+
+/* Section header — stark */
+.section-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:32px;border:2px solid #000;padding:12px 20px;
+  background:#fafafa;
+}
+.section-header h2{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000}
+.section-header .see-all{
+  font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#666;cursor:pointer;border:1px solid #ddd;padding:4px 12px;
+  transition:all 0.1s ease;
+}
+.section-header .see-all:hover{border-color:#000;color:#000}
+
+/* Card — raw */
+.card{
+  background:#fff;cursor:pointer;
+  border:2px solid #eee;padding:24px;
+  transition:all 0.15s ease;
+}
+.card:hover{border-color:#000;transform:scale(1.01)}
+
+.post-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.post-card{display:flex;flex-direction:column;position:relative}
+.post-card-number{
+  font-size:48px;font-weight:700;color:#f5f5f5;
+  line-height:1;position:absolute;top:8px;right:12px;
+  pointer-events:none;user-select:none;
+  letter-spacing:-2px;
+}
+.post-card-img{
+  aspect-ratio:16/9;margin:-24px -24px 20px;
+  background:#fafafa;border-bottom:2px solid #eee;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;color:#ddd;
+}
+.post-card-category{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#000;margin-bottom:8px;
+}
+.post-card-title{font-size:15px;font-weight:700;margin-bottom:10px;line-height:1.3;text-transform:uppercase;letter-spacing:-0.3px}
+.post-card-desc{font-size:11px;color:#999;line-height:1.7;flex:1;font-weight:400}
+.post-card-footer{
+  margin-top:16px;padding-top:12px;
+  border-top:2px solid #f5f5f5;
+  display:flex;justify-content:space-between;
+}
+.tag{font-size:9px;font-weight:700;color:#ccc;text-transform:uppercase}
+.post-card-meta{font-size:10px;font-weight:400;color:#ccc}
+
+/* Detail */
+.detail-page{max-width:700px;margin:0 auto}
+.detail-cover{
+  width:100%;aspect-ratio:2.5/1;margin-bottom:40px;
+  background:#fafafa;border:2px solid #eee;
+  display:flex;align-items:center;justify-content:center;font-size:36px;color:#ddd;
+}
+.detail-title{font-size:36px;font-weight:700;text-transform:uppercase;letter-spacing:-1px;margin-bottom:12px;line-height:1}
+.detail-meta{
+  display:flex;gap:24px;font-size:10px;font-weight:400;color:#999;
+  padding-bottom:20px;margin-bottom:32px;
+  border-bottom:2px solid #f5f5f5;
+}
+.detail-desc{font-size:13px;color:#666;line-height:1.9;margin-bottom:40px;font-weight:400}
+.content-block{
+  border:2px solid #eee;padding:24px;margin-bottom:16px;
+}
+.content-block-label{
+  font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#ccc;margin-bottom:12px;
+}
+.content-block pre{
+  background:#fafafa;color:#000;padding:16px;
+  font-size:12px;font-family:'Space Mono',monospace;
+  border:1px solid #eee;
+}
+
+/* Reaction */
+.reaction-bar{
+  display:flex;gap:0;padding:20px 0;border-top:2px solid #000;border-bottom:2px solid #000;margin-bottom:40px;
+}
+.reaction-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 20px;border:2px solid #eee;background:#fff;
+  color:#999;font-size:11px;font-weight:700;cursor:pointer;margin-right:-2px;
+  text-transform:uppercase;letter-spacing:0.5px;
+  transition:all 0.1s ease;
+}
+.reaction-btn:hover{border-color:#000;color:#000;z-index:1}
+.reaction-btn.active{background:#000;color:#fff;border-color:#000;z-index:1}
+
+/* Comments */
+.comments-section{margin-top:48px}
+.comments-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:24px;padding-bottom:8px;border-bottom:2px solid #000}
+.comment{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid #f5f5f5}
+.comment-avatar{width:36px;height:36px;background:#f5f5f5;color:#999;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid #eee}
+.comment-body{flex:1}
+.comment-header{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.comment-author{font-size:12px;font-weight:700;color:#000}
+.comment-date{font-size:9px;color:#ccc;font-weight:400}
+.comment-content{font-size:12px;color:#666;line-height:1.7;font-weight:400}
+
+/* Footer */
+.footer{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:#fff;border-top:3px solid #000;
+  padding:0 32px;height:56px;display:flex;align-items:center;
+}
+.footer-inner{max-width:1200px;width:100%;margin:0 auto;display:flex;align-items:center;justify-content:center}
+.footer-left{position:absolute;left:0}
+.footer-right{position:absolute;right:0}
+.mute-label{font-size:10px;font-weight:400;color:#999;cursor:pointer;letter-spacing:0.5px;transition:all 0.1s ease}
+.mute-label:hover{color:#000}
+.music-player{display:flex;align-items:center;gap:12px}
+.music-cover{width:32px;height:32px;background:#f5f5f5;border:1px solid #eee}
+.music-song-name{font-size:11px;font-weight:700;color:#000}
+.music-artist{font-size:9px;font-weight:400;color:#999}
+.music-btn{background:transparent;border:1px solid #eee;color:#999;font-size:11px;cursor:pointer;padding:4px 8px;transition:all 0.1s ease;font-family:'Space Mono',monospace}
+.music-btn:hover{border-color:#000;color:#000}
+</style>
+</head>
+<body>
+<div class="preview-badge">方案六 · Brutalist 粗野主义</div>
+<nav class="navbar"><div class="nav-inner">
+  <div class="nav-brand">PORTFOLIO</div>
+  <div class="nav-links">
+    <span class="level-display"><span class="lvl-badge">12</span><span>LV.12 · 2,480</span></span>
+    <button class="nav-btn">👥</button><button class="nav-btn">🌙</button>
+    <span class="nav-user"><span class="avatar">A</span><span>admin</span></span>
+    <button class="nav-btn">🔔</button><button class="nav-btn primary">退出</button>
+  </div>
+</div></nav>
+
+<div class="hero"><div class="hero-inner">
+  <div class="hero-eyebrow">Featured — 2026</div>
+  <h1>DESIGN<br><span class="outline">×</span><br>CODE</h1>
+  <p>每一次创作，都是对美与功能的重新思考。从像素到逻辑，从概念到落地。</p>
+  <div class="hero-actions">
+    <button class="hero-btn primary">浏览作品</button>
+    <button class="hero-btn secondary">关于我</button>
+  </div>
+</div></div>
+
+<div class="layout">
+  <div class="section-header">
+    <h2>最新作品</h2>
+    <span class="see-all">VIEW ALL →</span>
+  </div>
+  <div class="post-grid">
+    <div class="post-card card">
+      <div class="post-card-img">🎨</div>
+      <div class="post-card-number">01</div>
+      <div class="post-card-category">Design</div>
+      <div class="post-card-title">品牌视觉识别系统</div>
+      <div class="post-card-desc">完整的品牌 VI 设计，涵盖 Logo、色彩体系与字体规范。</div>
+      <div class="post-card-footer"><span class="tag">设计 · 品牌</span><span class="post-card-meta">256</span></div>
+    </div>
+    <div class="post-card card">
+      <div class="post-card-img">⚛️</div>
+      <div class="post-card-number">02</div>
+      <div class="post-card-category">Dev</div>
+      <div class="post-card-title">React 组件库架构</div>
+      <div class="post-card-desc">企业级组件库搭建，支持主题系统与按需加载。</div>
+      <div class="post-card-footer"><span class="tag">前端 · React</span><span class="post-card-meta">189</span></div>
+    </div>
+    <div class="post-card card">
+      <div class="post-card-img">📊</div>
+      <div class="post-card-number">03</div>
+      <div class="post-card-category">Data</div>
+      <div class="post-card-title">数据可视化仪表盘</div>
+      <div class="post-card-desc">实时监控面板，拖拽布局与多图表联动。</div>
+      <div class="post-card-footer"><span class="tag">数据 · 可视化</span><span class="post-card-meta">143</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="layout" style="padding-top:0">
+  <hr style="border:none;border-top:2px solid #f5f5f5;margin-bottom:64px">
+  <div class="detail-page">
+    <div class="detail-cover">🎨</div>
+    <h1 class="detail-title">品牌视觉<br>识别系统</h1>
+    <div class="detail-meta"><span>admin</span><span>2026.05.15</span><span>256 views</span><span>23 likes</span></div>
+    <p class="detail-desc">从策略定位到视觉落地。以「简洁 · 专业 · 记忆点」为核心，深蓝与暖金传递信赖感与品质感。</p>
+    <div class="content-block">
+      <div class="content-block-label">DESIGN PROCESS</div>
+      <div style="font-size:13px;line-height:1.9;color:#999;">在色彩选择上，采用深蓝搭配暖金来传递信赖感与品质感。字体选择了几何感强烈的无衬线体。</div>
+    </div>
+    <div class="content-block">
+      <div class="content-block-label">CODE</div>
+      <pre>const tokens = {
+  primary: '#000000',
+  accent:  '#ffffff',
+  border:  '#000000',
+  text:    '#000000'
+};</pre>
+    </div>
+    <div class="reaction-bar">
+      <button class="reaction-btn active">👍 23</button>
+      <button class="reaction-btn">👎 2</button>
+      <button class="reaction-btn">🔖 BOOKMARK</button>
+    </div>
+    <div class="comments-section">
+      <div class="comments-title">COMMENTS (3)</div>
+      <div class="comment"><div class="comment-avatar">W</div><div class="comment-body"><div class="comment-header"><span class="comment-author">Wesley</span><span class="comment-date">2H AGO</span></div><div class="comment-content">色彩搭配非常高级，金色点缀恰到好处。</div></div></div>
+      <div class="comment"><div class="comment-avatar">J</div><div class="comment-body"><div class="comment-header"><span class="comment-author">Jane</span><span class="comment-date">YESTERDAY</span></div><div class="comment-content">字体选择方面有更多细节可以分享吗？</div></div></div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-inner">
+  <div class="footer-left"><label class="mute-label">🔇 静音</label></div>
+  <div class="music-player"><div class="music-cover"></div><div><div class="music-song-name">起风了</div><div class="music-artist">买辣椒也用券</div></div><span style="display:flex;gap:2px;"><button class="music-btn">⏮</button><button class="music-btn" style="font-weight:700;">▶</button><button class="music-btn">⏭</button></span></div>
+  <div class="footer-right"><span style="font-size:9px;color:#ccc;">© 2026</span></div>
+</div></footer>
+</body>
+</html>

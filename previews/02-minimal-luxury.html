@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案二：Minimal Luxury 极简轻奢</title>
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'PT Serif', 'Noto Serif SC', 'Georgia', 'Times New Roman', serif;
+  background: #faf9f7;
+  color: #2d2a24;
+  min-height: 100vh;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+.preview-badge {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,0.9); box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+  padding: 8px 20px; border-radius: 20px;
+  font-size: 12px; color: #8c7a6b; z-index: 100;
+  letter-spacing: 0.3px; font-family: -apple-system, sans-serif;
+}
+
+/* ===== Navbar ===== */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(250,249,247,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e8e3de;
+  padding: 0 32px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+}
+.nav-inner {
+  max-width: 1200px; width: 100%; margin: 0 auto;
+  display: flex; align-items: center;
+}
+.nav-brand {
+  font-size: 22px; font-weight: 700;
+  color: #2d2a24;
+  letter-spacing: 1px;
+  font-family: -apple-system, sans-serif;
+}
+.nav-links { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.nav-btn {
+  padding: 8px 18px; border: none; border-radius: 6px;
+  background: transparent; color: #8c7a6b;
+  font-size: 13px; cursor: pointer;
+  transition: all 0.2s;
+  font-family: -apple-system, sans-serif;
+}
+.nav-btn:hover { color: #2d2a24; background: #f0ece7; }
+.nav-btn.primary {
+  background: #2d2a24; color: #faf9f7;
+  padding: 8px 20px; font-weight: 500;
+}
+.nav-btn.primary:hover { background: #1a1814; }
+.nav-user {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 14px 4px 4px;
+  background: #f0ece7;
+  border-radius: 24px; font-size: 13px; color: #2d2a24;
+  font-family: -apple-system, sans-serif;
+}
+.nav-user .avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #2d2a24; color: #faf9f7;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+
+/* ===== Level Badge ===== */
+.level-display {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 4px 14px 4px 4px;
+  border: 1px solid #e8e3de;
+  border-radius: 24px;
+  font-family: -apple-system, sans-serif;
+}
+.level-display .lvl-badge {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #2d2a24; color: #faf9f7;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.level-display .lvl-name { font-size: 11px; color: #2d2a24; }
+.level-display .lvl-points { font-size: 10px; color: #a39485; }
+
+/* ===== Hero ===== */
+.hero {
+  margin-top: 68px; padding: 100px 32px 80px;
+  text-align: center;
+  background: linear-gradient(180deg, #f0ece7 0%, #faf9f7 100%);
+}
+.hero h1 {
+  font-size: 52px; font-weight: 700;
+  color: #2d2a24; margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+.hero p {
+  font-size: 17px; color: #8c7a6b;
+  max-width: 500px; margin: 0 auto 32px;
+  font-style: italic;
+}
+.hero-actions { display: flex; gap: 16px; justify-content: center; }
+.hero-btn {
+  padding: 14px 36px; border-radius: 0;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  letter-spacing: 1px; text-transform: uppercase;
+  transition: all 0.3s;
+  font-family: -apple-system, sans-serif;
+}
+.hero-btn.primary {
+  background: #2d2a24; color: #faf9f7; border: none;
+}
+.hero-btn.primary:hover { background: #1a1814; transform: translateY(-1px); }
+.hero-btn.secondary {
+  background: transparent; color: #2d2a24;
+  border: 1px solid #2d2a24;
+}
+.hero-btn.secondary:hover { background: #2d2a24; color: #faf9f7; }
+
+/* ===== Container ===== */
+.container { max-width: 1080px; margin: 0 auto; padding: 60px 32px 100px; }
+.section-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 32px;
+  border-bottom: 1px solid #e8e3de;
+  padding-bottom: 16px;
+}
+.section-header h2 {
+  font-size: 20px; font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.section-header .see-all {
+  font-size: 12px; color: #a39485;
+  cursor: pointer; transition: color 0.2s;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  font-family: -apple-system, sans-serif;
+}
+.section-header .see-all:hover { color: #2d2a24; }
+
+/* ===== Card ===== */
+.card {
+  background: #fff;
+  border: 1px solid #e8e3de;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  position: relative;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(45,42,36,0.08);
+}
+
+/* ===== Post Grid ===== */
+.post-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  margin-bottom: 60px;
+}
+.post-card { border-radius: 0; overflow: hidden; }
+.post-card-img {
+  width: 100%; aspect-ratio: 4/3;
+  background: #f0ece7;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; color: #c4b5a5;
+  position: relative;
+}
+.post-card-category {
+  position: absolute; top: 12px; left: 12px;
+  padding: 4px 12px;
+  font-size: 10px; font-weight: 600;
+  background: #2d2a24; color: #faf9f7;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  font-family: -apple-system, sans-serif;
+}
+.post-card-body { padding: 28px; }
+.post-card-title {
+  font-size: 18px; font-weight: 700; margin-bottom: 10px;
+  line-height: 1.4;
+}
+.post-card-desc {
+  font-size: 14px; color: #8c7a6b;
+  line-height: 1.7;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.post-card-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 20px; padding-top: 20px;
+  border-top: 1px solid #f0ece7;
+}
+.post-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag {
+  padding: 3px 10px; font-size: 10px; letter-spacing: 0.3px;
+  background: #f0ece7; color: #8c7a6b;
+  font-family: -apple-system, sans-serif;
+}
+.post-card-meta { font-size: 11px; color: #c4b5a5; font-family: -apple-system, sans-serif; }
+
+/* ===== Detail ===== */
+.detail-page { max-width: 720px; margin: 0 auto; }
+.detail-cover {
+  width: 100%; aspect-ratio: 2.5/1;
+  background: #f0ece7; margin-bottom: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px;
+}
+.detail-title { font-size: 36px; font-weight: 700; margin-bottom: 16px; }
+.detail-meta {
+  display: flex; gap: 20px; font-size: 13px; color: #a39485;
+  padding-bottom: 24px; margin-bottom: 32px;
+  border-bottom: 1px solid #e8e3de;
+  font-family: -apple-system, sans-serif;
+}
+.detail-desc {
+  font-size: 16px; color: #5d5245;
+  line-height: 1.9; margin-bottom: 40px;
+}
+.content-block {
+  background: #fff;
+  border: 1px solid #e8e3de;
+  padding: 28px; margin-bottom: 20px;
+}
+.content-block-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1.5px; color: #c4b5a5; margin-bottom: 12px;
+  font-family: -apple-system, sans-serif;
+}
+.content-block pre {
+  background: #faf9f7; color: #2d2a24;
+  padding: 20px; font-size: 13px; line-height: 1.7;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  border: 1px solid #f0ece7;
+}
+
+/* ===== Reaction Bar ===== */
+.reaction-bar {
+  display: flex; gap: 8px; padding: 20px 0;
+  border-top: 1px solid #e8e3de;
+  border-bottom: 1px solid #e8e3de;
+  margin-bottom: 40px;
+}
+.reaction-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 20px; border: 1px solid #e8e3de;
+  background: #fff; color: #8c7a6b;
+  font-size: 13px; cursor: pointer; transition: all 0.2s;
+  font-family: -apple-system, sans-serif;
+}
+.reaction-btn:hover { border-color: #2d2a24; color: #2d2a24; }
+.reaction-btn.active { background: #2d2a24; color: #faf9f7; border-color: #2d2a24; }
+
+/* ===== Comments ===== */
+.comments-section { margin-top: 48px; }
+.comments-title {
+  font-size: 18px; font-weight: 700; margin-bottom: 24px;
+}
+.comment {
+  display: flex; gap: 14px; padding: 20px 0;
+  border-bottom: 1px solid #f0ece7;
+}
+.comment-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #f0ece7; color: #8c7a6b;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600;
+  font-family: -apple-system, sans-serif;
+}
+.comment-body { flex: 1; min-width: 0; }
+.comment-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.comment-author { font-size: 14px; font-weight: 600; }
+.comment-date { font-size: 11px; color: #c4b5a5; font-family: -apple-system, sans-serif; }
+.comment-content { font-size: 14px; color: #5d5245; line-height: 1.8; }
+
+/* ===== Footer ===== */
+.footer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(250,249,247,0.9);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid #e8e3de;
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center;
+}
+.footer-inner {
+  max-width: 1200px; width: 100%; margin: 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.footer-left { position: absolute; left: 24px; }
+.footer-right { position: absolute; right: 24px; }
+.mute-label { font-size: 12px; color: #a39485; font-family: -apple-system, sans-serif; }
+.music-player { display: flex; align-items: center; gap: 12px; }
+.music-cover { width: 36px; height: 36px; background: #f0ece7; }
+.music-song-name { font-size: 12px; font-weight: 600; color: #2d2a24; font-family: -apple-system, sans-serif; }
+.music-artist { font-size: 10px; color: #a39485; font-family: -apple-system, sans-serif; }
+
+/* ===== Section Divider ===== */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e8e3de, transparent);
+  margin: 60px 0;
+}
+</style>
+</head>
+<body>
+<div class="preview-badge">📜 方案二 · Minimal Luxury 极简轻奢</div>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="nav-brand">Portfolio</div>
+    <div class="nav-links">
+      <span class="level-display">
+        <span class="lvl-badge">12</span>
+        <span><div class="lvl-name">Lv.12 星辰</div><div class="lvl-points">⭐ 2,480 分</div></span>
+      </span>
+      <button class="nav-btn">👥</button>
+      <button class="nav-btn">🌙</button>
+      <span class="nav-user">
+        <span class="avatar">A</span>
+        <span>admin</span>
+      </span>
+      <button class="nav-btn">🔔</button>
+      <button class="nav-btn primary">退出</button>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>探寻设计与代码的边界</h1>
+  <p>每一次创作，都是对美与功能的重新思考</p>
+  <div class="hero-actions">
+    <button class="hero-btn primary">浏览作品</button>
+    <button class="hero-btn secondary">关于我</button>
+  </div>
+</section>
+
+<div class="container">
+  <div class="section-header">
+    <h2>最新作品</h2>
+    <span class="see-all">View All →</span>
+  </div>
+  <div class="post-grid">
+    <div class="post-card card">
+      <div class="post-card-img"><span>🎨</span><span class="post-card-category">Design</span></div>
+      <div class="post-card-body">
+        <div class="post-card-title">品牌视觉识别系统</div>
+        <div class="post-card-desc">一套完整的品牌 VI 设计，涵盖 Logo、色彩体系、字体规范与应用物料。</div>
+        <div class="post-card-footer">
+          <div class="post-card-tags"><span class="tag">设计</span><span class="tag">品牌</span></div>
+          <span class="post-card-meta">256 views</span>
+        </div>
+      </div>
+    </div>
+    <div class="post-card card">
+      <div class="post-card-img"><span>⚛️</span><span class="post-card-category">Dev</span></div>
+      <div class="post-card-body">
+        <div class="post-card-title">React 组件库架构</div>
+        <div class="post-card-desc">企业级组件库搭建实践，支持主题系统与按需加载。</div>
+        <div class="post-card-footer">
+          <div class="post-card-tags"><span class="tag">前端</span><span class="tag">React</span></div>
+          <span class="post-card-meta">189 views</span>
+        </div>
+      </div>
+    </div>
+    <div class="post-card card">
+      <div class="post-card-img"><span>📊</span><span class="post-card-category">Data</span></div>
+      <div class="post-card-body">
+        <div class="post-card-title">数据可视化仪表盘</div>
+        <div class="post-card-desc">实时监控面板，拖拽布局，多图表联动交互。</div>
+        <div class="post-card-footer">
+          <div class="post-card-tags"><span class="tag">数据</span><span class="tag">可视化</span></div>
+          <span class="post-card-meta">143 views</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="detail-page">
+    <div class="detail-cover">🎨</div>
+    <h1 class="detail-title">品牌视觉识别系统</h1>
+    <div class="detail-meta">
+      <span>admin</span><span>2026.05.15</span><span>256 views</span><span>23 likes</span>
+    </div>
+    <p class="detail-desc">从策略定位到视觉落地，完整品牌 VI 输出。设计风格以「简洁 · 专业 · 记忆点」为核心，深蓝与暖金的搭配传递信赖感与品质感。</p>
+    <div class="content-block">
+      <div class="content-block-label">Design Process</div>
+      <div style="font-size:15px;line-height:1.9;color:#5d5245;">
+        在色彩选择上，采用深蓝搭配暖金来传递信赖感与品质感。字体方面选择了几何感强烈的无衬线体，确保在不同媒介上的可读性。
+      </div>
+    </div>
+    <div class="content-block">
+      <div class="content-block-label">Implementation</div>
+      <pre>// Design Tokens
+const tokens = {
+  primary: '#1e3a5f',
+  accent:  '#c9a84c',
+  text:    '#2d2a24',
+  surface: '#faf9f7'
+};</pre>
+    </div>
+
+    <div class="reaction-bar">
+      <button class="reaction-btn active">👍 23</button>
+      <button class="reaction-btn">👎 2</button>
+      <button class="reaction-btn">🔖 Bookmark</button>
+    </div>
+
+    <div class="comments-section">
+      <div class="comments-title">Comments (3)</div>
+      <div class="comment">
+        <div class="comment-avatar">W</div>
+        <div class="comment-body">
+          <div class="comment-header"><span class="comment-author">Wesley</span><span class="comment-date">2h ago</span></div>
+          <div class="comment-content">色彩搭配非常高级，金色点缀恰到好处。</div>
+        </div>
+      </div>
+      <div class="comment">
+        <div class="comment-avatar">J</div>
+        <div class="comment-body">
+          <div class="comment-header"><span class="comment-author">Jane</span><span class="comment-date">yesterday</span></div>
+          <div class="comment-content">字体选择方面有更多细节可以分享吗？</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left"><label class="mute-label">🔇 静音</label></div>
+    <div class="music-player">
+      <div class="music-cover"></div>
+      <div>
+        <div class="music-song-name">起风了</div>
+        <div class="music-artist">买辣椒也用券</div>
+      </div>
+      <span style="display:flex;gap:6px;margin-left:8px;">
+        <span style="font-size:14px;cursor:pointer;">⏮</span>
+        <span style="font-size:18px;cursor:pointer;">▶</span>
+        <span style="font-size:14px;cursor:pointer;">⏭</span>
+      </span>
+    </div>
+    <div class="footer-right"><span style="font-size:11px;color:#c4b5a5;">© 2026</span></div>
+  </div>
+</footer>
+</body>
+</html>

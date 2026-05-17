@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案十三：Music · 音乐库</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e4e4ec;min-height:100vh;line-height:1.7;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(163,230,53,0.04),transparent);pointer-events:none;z-index:0;}
+.preview-badge{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06);padding:8px 24px;border-radius:20px;font-size:11px;letter-spacing:0.6px;color:rgba(255,255,255,0.3);z-index:100;font-weight:400;}
+
+/* ===== Navbar ===== */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.75);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.04);padding:0 32px;height:64px;display:flex;align-items:center;}
+.nav-inner{max-width:1200px;width:100%;margin:0 auto;display:flex;align-items:center;}
+.nav-brand{font-size:16px;font-weight:600;background:linear-gradient(135deg,#e4e4ec,#a3e635);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-links{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.nav-btn{padding:7px 16px;border:none;border-radius:10px;background:transparent;color:rgba(255,255,255,0.4);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.nav-btn:hover{background:rgba(255,255,255,0.05);color:#a3e635;}
+.nav-user{display:flex;align-items:center;gap:10px;padding:4px 16px 4px 4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.04);border-radius:12px;font-size:13px;font-weight:500;}
+.nav-user .avatar{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#a3e635,#65a30d);color:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+
+/* ===== Page ===== */
+.page{max-width:1000px;margin:84px auto 0;padding:0 32px 120px;position:relative;z-index:1;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-top:20px;}
+.page-header h1{font-size:24px;font-weight:700;}
+.btn-primary{padding:10px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#a3e635,#65a30d);color:#0a0a0f;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.25s;box-shadow:0 4px 20px rgba(163,230,53,0.08);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(163,230,53,0.12);}
+
+/* ===== Tabs ===== */
+.tabs{display:flex;gap:6px;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.04);padding-bottom:12px;}
+.tab-btn{padding:8px 20px;border-radius:10px;border:none;background:transparent;color:rgba(255,255,255,0.35);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.tab-btn.active{background:rgba(163,230,53,0.08);color:#a3e635;}
+.tab-btn:hover:not(.active){color:rgba(255,255,255,0.5);}
+
+/* ===== Grid ===== */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.music-card{background:rgba(23,23,23,0.85);border-radius:16px;border:1px solid rgba(255,255,255,0.04);overflow:hidden;cursor:pointer;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+.music-card:hover{transform:translateY(-4px);border-color:rgba(163,230,53,0.06);box-shadow:0 20px 40px rgba(0,0,0,0.3);}
+.music-cover-art{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,rgba(163,230,53,0.04),rgba(101,163,13,0.02));position:relative;}
+.music-cover-art .play-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font-size:36px;opacity:0;transition:opacity 0.3s;}
+.music-card:hover .play-overlay{opacity:1;}
+.music-info{padding:16px;}
+.music-title{font-size:14px;font-weight:600;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
+.music-artist{font-size:12px;color:rgba(255,255,255,0.3);margin-top:4px;}
+.music-stats{display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04);font-size:11px;color:rgba(255,255,255,0.2);}
+
+/* ===== Playlist / Album Card ===== */
+.playlist-card{background:rgba(23,23,23,0.85);border-radius:16px;border:1px solid rgba(255,255,255,0.04);padding:20px;cursor:pointer;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+.playlist-card:hover{transform:translateY(-4px);border-color:rgba(163,230,53,0.06);box-shadow:0 20px 40px rgba(0,0,0,0.3);}
+.playlist-cover{width:100%;aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:12px;background:linear-gradient(135deg,rgba(163,230,53,0.04),rgba(101,163,13,0.02));}
+.playlist-name{font-size:14px;font-weight:600;margin-bottom:4px;}
+.playlist-count{font-size:12px;color:rgba(255,255,255,0.3);}
+
+/* ===== Now Playing Bar (Bottom) ===== */
+.now-playing{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.85);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.04);padding:0 32px;height:68px;display:flex;align-items:center;}
+.now-inner{max-width:1200px;width:100%;margin:0 auto;display:flex;align-items:center;gap:16px;}
+.np-cover{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#a3e635,#65a30d);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.np-info{flex:1;min-width:0;}
+.np-title{font-size:13px;font-weight:600;}
+.np-artist{font-size:11px;color:rgba(255,255,255,0.3);}
+.np-controls{display:flex;align-items:center;gap:8px;}
+.np-btn{width:32px;height:32px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,0.4);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.np-btn:hover{background:rgba(163,230,53,0.04);color:#a3e635;}
+.np-play{width:38px;height:38px;border-radius:50%;border:none;background:linear-gradient(135deg,#a3e635,#65a30d);color:#0a0a0f;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;box-shadow:0 2px 12px rgba(163,230,53,0.1);}
+.np-play:hover{transform:scale(1.05);box-shadow:0 4px 20px rgba(163,230,53,0.15);}
+.np-progress{flex:1;max-width:300px;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+.np-progress-bar{height:100%;width:35%;background:linear-gradient(90deg,#a3e635,#65a30d);border-radius:2px;transition:width 1s linear;}
+.np-volume{display:flex;align-items:center;gap:6px;}
+.np-volume input[type="range"]{width:80px;height:3px;-webkit-appearance:none;background:rgba(255,255,255,0.08);border-radius:2px;outline:none;}
+.np-volume input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#a3e635;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="preview-badge">✦ 音乐库</div>
+
+<nav class="navbar"><div class="nav-inner"><div class="nav-brand">Portfolio</div><div class="nav-links"><span class="nav-user"><span class="avatar">A</span><span>admin</span></span></div></div></nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1>🎵 音乐库</h1>
+    <button class="btn-primary">📤 上传音乐</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active">🎵 歌曲</button>
+    <button class="tab-btn">📋 歌单</button>
+  </div>
+
+  <div style="margin-bottom:28px;">
+    <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;">最近播放</h3>
+    <div class="grid">
+      <div class="music-card">
+        <div class="music-cover-art">🎸<div class="play-overlay">▶</div></div>
+        <div class="music-info">
+          <div class="music-title">起风了</div>
+          <div class="music-artist">买辣椒也用券</div>
+          <div class="music-stats"><span>▶ 2.3k</span><span>❤️ 156</span></div>
+        </div>
+      </div>
+      <div class="music-card">
+        <div class="music-cover-art">🎹<div class="play-overlay">▶</div></div>
+        <div class="music-info">
+          <div class="music-title">River Flows in You</div>
+          <div class="music-artist">Yiruma</div>
+          <div class="music-stats"><span>▶ 1.8k</span><span>❤️ 98</span></div>
+        </div>
+      </div>
+      <div class="music-card">
+        <div class="music-cover-art">🎧<div class="play-overlay">▶</div></div>
+        <div class="music-info">
+          <div class="music-title">Midnight City</div>
+          <div class="music-artist">M83</div>
+          <div class="music-stats"><span>▶ 3.1k</span><span>❤️ 204</span></div>
+        </div>
+      </div>
+      <div class="music-card">
+        <div class="music-cover-art">🎻<div class="play-overlay">▶</div></div>
+        <div class="music-info">
+          <div class="music-title">Experience</div>
+          <div class="music-artist">Ludovico Einaudi</div>
+          <div class="music-stats"><span>▶ 1.2k</span><span>❤️ 87</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;">推荐歌单</h3>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="playlist-card">
+      <div class="playlist-cover">🎧</div>
+      <div class="playlist-name">编程专注</div>
+      <div class="playlist-count">12 首 · 45 分钟</div>
+    </div>
+    <div class="playlist-card">
+      <div class="playlist-cover">🌙</div>
+      <div class="playlist-name">夜间放松</div>
+      <div class="playlist-count">8 首 · 32 分钟</div>
+    </div>
+    <div class="playlist-card">
+      <div class="playlist-cover">⚡</div>
+      <div class="playlist-name">活力满满</div>
+      <div class="playlist-count">15 首 · 52 分钟</div>
+    </div>
+    <div class="playlist-card">
+      <div class="playlist-cover">🎹</div>
+      <div class="playlist-name">钢琴精选</div>
+      <div class="playlist-count">10 首 · 38 分钟</div>
+    </div>
+  </div>
+</div>
+
+<div class="now-playing">
+  <div class="now-inner">
+    <div class="np-cover">🎸</div>
+    <div class="np-info">
+      <div class="np-title">起风了</div>
+      <div class="np-artist">买辣椒也用券</div>
+    </div>
+    <div class="np-progress"><div class="np-progress-bar"></div></div>
+    <div class="np-controls">
+      <button class="np-btn">⏮</button>
+      <button class="np-play">▶</button>
+      <button class="np-btn">⏭</button>
+    </div>
+    <div class="np-volume">
+      <span style="font-size:14px;color:rgba(255,255,255,0.3);">🔊</span>
+      <input type="range" min="0" max="100" value="65">
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案七：Feature Carousel 暗色动效</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ===== Base — 深色沉浸 ===== */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #0a0a0f;
+  color: #e4e4ec;
+  min-height: 100vh;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(163,230,53,0.04), transparent),
+              radial-gradient(ellipse 60% 50% at 80% 80%, rgba(168,85,247,0.03), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+.preview-badge {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,0.04); backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 8px 24px; border-radius: 20px;
+  font-size: 11px; letter-spacing: 0.6px;
+  color: rgba(255,255,255,0.3); z-index: 100;
+  font-weight: 400;
+}
+
+/* ===== Typography ===== */
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; }
+
+/* ===== Navbar — 极简深色玻璃 ===== */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,15,0.75);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding: 0 32px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+}
+.nav-inner {
+  max-width: 1200px; width: 100%; margin: 0 auto;
+  display: flex; align-items: center;
+}
+.nav-brand {
+  font-size: 17px; font-weight: 600;
+  background: linear-gradient(135deg, #e4e4ec, #a3e635);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.nav-links { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.nav-btn {
+  padding: 8px 18px; border: none; border-radius: 10px;
+  background: transparent; color: rgba(255,255,255,0.4);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all 0.2s ease;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.05); color: #a3e635; }
+.nav-btn.primary {
+  background: rgba(163,230,53,0.1);
+  color: #a3e635;
+  border: 1px solid rgba(163,230,53,0.12);
+  font-weight: 500;
+}
+.nav-btn.primary:hover {
+  background: rgba(163,230,53,0.15);
+  border-color: rgba(163,230,53,0.2);
+}
+.level-display {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 5px 14px 5px 5px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+.level-display:hover { border-color: rgba(163,230,53,0.08); }
+.level-display .lvl-badge {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f; font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.level-display .lvl-name { font-size: 11px; color: #e4e4ec; font-weight: 500; }
+.level-display .lvl-points { font-size: 10px; color: rgba(255,255,255,0.3); }
+.nav-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 16px 4px 4px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 12px; font-size: 13px; font-weight: 500;
+  transition: all 0.2s ease;
+}
+.nav-user:hover { border-color: rgba(163,230,53,0.06); }
+.nav-user .avatar {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+}
+
+/* ===== Hero ===== */
+.hero {
+  margin-top: 68px; padding: 120px 32px 100px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.hero::after {
+  content: '';
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(163,230,53,0.08), transparent);
+}
+.hero h1 {
+  font-size: 48px; font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 18px;
+  background: linear-gradient(135deg, #f0f0f5, #a3e635, #65a30d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero p {
+  font-size: 15px; font-weight: 400; color: rgba(255,255,255,0.35);
+  max-width: 420px; margin: 0 auto 40px;
+}
+.hero-actions { display: flex; gap: 12px; justify-content: center; }
+.hero-btn {
+  padding: 14px 32px; border-radius: 12px; border: none;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.25s ease;
+}
+.hero-btn.primary {
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f;
+  box-shadow: 0 4px 24px rgba(163,230,53,0.12);
+}
+.hero-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(163,230,53,0.18); }
+.hero-btn.secondary {
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.hero-btn.secondary:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+
+/* ===== Container ===== */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 32px 100px; position: relative; z-index: 1; }
+.section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 36px;
+}
+.section-header h2 { font-size: 20px; font-weight: 600; color: #e4e4ec; }
+.section-header .see-all {
+  font-size: 13px; color: #a3e635; font-weight: 500;
+  cursor: pointer; transition: all 0.2s ease;
+}
+.section-header .see-all:hover { opacity: 0.7; }
+
+/* ===== Feature Carousel ===== */
+.feature-carousel {
+  margin-bottom: 80px;
+  position: relative;
+}
+.feature-carousel-inner {
+  position: relative;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(23,23,23,0.95), rgba(41,37,36,0.9));
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+.feature-carousel-inner:hover {
+  border-color: rgba(163,230,53,0.08);
+}
+
+/* Spotlight overlay (follows mouse) */
+.spotlight-overlay {
+  position: absolute;
+  inset: -1px;
+  border-radius: 24px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 2;
+}
+.feature-carousel-inner:hover .spotlight-overlay {
+  opacity: 1;
+}
+
+.feature-card-body {
+  padding: 48px 56px;
+  min-height: 480px;
+  position: relative;
+}
+
+/* Step content */
+.step-content {
+  max-width: 420px;
+  margin-bottom: 40px;
+}
+.step-title {
+  font-size: 26px; font-weight: 700; color: #fff;
+  margin-bottom: 14px;
+  letter-spacing: -0.02em;
+}
+.step-desc {
+  font-size: 14px; line-height: 1.8;
+  color: rgba(255,255,255,0.4);
+}
+
+/* Step indicators */
+.step-indicators {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  position: absolute;
+  top: 48px; right: 56px;
+  z-index: 10;
+}
+.step-dot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 6px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.step-dot:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.08);
+}
+.step-dot.active {
+  background: rgba(163,230,53,0.08);
+  border-color: rgba(163,230,53,0.15);
+}
+.step-dot.completed {
+  background: rgba(163,230,53,0.06);
+  border-color: rgba(163,230,53,0.08);
+}
+.step-dot-circle {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.3);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+.step-dot.active .step-dot-circle {
+  background: rgba(163,230,53,0.15);
+  color: #a3e635;
+}
+.step-dot.completed .step-dot-circle {
+  background: #a3e635;
+  color: #0a0a0f;
+}
+.step-dot-label {
+  font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,0.3);
+  transition: color 0.3s ease;
+}
+.step-dot.active .step-dot-label { color: #a3e635; }
+.step-dot.completed .step-dot-label { color: rgba(255,255,255,0.4); }
+
+/* Step illustration area */
+.step-visual {
+  position: absolute;
+  right: 56px;
+  bottom: 48px;
+  width: 340px;
+  height: 220px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(0,0,0,0.3);
+}
+.step-visual-content {
+  font-size: 72px;
+  opacity: 0;
+  transform: scale(0.9) translateY(10px);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: absolute;
+}
+.step-visual-content.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+.step-visual-label {
+  position: absolute;
+  bottom: 16px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ===== Card ===== */
+.card {
+  background: rgba(23,23,23,0.9);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  overflow: hidden;
+}
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(163,230,53,0.08);
+  box-shadow: 0 24px 48px rgba(0,0,0,0.3);
+}
+
+/* ===== Post Grid ===== */
+.post-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 56px;
+}
+.post-card-img {
+  width: 100%; aspect-ratio: 16/10;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+  position: relative;
+  overflow: hidden;
+}
+.post-card:nth-child(1) .post-card-img { background: linear-gradient(135deg, rgba(163,230,53,0.06), rgba(101,163,13,0.03)); }
+.post-card:nth-child(2) .post-card-img { background: linear-gradient(135deg, rgba(168,85,247,0.06), rgba(126,34,206,0.03)); }
+.post-card:nth-child(3) .post-card-img { background: linear-gradient(135deg, rgba(251,191,36,0.06), rgba(217,119,6,0.03)); }
+.post-card-category {
+  position: absolute; top: 14px; left: 14px; z-index: 2;
+  padding: 5px 12px; border-radius: 8px;
+  font-size: 11px; font-weight: 600;
+  background: rgba(0,0,0,0.4); backdrop-filter: blur(8px);
+  color: #a3e635;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(163,230,53,0.06);
+}
+.post-card-body { padding: 28px; }
+.post-card-title {
+  font-size: 17px; font-weight: 600; margin-bottom: 10px;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+  overflow: hidden; color: #e4e4ec;
+}
+.post-card-desc {
+  font-size: 13px; color: rgba(255,255,255,0.35);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; line-height: 1.8;
+}
+.post-card-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 20px; padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.post-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag {
+  padding: 4px 12px; border-radius: 6px;
+  font-size: 11px; font-weight: 500;
+  background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.35);
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: all 0.2s ease;
+}
+.tag:hover { background: rgba(163,230,53,0.06); color: #a3e635; border-color: rgba(163,230,53,0.06); }
+.post-card-stats { display: flex; gap: 14px; }
+.stat-item { font-size: 11px; color: rgba(255,255,255,0.25); display: flex; align-items: center; gap: 4px; }
+
+/* ===== Detail ===== */
+.detail-page { max-width: 800px; margin: 80px auto 0; padding-top: 64px; position: relative; }
+.detail-page::before {
+  content: '';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 400px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(163,230,53,0.06), transparent);
+}
+.detail-cover {
+  width: 100%; aspect-ratio: 2.5/1; border-radius: 20px;
+  background: linear-gradient(135deg, rgba(163,230,53,0.06), rgba(101,163,13,0.03));
+  border: 1px solid rgba(163,230,53,0.04);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 64px; margin-bottom: 40px;
+}
+.detail-title { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 16px; color: #e4e4ec; }
+.detail-meta {
+  display: flex; gap: 20px; font-size: 13px; color: rgba(255,255,255,0.3);
+  padding-bottom: 24px; margin-bottom: 36px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  flex-wrap: wrap;
+}
+.detail-meta .meta-tag {
+  padding: 3px 12px; border-radius: 6px;
+  background: rgba(163,230,53,0.06); font-size: 12px;
+  color: #a3e635;
+}
+.detail-desc {
+  font-size: 15px; color: rgba(255,255,255,0.35);
+  line-height: 1.9; margin-bottom: 36px;
+}
+.content-block {
+  background: rgba(23,23,23,0.85);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 16px; padding: 28px; margin-bottom: 20px;
+  transition: all 0.2s ease;
+}
+.content-block:hover { border-color: rgba(163,230,53,0.04); }
+.content-block-label {
+  font-size: 12px; font-weight: 600;
+  color: #a3e635; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+.content-block pre {
+  background: rgba(0,0,0,0.4); color: #e4e4ec;
+  padding: 24px; border-radius: 12px; overflow-x: auto;
+  font-size: 13px; line-height: 1.8;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+/* ===== Reaction Bar ===== */
+.reaction-bar {
+  display: flex; gap: 8px; padding: 24px 0;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  margin-bottom: 40px;
+}
+.reaction-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 22px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.4);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all 0.2s ease;
+}
+.reaction-btn:hover { border-color: rgba(163,230,53,0.08); color: #a3e635; background: rgba(163,230,53,0.04); }
+.reaction-btn.active { background: rgba(163,230,53,0.06); border-color: rgba(163,230,53,0.1); color: #a3e635; }
+
+/* ===== Comments ===== */
+.comments-section { margin-top: 48px; }
+.comments-title {
+  font-size: 18px; font-weight: 600; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 8px;
+  color: #e4e4ec;
+}
+.comment-count-badge {
+  font-size: 12px; font-weight: 600;
+  background: rgba(163,230,53,0.06); color: #a3e635;
+  padding: 2px 12px; border-radius: 10px;
+}
+.comment {
+  display: flex; gap: 16px; padding: 22px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: all 0.2s ease;
+}
+.comment:hover { padding-left: 8px; }
+.comment-avatar {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0;
+}
+.comment-body { flex: 1; min-width: 0; }
+.comment-header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.comment-author { font-size: 14px; font-weight: 600; color: #e4e4ec; }
+.comment-date { font-size: 12px; color: rgba(255,255,255,0.25); }
+.comment-content { font-size: 14px; color: rgba(255,255,255,0.45); line-height: 1.8; }
+.comment-actions { display: flex; gap: 16px; margin-top: 8px; }
+.comment-action {
+  font-size: 12px; color: rgba(255,255,255,0.25); cursor: pointer;
+  transition: all 0.2s ease; background: none; border: none; padding: 4px 0;
+}
+.comment-action:hover { color: #a3e635; }
+
+/* ===== Section Divider ===== */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(163,230,53,0.04), transparent);
+  margin: 56px 0;
+}
+
+/* ===== Footer ===== */
+.footer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,15,0.8);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-top: 1px solid rgba(255,255,255,0.03);
+  padding: 0 32px; height: 60px;
+  display: flex; align-items: center;
+}
+.footer-inner {
+  max-width: 1200px; width: 100%; margin: 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.footer-left { position: absolute; left: 0; }
+.footer-right { position: absolute; right: 0; }
+.mute-label { font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.3); cursor: pointer; transition: all 0.2s ease; }
+.mute-label:hover { color: #a3e635; }
+.music-player { display: flex; align-items: center; gap: 14px; }
+.music-cover {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: linear-gradient(135deg, rgba(163,230,53,0.06), rgba(101,163,13,0.03));
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.music-song-name { font-size: 13px; font-weight: 600; color: #e4e4ec; }
+.music-artist { font-size: 11px; font-weight: 400; color: rgba(255,255,255,0.3); }
+.music-btn {
+  background: transparent; border: none;
+  color: rgba(255,255,255,0.3); font-size: 16px;
+  cursor: pointer; padding: 6px 8px; border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.music-btn:hover { background: rgba(163,230,53,0.04); color: #a3e635; }
+.music-play {
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  border: none; color: #0a0a0f;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; cursor: pointer;
+  box-shadow: 0 2px 12px rgba(163,230,53,0.12);
+  transition: all 0.2s ease;
+}
+.music-play:hover { box-shadow: 0 4px 20px rgba(163,230,53,0.18); transform: scale(1.05); }
+</style>
+</head>
+<body>
+<div class="preview-badge">✦ 方案七 · Feature Carousel 暗色动效</div>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="nav-brand">Portfolio</div>
+    <div class="nav-links">
+      <span class="level-display">
+        <span class="lvl-badge">12</span>
+        <span><div class="lvl-name">Lv.12 星辰</div><div class="lvl-points">2,480 XP</div></span>
+      </span>
+      <button class="nav-btn">活动</button>
+      <button class="nav-btn">好友</button>
+      <span class="nav-user">
+        <span class="avatar">A</span>
+        <span>admin</span>
+      </span>
+      <button class="nav-btn primary">退出</button>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>用代码创造美</h1>
+  <p>前端 · 设计 · 交互 — 每个作品都是一次新的探索</p>
+  <div class="hero-actions">
+    <button class="hero-btn primary">浏览作品</button>
+    <button class="hero-btn secondary">关于我</button>
+  </div>
+</section>
+
+<div class="container">
+
+  <!-- ===== Feature Carousel Section ===== -->
+  <div class="feature-carousel">
+    <div class="feature-carousel-inner" id="carousel">
+      <div class="spotlight-overlay" id="spotlight"></div>
+      <div class="feature-card-body">
+        <div class="step-indicators" id="stepIndicators"></div>
+        <div class="step-content" id="stepContent">
+          <div class="step-title" id="stepTitle">品牌视觉识别系统</div>
+          <div class="step-desc" id="stepDesc">从策略定位到视觉落地的全链路品牌设计。以「简洁·专业·记忆点」为核心，深色搭配暖金传递信赖感与品质感。</div>
+        </div>
+        <div class="step-visual" id="stepVisual">
+          <span class="step-visual-content visible" data-step="0">🎨</span>
+          <span class="step-visual-content" data-step="1">⚛️</span>
+          <span class="step-visual-content" data-step="2">📊</span>
+          <span class="step-visual-content" data-step="3">🚀</span>
+          <span class="step-visual-label">FEATURE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Latest Works ===== -->
+  <div class="section-header">
+    <h2>最新作品</h2>
+    <span class="see-all">查看全部 →</span>
+  </div>
+  <div class="post-grid">
+    <div class="post-card card">
+      <div class="post-card-img"><span>🎨</span><span class="post-card-category">设计</span></div>
+      <div class="post-card-body">
+        <div class="post-card-title">品牌视觉识别系统设计</div>
+        <div class="post-card-desc">完整的品牌 VI 设计，涵盖 Logo、色彩体系、字体规范和应用物料。</div>
+        <div class="post-card-footer">
+          <div class="post-card-tags"><span class="tag">设计</span><span class="tag">品牌</span></div>
+          <div class="post-card-stats"><span class="stat-item">👁 256</span><span class="stat-item">❤️ 23</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="post-card card">
+      <div class="post-card-img"><span>⚛️</span><span class="post-card-category">前端</span></div>
+      <div class="post-card-body">
+        <div class="post-card-title">React 组件库设计</div>
+        <div class="post-card-desc">从零搭建企业级组件库，支持主题定制和按需加载。</div>
+        <div class="post-card-footer">
+          <div class="post-card-tags"><span class="tag">React</span><span class="tag">TypeScript</span></div>
+          <div class="post-card-stats"><span class="stat-item">👁 189</span><span class="stat-item">❤️ 15</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="post-card card">
+      <div class="post-card-img"><span>📊</span><span class="post-card-category">数据</span></div>
+      <div class="post-card-body">
+        <div class="post-card-title">实时数据仪表盘</div>
+        <div class="post-card-desc">高性能监控面板，支持拖拽布局和多图表联动。</div>
+        <div class="post-card-footer">
+          <div class="post-card-tags"><span class="tag">D3.js</span><span class="tag">WebSocket</span></div>
+          <div class="post-card-stats"><span class="stat-item">👁 143</span><span class="stat-item">❤️ 18</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ===== Detail ===== -->
+  <div class="detail-page">
+    <div class="detail-cover">🎨</div>
+    <h1 class="detail-title">品牌视觉识别系统设计</h1>
+    <div class="detail-meta">
+      <span>👤 admin</span><span>📅 2026.05.15</span><span>👁 256</span>
+      <span class="meta-tag">设计</span><span class="meta-tag">品牌</span>
+    </div>
+    <p class="detail-desc">从策略定位到视觉落地的全链路品牌设计。以「简洁 · 专业 · 记忆点」为核心，深色与暖金搭配传递信赖感与品质感。</p>
+    <div class="content-block">
+      <div class="content-block-label">设计思路</div>
+      <div style="font-size:14px;line-height:1.9;color:rgba(255,255,255,0.4);">
+        本次设计以「简洁 · 专业 · 记忆点」为核心关键词。在色彩选择上，采用深色搭配 lime 绿来传递现代感与技术感。
+      </div>
+    </div>
+    <div class="content-block">
+      <div class="content-block-label">技术实现</div>
+      <pre>const theme = {
+  primary: '#a3e635',
+  accent:  '#65a30d',
+  surface: 'rgba(23,23,23,0.9)',
+  text:    '#e4e4ec'
+};</pre>
+    </div>
+
+    <div class="reaction-bar">
+      <button class="reaction-btn active">👍 23</button>
+      <button class="reaction-btn">👎 2</button>
+      <button class="reaction-btn">🔖 收藏</button>
+    </div>
+
+    <div class="comments-section">
+      <div class="comments-title">💬 评论 <span class="comment-count-badge">3</span></div>
+      <div class="comment">
+        <div class="comment-avatar">W</div>
+        <div class="comment-body">
+          <div class="comment-header"><span class="comment-author">Wesley</span><span class="comment-date">2 小时前</span></div>
+          <div class="comment-content">lime 绿色调非常抢眼！暗色背景下的质感很棒。</div>
+          <div class="comment-actions"><button class="comment-action">回复</button><button class="comment-action">❤️ 3</button></div>
+        </div>
+      </div>
+      <div class="comment">
+        <div class="comment-avatar">J</div>
+        <div class="comment-body">
+          <div class="comment-header"><span class="comment-author">Jane</span><span class="comment-date">昨天</span></div>
+          <div class="comment-content">这个 carousel 组件的动效很流畅，是用什么实现的？</div>
+          <div class="comment-actions"><button class="comment-action">回复</button><button class="comment-action">❤️ 1</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left"><label class="mute-label">🔇 静音</label></div>
+    <div class="music-player">
+      <div class="music-cover"></div>
+      <div>
+        <div class="music-song-name">起风了</div>
+        <div class="music-artist">买辣椒也用券</div>
+      </div>
+      <span style="display:flex;gap:4px;margin-left:8px;">
+        <button class="music-btn">⏮</button>
+        <button class="music-play">▶</button>
+        <button class="music-btn">⏭</button>
+      </span>
+    </div>
+    <div class="footer-right"><span style="font-size:11px;color:rgba(255,255,255,0.2);">© 2026</span></div>
+  </div>
+</footer>
+
+<script>
+// ===== Feature Carousel State =====
+const steps = [
+  { title: '品牌视觉识别系统', desc: '从策略定位到视觉落地的全链路品牌设计。以「简洁·专业·记忆点」为核心，深色搭配 lime 绿传递现代感与技术感。', icon: '🎨' },
+  { title: 'React 组件库设计', desc: '从零搭建企业级组件库，支持主题定制和按需加载。暗色主题优先，lime 绿作为强调色贯穿整个设计系统。', icon: '⚛️' },
+  { title: '实时数据仪表盘', desc: '高性能监控面板，支持拖拽布局和多图表联动。暗色沉浸式界面让数据更聚焦。', icon: '📊' },
+  { title: '全栈项目架构', desc: 'Node.js + Express + SQL.js 的 SPA 架构设计。代码组织结构清晰，路由拆分合理。', icon: '🚀' },
+];
+
+let currentStep = 0;
+let isAnimating = false;
+
+const titleEl = document.getElementById('stepTitle');
+const descEl = document.getElementById('stepDesc');
+const indicatorsEl = document.getElementById('stepIndicators');
+const visualContents = document.querySelectorAll('.step-visual-content');
+
+// Render step dots
+function renderIndicators() {
+  indicatorsEl.innerHTML = '';
+  steps.forEach((step, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'step-dot';
+    if (i < currentStep) dot.classList.add('completed');
+    if (i === currentStep) dot.classList.add('active');
+
+    const circle = document.createElement('span');
+    circle.className = 'step-dot-circle';
+    if (i < currentStep) {
+      circle.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    } else {
+      circle.textContent = i + 1;
+    }
+
+    const label = document.createElement('span');
+    label.className = 'step-dot-label';
+    label.textContent = 'Step ' + (i + 1);
+
+    dot.appendChild(circle);
+    dot.appendChild(label);
+    dot.addEventListener('click', () => goToStep(i));
+    indicatorsEl.appendChild(dot);
+  });
+}
+
+// Update visual icons
+function updateVisual(index) {
+  visualContents.forEach(el => {
+    el.classList.toggle('visible', parseInt(el.dataset.step) === index);
+  });
+}
+
+// Animate content swap
+function updateContent(index) {
+  const step = steps[index];
+  titleEl.style.opacity = '0';
+  titleEl.style.transform = 'translateY(8px)';
+  descEl.style.opacity = '0';
+  descEl.style.transform = 'translateY(8px)';
+
+  setTimeout(() => {
+    titleEl.textContent = step.title;
+    descEl.textContent = step.desc;
+    titleEl.style.opacity = '1';
+    titleEl.style.transform = 'translateY(0)';
+    descEl.style.opacity = '1';
+    descEl.style.transform = 'translateY(0)';
+  }, 150);
+}
+
+function goToStep(index) {
+  if (isAnimating || index === currentStep) return;
+  isAnimating = true;
+  currentStep = index;
+  renderIndicators();
+  updateVisual(index);
+  updateContent(index);
+  setTimeout(() => { isAnimating = false; }, 500);
+}
+
+// Auto-advance every 4s
+let autoTimer = setInterval(() => {
+  const next = (currentStep + 1) % steps.length;
+  goToStep(next);
+}, 4000);
+
+// Pause auto-advance on interaction
+document.getElementById('carousel').addEventListener('click', () => {
+  clearInterval(autoTimer);
+  autoTimer = setInterval(() => {
+    const next = (currentStep + 1) % steps.length;
+    goToStep(next);
+  }, 4000);
+});
+
+// ===== Mouse-follow Spotlight =====
+const carousel = document.getElementById('carousel');
+const spotlight = document.getElementById('spotlight');
+
+carousel.addEventListener('mousemove', (e) => {
+  const rect = carousel.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const size = 280;
+  spotlight.style.background = `radial-gradient(circle ${size}px at ${x}px ${y}px, rgba(163,230,53,0.04), transparent 70%)`;
+});
+
+// ===== Init =====
+renderIndicators();
+updateVisual(0);
+titleEl.style.transition = 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+descEl.style.transition = 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+</script>
+</body>
+</html>

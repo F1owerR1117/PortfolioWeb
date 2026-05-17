@@ -514,7 +514,9 @@
       "Bash(curl -s http://localhost:3000/js/api/auth.js)",
       "Bash(curl -s http://localhost:3000/js/api/music.js)",
       "Bash(curl -s http://localhost:3000/js/api/admin.js)",
-      "Bash(bash scripts/snapshot.sh \"结构优化：CSS/api.js/db.init 三拆完成\")"
+      "Bash(bash scripts/snapshot.sh \"结构优化：CSS/api.js/db.init 三拆完成\")",
+      "Bash(mkdir -p f:/code/portfolio/previews)",
+      "Bash(bash scripts/snapshot.sh \"重构前备份：CSS暗色动效重构前状态\")"
     ]
   }
 }

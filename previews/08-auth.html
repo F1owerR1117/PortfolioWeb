@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案八：Auth · 暗色动效</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e4e4ec;min-height:100vh;line-height:1.7;overflow-x:hidden;display:flex;align-items:center;justify-content:center;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(163,230,53,0.04),transparent),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(168,85,247,0.03),transparent);pointer-events:none;z-index:0;}
+.preview-badge{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06);padding:8px 24px;border-radius:20px;font-size:11px;letter-spacing:0.6px;color:rgba(255,255,255,0.3);z-index:100;font-weight:400;}
+
+/* ===== Auth Card ===== */
+.auth-wrap{position:relative;z-index:1;width:100%;max-width:420px;padding:20px;}
+.auth-card{background:linear-gradient(135deg,rgba(23,23,23,0.95),rgba(41,37,36,0.9));border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:48px 40px;position:relative;overflow:hidden;transition:border-color 0.3s;}
+.auth-card:hover{border-color:rgba(163,230,53,0.08);}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(163,230,53,0.3),transparent);}
+.auth-icon{text-align:center;font-size:48px;margin-bottom:8px;}
+.auth-title{text-align:center;font-size:24px;font-weight:700;margin-bottom:4px;background:linear-gradient(135deg,#f0f0f5,#a3e635);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.auth-subtitle{text-align:center;font-size:13px;color:rgba(255,255,255,0.3);margin-bottom:32px;}
+
+/* ===== Tabs ===== */
+.auth-tabs{display:flex;background:rgba(0,0,0,0.3);border-radius:12px;padding:4px;margin-bottom:28px;border:1px solid rgba(255,255,255,0.04);}
+.auth-tab{flex:1;padding:10px;text-align:center;border:none;border-radius:10px;background:transparent;color:rgba(255,255,255,0.3);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s ease;}
+.auth-tab.active{background:rgba(163,230,53,0.1);color:#a3e635;box-shadow:0 0 20px rgba(163,230,53,0.04);}
+.auth-tab:hover:not(.active){color:rgba(255,255,255,0.5);}
+
+/* ===== Form ===== */
+.form-group{margin-bottom:20px;}
+.form-label{display:block;font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);margin-bottom:8px;letter-spacing:0.3px;text-transform:uppercase;}
+.form-input{width:100%;padding:12px 16px;border:1px solid rgba(255,255,255,0.06);border-radius:12px;background:rgba(0,0,0,0.3);color:#e4e4ec;font-size:14px;outline:none;transition:all 0.2s;}
+.form-input:focus{border-color:rgba(163,230,53,0.2);box-shadow:0 0 0 3px rgba(163,230,53,0.04);}
+.form-input::placeholder{color:rgba(255,255,255,0.15);}
+.form-checkbox{display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;}
+.form-checkbox input[type="checkbox"]{width:18px;height:18px;border-radius:4px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.3);accent-color:#a3e635;cursor:pointer;}
+.form-hint{display:block;font-size:11px;color:rgba(255,255,255,0.2);margin-top:6px;}
+
+/* ===== Buttons ===== */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 24px;border-radius:12px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.25s ease;text-decoration:none;}
+.btn-block{width:100%;}
+.btn-primary{background:linear-gradient(135deg,#a3e635,#65a30d);color:#0a0a0f;box-shadow:0 4px 20px rgba(163,230,53,0.1);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(163,230,53,0.15);}
+
+/* ===== Animated BG ===== */
+.bg-orb{position:fixed;border-radius:50%;filter:blur(100px);z-index:0;}
+.bg-orb:nth-child(1){width:400px;height:400px;background:rgba(163,230,53,0.04);top:-10%;left:-5%;animation:orbFloat 20s ease-in-out infinite;}
+.bg-orb:nth-child(2){width:350px;height:350px;background:rgba(168,85,247,0.03);bottom:-10%;right:-5%;animation:orbFloat 25s ease-in-out infinite alternate;}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(30px,-40px) scale(1.05);}}
+
+/* ===== Decorative line ===== */
+.auth-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(163,230,53,0.06),transparent);margin:24px 0;}
+</style>
+</head>
+<body>
+<div class="preview-badge">✦ 登录 / 注册</div>
+<div class="bg-orb"></div><div class="bg-orb"></div>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-icon">📂</div>
+    <h1 class="auth-title">作品集</h1>
+    <p class="auth-subtitle">登录以浏览作品</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active">登录</button>
+      <button class="auth-tab">注册</button>
+    </div>
+
+    <form>
+      <div class="form-group">
+        <label class="form-label">用户名</label>
+        <input class="form-input" type="text" placeholder="输入用户名" value="admin">
+      </div>
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input class="form-input" type="password" placeholder="输入密码" value="······">
+      </div>
+      <button class="btn btn-primary btn-block" style="margin-top:8px;">登录</button>
+    </form>
+
+    <div class="auth-divider"></div>
+
+    <div style="display:none;">
+      <div class="form-group">
+        <label class="form-label">用户名</label>
+        <input class="form-input" type="text" placeholder="3-20个字符">
+      </div>
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <input class="form-input" type="password" placeholder="至少6位">
+      </div>
+      <div class="form-group">
+        <label class="form-checkbox"><input type="checkbox"><span>注册为管理员</span></label>
+      </div>
+      <button class="btn btn-primary btn-block">注册</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

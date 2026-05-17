@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案十七：Friends · 好友管理</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e4e4ec;min-height:100vh;line-height:1.7;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(163,230,53,0.04),transparent),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(168,85,247,0.03),transparent);pointer-events:none;z-index:0;}
+.preview-badge{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.06);padding:8px 24px;border-radius:20px;font-size:11px;letter-spacing:0.6px;color:rgba(255,255,255,0.3);z-index:100;font-weight:400;}
+
+.navbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,15,0.75);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.04);padding:0 32px;height:64px;display:flex;align-items:center;}
+.nav-inner{max-width:800px;width:100%;margin:0 auto;display:flex;align-items:center;}
+.nav-brand{font-size:16px;font-weight:600;background:linear-gradient(135deg,#e4e4ec,#a3e635);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nav-links{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.nav-user{display:flex;align-items:center;gap:10px;padding:4px 16px 4px 4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.04);border-radius:12px;font-size:13px;font-weight:500;}
+.nav-user .avatar{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#a3e635,#65a30d);color:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+
+.page{max-width:800px;margin:84px auto 0;padding:0 32px 100px;position:relative;z-index:1;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-top:20px;}
+.page-header h1{font-size:22px;font-weight:700;display:flex;align-items:center;gap:10px;}
+.friend-count{font-size:13px;color:rgba(255,255,255,0.3);font-weight:400;}
+.search-bar{position:relative;margin-bottom:24px;}
+.search-input{width:100%;padding:12px 16px;border:1px solid rgba(255,255,255,0.06);border-radius:12px;background:rgba(23,23,23,0.8);color:#e4e4ec;font-size:14px;outline:none;transition:all 0.2s;}
+.search-input:focus{border-color:rgba(163,230,53,0.15);box-shadow:0 0 0 3px rgba(163,230,53,0.04);}
+.search-input::placeholder{color:rgba(255,255,255,0.15);}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.25s;border:none;}
+.btn-primary{background:linear-gradient(135deg,#a3e635,#65a30d);color:#0a0a0f;box-shadow:0 4px 16px rgba(163,230,53,0.08);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(163,230,53,0.12);}
+.btn-outline{border:1px solid rgba(255,255,255,0.06);background:transparent;color:rgba(255,255,255,0.5);}
+.btn-outline:hover{border-color:rgba(163,230,53,0.08);color:#a3e635;}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px;}
+
+.tabs{display:flex;gap:6px;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.04);padding-bottom:12px;}
+.tab-btn{padding:8px 20px;border-radius:10px;border:none;background:transparent;color:rgba(255,255,255,0.35);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+.tab-btn.active{background:rgba(163,230,53,0.08);color:#a3e635;}
+.tab-btn:hover:not(.active){color:rgba(255,255,255,0.5);}
+.tab-badge{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.3);padding:1px 8px;border-radius:10px;font-size:11px;}
+.tab-btn.active .tab-badge{background:rgba(163,230,53,0.15);color:#a3e635;}
+
+/* ===== Friend Card ===== */
+.friend-card{display:flex;align-items:center;gap:16px;padding:18px;background:linear-gradient(135deg,rgba(23,23,23,0.85),rgba(41,37,36,0.8));border:1px solid rgba(255,255,255,0.04);border-radius:16px;margin-bottom:12px;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+.friend-card:hover{transform:translateY(-2px);border-color:rgba(163,230,53,0.06);box-shadow:0 12px 32px rgba(0,0,0,0.15);}
+.friend-avatar{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#a3e635,#65a30d);color:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0;position:relative;}
+.friend-avatar .online-dot{position:absolute;bottom:-1px;right:-1px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2px solid #0a0a0f;}
+.friend-info{flex:1;min-width:0;}
+.friend-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.friend-bio{font-size:13px;color:rgba(255,255,255,0.35);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.friend-meta{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.friend-status{font-size:11px;color:rgba(255,255,255,0.25);display:flex;align-items:center;gap:4px;}
+.friend-status.online{color:#22c55e;}
+
+/* ===== Request Card ===== */
+.request-card{display:flex;align-items:center;gap:14px;padding:16px;background:rgba(23,23,23,0.6);border:1px solid rgba(255,255,255,0.04);border-radius:14px;margin-bottom:10px;}
+.request-card .req-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#a3e635,#65a30d);color:#0a0a0f;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;}
+.request-card .req-info{flex:1;}
+.request-card .req-name{font-size:14px;font-weight:600;}
+.request-card .req-time{font-size:12px;color:rgba(255,255,255,0.25);}
+
+/* ===== Search Results ===== */
+.search-result{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;background:rgba(23,23,23,0.6);border:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:all 0.2s;}
+.search-result:hover{border-color:rgba(163,230,53,0.06);background:rgba(163,230,53,0.02);}
+</style>
+</head>
+<body>
+<div class="preview-badge">✦ 好友管理</div>
+<nav class="navbar"><div class="nav-inner"><div class="nav-brand">Portfolio</div><div class="nav-links"><span class="nav-user"><span class="avatar">A</span><span>admin</span></span></div></div></nav>
+
+<div class="page">
+  <div class="page-header">
+    <h1>👥 好友 <span class="friend-count">共 12 人</span></h1>
+    <button class="btn btn-outline btn-sm">+ 添加好友</button>
+  </div>
+
+  <div class="search-bar">
+    <input class="search-input" type="text" placeholder="搜索好友或用户...">
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active">👥 全部好友</button>
+    <button class="tab-btn">📨 好友请求 <span class="tab-badge">2</span></button>
+    <button class="tab-btn">🔍 搜索结果</button>
+  </div>
+
+  <!-- All Friends -->
+  <div>
+    <div class="friend-card">
+      <div class="friend-avatar">W<span class="online-dot"></span></div>
+      <div class="friend-info">
+        <div class="friend-name">Wesley</div>
+        <div class="friend-bio">全栈工程师，热爱 React 和设计系统</div>
+      </div>
+      <div class="friend-meta">
+        <span class="friend-status online">🟢 在线</span>
+        <button class="btn btn-outline btn-sm">💬 聊天</button>
+      </div>
+    </div>
+    <div class="friend-card">
+      <div class="friend-avatar">J</div>
+      <div class="friend-info">
+        <div class="friend-name">Jane <span style="font-size:11px;color:rgba(255,255,255,0.2);">@jane_design</span></div>
+        <div class="friend-bio">UI/UX 设计师，专注暗色主题和动效设计</div>
+      </div>
+      <div class="friend-meta">
+        <span class="friend-status">离线</span>
+        <button class="btn btn-outline btn-sm">💬 聊天</button>
+      </div>
+    </div>
+    <div class="friend-card">
+      <div class="friend-avatar">T<span class="online-dot"></span></div>
+      <div class="friend-info">
+        <div class="friend-name">Tom</div>
+        <div class="friend-bio">后端开发者，Node.js / Python</div>
+      </div>
+      <div class="friend-meta">
+        <span class="friend-status online">🟢 在线</span>
+        <button class="btn btn-outline btn-sm">💬 聊天</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Requests (hidden, shown when tab active) -->
+  <div style="display:none;">
+    <div class="request-card">
+      <div class="req-avatar">M</div>
+      <div class="req-info">
+        <div class="req-name">Mike</div>
+        <div class="req-time">来自共同好友 Wesley</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-primary btn-sm">✓ 同意</button>
+        <button class="btn btn-outline btn-sm">✕ 拒绝</button>
+      </div>
+    </div>
+    <div class="request-card">
+      <div class="req-avatar">L</div>
+      <div class="req-info">
+        <div class="req-name">Lisa</div>
+        <div class="req-time">2 天前发送</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-primary btn-sm">✓ 同意</button>
+        <button class="btn btn-outline btn-sm">✕ 拒绝</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案四：Swiss Precision · 瑞士网格</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter',-apple-system,sans-serif;
+  background:#f5f4f2;color:#1a1a1a;
+  min-height:100vh;line-height:1.6;
+  font-weight:400;overflow-x:hidden;
+}
+.preview-badge{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  background:#fff;border:1px solid #e8e6e4;
+  padding:6px 20px;font-size:9px;letter-spacing:1.5px;
+  text-transform:uppercase;color:#9a9490;z-index:100;
+  font-weight:500;
+}
+
+/* 8px grid system */
+:root{--unit:8px}
+.g2{display:grid;grid-template-columns:repeat(12,1fr);gap:calc(var(--unit)*3)}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--unit)*4)}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:calc(var(--unit)*4)}
+
+/* Nav — Swiss minimal */
+.navbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:#f5f4f2;border-bottom:1px solid #e8e6e4;
+  padding:0 48px;height:64px;
+  display:flex;align-items:center;
+}
+.nav-inner{max-width:1200px;width:100%;margin:0 auto;display:flex;align-items:center}
+.nav-brand{
+  font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+  color:#1a1a1a;
+}
+.nav-links{margin-left:auto;display:flex;align-items:center;gap:0}
+.nav-btn{
+  padding:8px 16px;border:none;background:transparent;
+  color:#9a9490;font-size:11px;font-weight:500;cursor:pointer;
+  letter-spacing:1px;text-transform:uppercase;
+  transition:all 0.2s ease;border-radius:0;
+}
+.nav-btn:hover{color:#1a1a1a;background:#ecebe9}
+.nav-btn.primary{background:#1a1a1a;color:#f5f4f2;padding:8px 20px}
+.nav-btn.primary:hover{background:#333;color:#fff}
+.nav-user{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 12px 4px 4px;
+  background:#ecebe9;font-size:11px;color:#6b6663;font-weight:500;
+}
+.nav-user .avatar{
+  width:26px;height:26px;
+  background:#1a1a1a;color:#f5f4f2;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;
+}
+
+/* Level — Swiss badge */
+.level-display{
+  display:inline-flex;align-items:center;
+  padding:4px 12px;background:#ecebe9;font-size:11px;color:#6b6663;
+  gap:8px;
+}
+.level-display .lvl-badge{
+  width:24px;height:24px;background:#1a1a1a;color:#f5f4f2;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:600;
+}
+.level-display .lvl-name{color:#6b6663;font-weight:400}
+.level-display .lvl-points{color:#b0aba6;font-weight:400;font-size:10px}
+
+/* Hero — bold color block */
+.hero{
+  margin-top:64px;padding:80px 48px 64px;
+  background:#ed1c24; /* Swiss red */
+  color:#fff;
+  position:relative;
+}
+.hero-inner{max-width:1200px;margin:0 auto}
+.hero h1{
+  font-size:56px;font-weight:800;line-height:1;letter-spacing:-2px;
+  text-transform:uppercase;margin-bottom:20px;
+}
+.hero p{
+  font-size:13px;font-weight:400;letter-spacing:0.3px;
+  max-width:360px;opacity:0.7;line-height:1.8;
+}
+.hero-meta{display:flex;gap:32px;margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.15)}
+.hero-meta span{font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:0.5}
+
+/* Layout */
+.layout{max-width:1200px;margin:0 auto;padding:64px 48px 100px}
+
+/* Section header — rule line */
+.section-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:40px;padding-bottom:16px;
+  border-bottom:2px solid #1a1a1a;
+}
+.section-header h2{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#1a1a1a}
+.section-header .see-all{
+  font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;
+  color:#b0aba6;cursor:pointer;transition:all 0.2s ease;
+}
+.section-header .see-all:hover{color:#1a1a1a}
+
+/* Card — flat, no round corners */
+.card{
+  background:#fff;cursor:pointer;
+  transition:all 0.2s ease;
+}
+.card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.04)}
+
+.post-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:#e8e6e4}
+.post-card{background:#fff;padding:32px;display:flex;flex-direction:column}
+.post-card-img{
+  aspect-ratio:16/10;background:#f0efed;margin:-32px -32px 24px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;color:#ccc;
+}
+.post-card:first-child .post-card-img{background:#f0efed}
+.post-card:nth-child(2) .post-card-img{background:#eeebe9}
+.post-card:last-child .post-card-img{background:#e8e5e2}
+.post-card-category{
+  font-size:8px;letter-spacing:1.5px;text-transform:uppercase;
+  color:#ed1c24;font-weight:600;margin-bottom:8px;
+}
+.post-card-title{font-size:16px;font-weight:600;margin-bottom:8px;line-height:1.3;color:#1a1a1a}
+.post-card-desc{font-size:12px;color:#9a9490;line-height:1.7;flex:1}
+.post-card-footer{
+  margin-top:20px;padding-top:16px;
+  border-top:1px solid #f0efed;
+  display:flex;justify-content:space-between;
+}
+.tag{font-size:9px;letter-spacing:0.5px;color:#b0aba6;font-weight:500}
+.post-card-meta{font-size:10px;color:#ccc;font-weight:500}
+
+/* Detail */
+.detail-page{max-width:720px;margin:0 auto}
+.detail-cover{
+  width:100%;aspect-ratio:2.5/1;margin-bottom:40px;
+  background:#f0efed;display:flex;align-items:center;justify-content:center;font-size:48px;color:#ccc;
+}
+.detail-title{font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:16px;color:#1a1a1a}
+.detail-meta{
+  display:flex;gap:24px;font-size:11px;color:#b0aba6;
+  padding-bottom:20px;margin-bottom:32px;
+  border-bottom:1px solid #e8e6e4;
+}
+.detail-desc{
+  font-size:14px;color:#6b6663;line-height:2;margin-bottom:40px;
+}
+.content-block{
+  background:#fff;padding:28px;margin-bottom:16px;
+  border:1px solid #f0efed;
+}
+.content-block-label{
+  font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  color:#ed1c24;margin-bottom:12px;
+}
+.content-block pre{
+  background:#f5f4f2;color:#1a1a1a;padding:20px;
+  font-size:12px;font-family:'JetBrains Mono',monospace;
+}
+
+/* Reaction */
+.reaction-bar{
+  display:flex;gap:0;padding:20px 0;border-top:1px solid #e8e6e4;border-bottom:1px solid #e8e6e4;margin-bottom:40px;
+}
+.reaction-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 24px;border:1px solid #e8e6e4;background:#fff;
+  color:#9a9490;font-size:11px;font-weight:500;cursor:pointer;margin-right:-1px;
+  transition:all 0.2s ease;
+}
+.reaction-btn:hover{background:#f5f4f2;color:#1a1a1a;z-index:1}
+.reaction-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a;z-index:1}
+
+/* Comments */
+.comments-section{margin-top:48px}
+.comments-title{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:24px;color:#6b6663}
+.comment{display:flex;gap:14px;padding:20px 0;border-bottom:1px solid #f0efed}
+.comment-avatar{width:36px;height:36px;background:#f0efed;color:#b0aba6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.comment-body{flex:1}
+.comment-header{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.comment-author{font-size:12px;font-weight:600;color:#1a1a1a}
+.comment-date{font-size:10px;color:#ccc}
+.comment-content{font-size:12px;color:#9a9490;line-height:1.8}
+
+/* Footer */
+.footer{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:#f5f4f2;border-top:1px solid #e8e6e4;
+  padding:0 48px;height:56px;display:flex;align-items:center;
+}
+.footer-inner{max-width:1200px;width:100%;margin:0 auto;display:flex;align-items:center;justify-content:center}
+.footer-left{position:absolute;left:0}
+.footer-right{position:absolute;right:0}
+.mute-label{font-size:10px;color:#b0aba6;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s ease}
+.mute-label:hover{color:#1a1a1a}
+.music-player{display:flex;align-items:center;gap:12px}
+.music-cover{width:32px;height:32px;background:#e8e6e4}
+.music-song-name{font-size:11px;font-weight:500;color:#6b6663}
+.music-artist{font-size:9px;color:#b0aba6}
+.music-btn{background:transparent;border:none;color:#ccc;font-size:12px;cursor:pointer;padding:4px;transition:all 0.2s ease}
+.music-btn:hover{color:#1a1a1a}
+</style>
+</head>
+<body>
+<div class="preview-badge">方案四 · Swiss Precision 瑞士网格</div>
+<nav class="navbar"><div class="nav-inner">
+  <div class="nav-brand">Portfolio</div>
+  <div class="nav-links">
+    <span class="level-display"><span class="lvl-badge">12</span><div><span class="lvl-name">Lv.12</span> · <span class="lvl-points">2,480</span></div></span>
+    <button class="nav-btn">👥</button><button class="nav-btn">🌙</button>
+    <span class="nav-user"><span class="avatar">A</span><span>admin</span></span>
+    <button class="nav-btn">🔔</button><button class="nav-btn primary">退出</button>
+  </div>
+</div></nav>
+
+<div class="hero"><div class="hero-inner">
+  <h1>DESIGN × CODE</h1>
+  <p>每一次创作，都是对美与功能的重新思考。从像素到逻辑，从概念到落地。</p>
+  <div class="hero-meta"><span>Featured 2026</span><span>12 Works</span><span>Design & Dev</span></div>
+</div></div>
+
+<div class="layout">
+  <div class="section-header">
+    <h2>最新作品</h2>
+    <span class="see-all">View All →</span>
+  </div>
+  <div class="post-grid">
+    <div class="post-card card">
+      <div class="post-card-img">🎨</div>
+      <div class="post-card-category">Design</div>
+      <div class="post-card-title">品牌视觉识别系统</div>
+      <div class="post-card-desc">完整的品牌 VI 设计，涵盖 Logo、色彩体系与字体规范。</div>
+      <div class="post-card-footer"><span class="tag">设计 · 品牌</span><span class="post-card-meta">256</span></div>
+    </div>
+    <div class="post-card card">
+      <div class="post-card-img">⚛️</div>
+      <div class="post-card-category">Dev</div>
+      <div class="post-card-title">React 组件库架构</div>
+      <div class="post-card-desc">企业级组件库搭建，支持主题系统与按需加载。</div>
+      <div class="post-card-footer"><span class="tag">前端 · React</span><span class="post-card-meta">189</span></div>
+    </div>
+    <div class="post-card card">
+      <div class="post-card-img">📊</div>
+      <div class="post-card-category">Data</div>
+      <div class="post-card-title">数据可视化仪表盘</div>
+      <div class="post-card-desc">实时监控面板，拖拽布局，多图表联动。</div>
+      <div class="post-card-footer"><span class="tag">数据 · 可视化</span><span class="post-card-meta">143</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="layout" style="padding-top:0">
+  <hr style="border:none;border-top:1px solid #e8e6e4;margin-bottom:64px">
+
+  <div class="detail-page">
+    <div class="detail-cover">🎨</div>
+    <h1 class="detail-title">品牌视觉识别系统</h1>
+    <div class="detail-meta"><span>admin</span><span>2026.05.15</span><span>256 views</span><span>23 likes</span></div>
+    <p class="detail-desc">从策略定位到视觉落地，完整品牌 VI 输出。以「简洁 · 专业 · 记忆点」为核心。</p>
+    <div class="content-block">
+      <div class="content-block-label">Design Process</div>
+      <div style="font-size:13px;line-height:2;color:#9a9490;">在色彩选择上，采用深蓝搭配暖金来传递信赖感与品质感。字体选择了几何感强烈的无衬线体。</div>
+    </div>
+    <div class="content-block">
+      <div class="content-block-label">Implementation</div>
+      <pre>const tokens = {
+  primary:   '#1a1a1a',
+  accent:    '#ed1c24',
+  surface:   '#f5f4f2',
+  text:      '#1a1a1a'
+};</pre>
+    </div>
+    <div class="reaction-bar">
+      <button class="reaction-btn active">👍 23</button>
+      <button class="reaction-btn">👎 2</button>
+      <button class="reaction-btn">🔖 Bookmark</button>
+    </div>
+    <div class="comments-section">
+      <div class="comments-title">Comments (3)</div>
+      <div class="comment"><div class="comment-avatar">W</div><div class="comment-body"><div class="comment-header"><span class="comment-author">Wesley</span><span class="comment-date">2h ago</span></div><div class="comment-content">色彩搭配非常高级，金色点缀恰到好处。</div></div></div>
+      <div class="comment"><div class="comment-avatar">J</div><div class="comment-body"><div class="comment-header"><span class="comment-author">Jane</span><span class="comment-date">yesterday</span></div><div class="comment-content">字体选择方面有更多细节可以分享吗？</div></div></div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="footer-inner">
+  <div class="footer-left"><label class="mute-label">🔇 静音</label></div>
+  <div class="music-player"><div class="music-cover"></div><div><div class="music-song-name">起风了</div><div class="music-artist">买辣椒也用券</div></div><span style="display:flex;gap:2px;"><button class="music-btn">⏮</button><button class="music-btn" style="font-size:14px;">▶</button><button class="music-btn">⏭</button></span></div>
+  <div class="footer-right"><span style="font-size:9px;color:#ccc;">© 2026</span></div>
+</div></footer>
+</body>
+</html>
