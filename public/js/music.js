@@ -81,7 +81,6 @@ const MusicPlayer = {
   },
 
   // Sync the 'playing' indicator in the song list / playlist detail DOM
-  // so it stays in sync when next/prev changes the current song
   _updatePlayingIndicator() {
     // Remove 'playing' class and badge from all song items
     document.querySelectorAll('.music-song-item.playing').forEach(el => {
@@ -89,8 +88,12 @@ const MusicPlayer = {
       const badge = el.querySelector('.music-song-playing');
       if (badge) badge.remove();
     });
+    // Also remove from music-card
+    document.querySelectorAll('.music-card.playing').forEach(el => {
+      el.classList.remove('playing');
+    });
 
-    // Add 'playing' class and badge to the current song's item
+    // Add 'playing' class to the current song's item
     if (this.currentSong) {
       const item = document.querySelector(
         `.music-song-item[data-song-id="${this.currentSong.id}"]`
@@ -105,6 +108,9 @@ const MusicPlayer = {
           nameRow.appendChild(badge);
         }
       }
+      // Also highlight the music-card grid item
+      const card = document.querySelector(`.music-card[data-song-id="${this.currentSong.id}"]`);
+      if (card) card.classList.add('playing');
     }
   },
 
@@ -122,7 +128,6 @@ const MusicPlayer = {
   next() {
     if (this.queue.length === 0) return;
     if (this.mode === 'single') {
-      // Restart current
       this.audio.currentTime = 0;
       this.audio.play().catch(e => {});
       return;
@@ -132,7 +137,6 @@ const MusicPlayer = {
       if (this.mode === 'loop') {
         this.queueIndex = 0;
       } else {
-        // sequential: stop
         this.queueIndex = this.queue.length - 1;
         this.audio.pause();
         this.playing = false;
@@ -148,7 +152,6 @@ const MusicPlayer = {
   prev() {
     if (this.queue.length === 0) return;
     if (this.audio.currentTime > 3) {
-      // Just restart current song if >3 seconds in
       this.audio.currentTime = 0;
       return;
     }
@@ -160,125 +163,91 @@ const MusicPlayer = {
     this._loadAndPlay();
   },
 
-  _onEnded() {
-    if (this.mode === 'single') {
-      this.audio.currentTime = 0;
-      this.audio.play().catch(e => {});
-      return;
-    }
-    this.next();
+  setVolume(vol) {
+    this.volume = Math.max(0, Math.min(1, vol));
+    if (this.audio) this.audio.volume = this.volume;
+    this._saveState();
   },
 
-  setMode(mode) {
-    this.mode = mode;
-    this._renderPlayer();
-    this._saveState();
+  seekTo(pct) {
+    const duration = this.audio.duration || this.currentSong?.duration || 0;
+    if (duration > 0 && this.audio) {
+      this.audio.currentTime = (pct / 100) * duration;
+    }
   },
 
   cycleMode() {
     const modes = ['sequential', 'loop', 'single'];
     const idx = modes.indexOf(this.mode);
     this.mode = modes[(idx + 1) % modes.length];
-    var modeLabels = { sequential: '顺序', loop: '循环', single: '单曲' };
-    var modeCls = { sequential: 'mode-sequential', loop: 'mode-loop', single: 'mode-single' };
-    var btn = document.getElementById('music-mode-btn');
-    if (btn) {
-      btn.textContent = modeLabels[this.mode] || '顺序';
-      // Replace mode class
-      Object.values(modeCls).forEach(function(c) { btn.classList.remove(c); });
-      btn.classList.add(modeCls[this.mode]);
-      btn.title = '播放模式：' + (modeLabels[this.mode] || '顺序');
+    this._renderPlayer();
+    this._saveState();
+  },
+
+  _onEnded() {
+    if (this.queue.length > 0) {
+      this.next();
     }
-    this._saveState();
   },
 
-  setVolume(vol) {
-    this.volume = Math.max(0, Math.min(1, vol));
-    this.audio.volume = this.volume;
-    // Update slider DOM directly without full re-render
-    var slider = document.getElementById('music-volume');
-    if (slider) slider.value = Math.round(this.volume * 100);
-    this._saveState();
+  _fmtTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
   },
 
-  _updateProgress() {
-    const progressEl = document.getElementById('music-progress');
-    const currentEl = document.getElementById('music-current-time');
-    const totalEl = document.getElementById('music-total-time');
-    if (!progressEl) return;
-
-    const current = this.audio.currentTime || 0;
-    const duration = this.audio.duration || this.currentSong?.duration || 0;
-    const pct = duration > 0 ? (current / duration) * 100 : 0;
-    progressEl.value = pct;
-
-    if (currentEl) currentEl.textContent = this._fmtTime(current);
-    if (totalEl) totalEl.textContent = duration > 0 ? this._fmtTime(duration) : '--:--';
-  },
-
-  seekTo(pct) {
-    if (!this.audio || !this.audio.duration) return;
-    this.audio.currentTime = (pct / 100) * this.audio.duration;
-  },
-
-  _fmtTime(sec) {
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return m + ':' + String(s).padStart(2, '0');
-  },
-
-  // Save state to localStorage
   _saveState() {
     if (this._stateSaveTimer) clearTimeout(this._stateSaveTimer);
     this._stateSaveTimer = setTimeout(() => {
-      const state = {
-        currentSongId: this.currentSong?.id || null,
-        queueIds: this.queue.map(s => s.id),
-        queueIndex: this.queueIndex,
-        queueLabel: this.queueLabel,
-        mode: this.mode,
-        volume: this.volume
-      };
-      localStorage.setItem('music_player_state', JSON.stringify(state));
+      try {
+        const state = {
+          queueIds: this.queue.map(s => s.id).filter(Boolean),
+          queueIndex: this.queueIndex,
+          queueLabel: this.queueLabel,
+          currentSongId: this.currentSong ? this.currentSong.id : null,
+          volume: this.volume,
+          mode: this.mode
+        };
+        localStorage.setItem('music_player_state', JSON.stringify(state));
+      } catch (e) {}
     }, 500);
   },
 
-  // Restore state from localStorage
-  async _loadState() {
+  _loadState() {
     try {
       const raw = localStorage.getItem('music_player_state');
       if (!raw) return;
       const state = JSON.parse(raw);
+      if (state.volume !== undefined) this.volume = state.volume;
+      if (state.mode) this.mode = state.mode;
 
-      this.mode = state.mode || 'sequential';
-      this.volume = state.volume || 0.7;
-      this.audio.volume = this.volume;
-
-      // Try to restore queue by getting current user's songs
+      // Try to restore queue from song IDs
       if (state.queueIds && state.queueIds.length > 0 && state.currentSongId) {
-        try {
-          const data = await API.getMySongs();
-          const allSongs = data.songs || [];
-          const restoredQueue = state.queueIds
-            .map(id => allSongs.find(s => s.id === id))
-            .filter(Boolean);
+        (async () => {
+          try {
+            const data = await API.getMySongs();
+            const allSongs = data.songs || [];
+            const restoredQueue = state.queueIds
+              .map(id => allSongs.find(s => s.id === id))
+              .filter(Boolean);
 
-          if (restoredQueue.length > 0) {
-            this.queue = restoredQueue;
-            this.queueLabel = state.queueLabel || '';
-            const idx = Math.max(0, Math.min(state.queueIndex || 0, restoredQueue.length - 1));
-            this.queueIndex = idx;
-            this.currentSong = restoredQueue[idx];
+            if (restoredQueue.length > 0) {
+              this.queue = restoredQueue;
+              this.queueLabel = state.queueLabel || '';
+              const idx = Math.max(0, Math.min(state.queueIndex || 0, restoredQueue.length - 1));
+              this.queueIndex = idx;
+              this.currentSong = restoredQueue[idx];
 
-            // Preload but don't autoplay
-            this.audio.src = this.currentSong.file_url;
-            this._renderPlayer();
-          } else {
-            localStorage.removeItem('music_player_state');
+              // Preload but don't autoplay
+              this.audio.src = this.currentSong.file_url;
+              this._renderPlayer();
+            } else {
+              localStorage.removeItem('music_player_state');
+            }
+          } catch (e) {
+            // Songs not available (not logged in, etc.)
           }
-        } catch (e) {
-          // Songs not available (not logged in, etc.)
-        }
+        })();
       }
     } catch (e) {
       // Invalid state
@@ -297,41 +266,38 @@ const MusicPlayer = {
     var playingClass = this.playing ? ' playing' : '';
     var modeCls = 'mode-' + this.mode;
     container.innerHTML = [
-      '<div class="music-player' + playingClass + '" id="music-player">',
-      '  <div class="music-cover" style="position:relative;">',
+      '<div class="now-playing' + playingClass + '" id="music-player">',
+      '  <div class="now-inner">',
+      '    <div class="np-cover">',
       song && song.cover_url
         ? '<img src="' + escapeHtml(song.cover_url) + '" alt="">'
-        : '<span class="music-cover-icon">&#9835;</span>',
-      '    <div class="music-equalizer"><span></span><span></span><span></span><span></span></div>',
-      '  </div>',
-      '  <div class="music-info">',
-      '    <div class="music-song-name" title="' + (song ? escapeHtml(song.name) + (song.artist ? ' - ' + escapeHtml(song.artist) : '') : '') + '">',
+        : '<span style="opacity:0.5;">&#9835;</span>',
+      '      <div class="music-equalizer"><span></span><span></span><span></span><span></span></div>',
+      '    </div>',
+      '    <div class="np-info">',
+      '      <div class="np-title" title="' + (song ? escapeHtml(song.name) + (song.artist ? ' - ' + escapeHtml(song.artist) : '') : '') + '">',
       (song ? escapeHtml(song.name) : '未选择歌曲'),
+      '      </div>',
+      (song && song.artist ? '<div class="np-artist">' + escapeHtml(song.artist) + '</div>' : ''),
+      (!song ? '<div class="np-artist">从音乐库中选择歌曲播放</div>' : ''),
       '    </div>',
-      (song && song.artist ? '<div class="music-artist">' + escapeHtml(song.artist) + '</div>' : ''),
-      (!song ? '<div class="music-artist">从音乐库中选择歌曲播放</div>' : ''),
-      '  </div>',
-      '  <div class="music-controls">',
-      '    <button class="music-btn music-mode-btn ' + modeCls + '" id="music-mode-btn" title="播放模式：' + modeLabel + '">' + modeLabel + '</button>',
-      '    <button class="music-btn" id="music-prev-btn" title="上一首"' + (this.queue.length <= 1 ? ' disabled' : '') + '>|<</button>',
-      '    <button class="music-btn music-play-btn" id="music-play-btn" title="' + (this.playing ? '暂停' : '播放') + '">',
-      (this.playing ? '||' : '&#9654;'),
-      '    </button>',
-      '    <button class="music-btn" id="music-next-btn" title="下一首"' + (this.queue.length <= 1 ? ' disabled' : '') + '>>|</button>',
-      '    <div class="music-volume-wrap">',
-      '      <span class="music-volume-icon">&#9834;</span>',
-      '      <input type="range" class="music-volume-slider" id="music-volume" min="0" max="100" value="' + Math.round(this.volume * 100) + '" title="音量">',
+      '    <div class="np-progress"><div class="np-progress-bar" id="np-progress-bar" style="width:0%;"></div></div>',
+      '    <div class="np-controls">',
+      '      <button class="np-btn np-mode ' + modeCls + '" id="music-mode-btn" title="播放模式：' + modeLabel + '">' + modeLabel + '</button>',
+      '      <button class="np-btn" id="music-prev-btn" title="上一首"' + (this.queue.length <= 1 ? ' disabled' : '') + '>⏮</button>',
+      '      <button class="np-play" id="music-play-btn" title="' + (this.playing ? '暂停' : '播放') + '">',
+      (this.playing ? '⏸' : '▶'),
+      '      </button>',
+      '      <button class="np-btn" id="music-next-btn" title="下一首"' + (this.queue.length <= 1 ? ' disabled' : '') + '>⏭</button>',
       '    </div>',
-      '  </div>',
-      '  <div class="music-progress-wrap">',
-      '    <span class="music-time" id="music-current-time">0:00</span>',
-      '    <input type="range" class="music-progress-bar" id="music-progress" min="0" max="100" value="0" title="进度">',
-      '    <span class="music-time" id="music-total-time">--:--</span>',
+      '    <div class="np-volume">',
+      '      <span style="font-size:14px;color:rgba(255,255,255,0.3);">🔊</span>',
+      '      <input type="range" id="music-volume" min="0" max="100" value="' + Math.round(this.volume * 100) + '" title="音量">',
+      '    </div>',
       '  </div>',
       '</div>'
     ].join('');
 
-    // Bind events on the newly rendered player
     this._bindPlayerEvents();
   },
 
@@ -341,7 +307,6 @@ const MusicPlayer = {
     const nextBtn = document.getElementById('music-next-btn');
     const modeBtn = document.getElementById('music-mode-btn');
     const volumeSlider = document.getElementById('music-volume');
-    const progressBar = document.getElementById('music-progress');
 
     if (playBtn) {
       playBtn.addEventListener('click', () => this.togglePlay());
@@ -360,25 +325,16 @@ const MusicPlayer = {
         this.setVolume(parseInt(e.target.value) / 100);
       });
     }
-    if (progressBar) {
-      let seeking = false;
-      progressBar.addEventListener('mousedown', () => { seeking = true; });
-      progressBar.addEventListener('mouseup', (e) => {
-        if (seeking) {
-          this.seekTo(parseInt(e.target.value));
-          seeking = false;
-        }
-      });
-      progressBar.addEventListener('input', (e) => {
-        if (seeking) return;
-        this.seekTo(parseInt(e.target.value));
-      });
-      // Mobile touch support
-      progressBar.addEventListener('touchstart', () => { seeking = true; });
-      progressBar.addEventListener('touchend', (e) => {
-        if (seeking) {
-          this.seekTo(parseInt(e.target.value));
-          seeking = false;
+    // Click on progress bar to seek
+    const progressWrap = document.querySelector('.np-progress');
+    if (progressWrap) {
+      progressWrap.addEventListener('click', (e) => {
+        const rect = progressWrap.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const pct = Math.max(0, Math.min(1, x / rect.width));
+        const duration = this.audio.duration || this.currentSong?.duration || 0;
+        if (duration > 0) {
+          this.seekTo(pct * 100);
         }
       });
     }

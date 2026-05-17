@@ -548,7 +548,9 @@
       "Bash(bash scripts/snapshot.sh \"音乐重构前备份\")",
       "Bash(curl -s http://localhost:3000/css/components/music.css)",
       "Bash(curl -s http://localhost:3000/js/components/musicLibrary.js)",
-      "Bash(bash scripts/snapshot.sh \"播放器重构前备份\")"
+      "Bash(bash scripts/snapshot.sh \"播放器重构前备份\")",
+      "Bash(curl -s http://localhost:3000/js/music.js)",
+      "Bash(bash scripts/snapshot.sh \"底部播放器优化：now-playing+np-*样式\")"
     ]
   }
 }
