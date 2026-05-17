@@ -527,7 +527,9 @@
       "Bash(curl -s http://localhost:3000/js/components/bookmarks.js)",
       "Bash(bash scripts/snapshot.sh \"收藏夹优化完成：卡片+项列表样式\")",
       "Bash(curl -s http://localhost:3000/js/components/postDetail.js)",
-      "Bash(bash scripts/snapshot.sh \"帖子详情优化：返回链接+meta标签+admin-actions类\")"
+      "Bash(bash scripts/snapshot.sh \"帖子详情优化：返回链接+meta标签+admin-actions类\")",
+      "Bash(curl -s http://localhost:3000/js/components/postEditor.js)",
+      "Bash(bash scripts/snapshot.sh \"编辑器优化：卡片布局+标签芯片+block-item结构\")"
     ]
   }
 }

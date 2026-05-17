@@ -7,18 +7,17 @@ var ComponentsPostEditor = {
   _renderEditor: function(title, post, category) {
     var isEdit = !!post, self = this;
     var cat = category || (post ? post.category : 'work');
-    var editorHtml = '<div class="page-fade-in"><div class="post-editor" style="max-width:800px;margin:0 auto;padding:20px 16px;">' +
-      '<h2 style="font-size:22px;font-weight:700;margin-bottom:20px;">' + escapeHtml(title) + '</h2>' +
-      '<div class="form-group"><label class="form-label">标题 <span style="color:var(--error);">*</span></label><input class="form-input" id="editor-title" value="' + escapeHtml(post ? post.title : '') + '" placeholder="请输入标题"></div>' +
+    var editorHtml = '<div class="page-fade-in"><div class="editor-page"><div class="editor-page-header"><h1>' + escapeHtml(title) + '</h1></div><div class="editor-card">' +
+      '<div class="form-group"><label class="form-label">标题 <span style="color:var(--error);">*</span></label><input class="form-input" id="editor-title" value="' + escapeHtml(post ? post.title : '') + '" placeholder="输入作品标题..."></div>' +
       '<div class="form-group"><label class="form-label">简介</label><textarea class="form-textarea" id="editor-desc" rows="2" placeholder="简要描述">' + escapeHtml(post ? (post.description || '') : '') + '</textarea></div>' +
-      '<div class="form-group"><label class="form-label">标签（逗号分隔）</label><input class="form-input" id="editor-tags" value="' + escapeHtml(post ? (post.tags || '') : '') + '" placeholder="例如: javascript,nodejs"></div>' +
-      '<div class="form-group"><label class="form-label">封面图片</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><button class="btn btn-sm btn-outline" id="editor-upload-cover-btn">📁 选择图片</button><input type="file" id="editor-cover-file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><span id="editor-cover-name" style="font-size:13px;color:var(--text-secondary);">' + (post && post.cover_url ? '已有封面' : '未选择') + '</span><button class="btn btn-sm btn-outline" id="editor-remove-cover-btn"' + (post && post.cover_url ? '' : ' style="display:none;"') + '>✕ 移除</button></div></div>' +
-      '<div class="form-group" id="editor-cover-preview"' + (post && post.cover_url ? '' : ' style="display:none;"') + '>' + (post && post.cover_url ? '<img src="' + post.cover_url + '" style="max-width:200px;max-height:120px;border-radius:8px;object-fit:cover;">' : '') + '</div>' +
-      '<div class="form-group" style="' + (cat === 'chat' ? '' : 'display:none;') + '"><label class="form-label">分类</label><select class="form-input" id="editor-category"><option value="work"' + (cat === 'work' ? ' selected' : '') + '>📂 作品区</option><option value="chat"' + (cat === 'chat' ? ' selected' : '') + '>💬 聊天区</option></select></div>' +
-      '<div style="margin:20px 0;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h3 style="font-size:16px;font-weight:600;">📝 内容块</h3><div style="display:flex;gap:4px;"><button class="btn btn-sm btn-outline add-block-btn" data-type="text">➕ 文本</button><button class="btn btn-sm btn-outline add-block-btn" data-type="image">🖼 图片</button><button class="btn btn-sm btn-outline add-block-btn" data-type="video">🎬 视频</button><button class="btn btn-sm btn-outline add-block-btn" data-type="code">💻 代码</button><button class="btn btn-sm btn-outline add-block-btn" data-type="file">📎 附件</button></div></div>' +
-      '<div id="editor-blocks-list">' + self._renderEditorBlocks() + '</div></div>' +
-      '<div style="display:flex;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);"><button class="btn btn-primary" id="editor-save-btn">💾 ' + (isEdit ? '保存修改' : '发布') + '</button><button class="btn btn-outline" id="editor-cancel-btn">取消</button></div></div></div>';
+      '<div class="form-group"><label class="form-label">标签</label><div class="tag-input-wrap"><input class="form-input" id="editor-tag-input" type="text" placeholder="输入标签后添加..." value=""><button class="btn btn-outline btn-sm" id="editor-add-tag-btn" style="padding:10px 20px;">添加</button></div><div class="tag-chips" id="editor-tag-chips"></div></div>' +
+      '<div class="form-group" id="editor-cat-group" style="' + (cat === 'chat' ? '' : 'display:none;') + '"><label class="form-label">分类</label><select class="form-input form-select" id="editor-category"><option value="work"' + (cat === 'work' ? ' selected' : '') + '>📂 作品区</option><option value="chat"' + (cat === 'chat' ? ' selected' : '') + '>💬 聊天区</option></select></div>' +
+      '<div class="form-group"><label class="form-label">封面图片</label><div class="cover-upload-row"><button class="btn btn-outline btn-sm" id="editor-upload-cover-btn">📁 选择图片</button><input type="file" id="editor-cover-file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><span class="cover-name" id="editor-cover-name">' + (post && post.cover_url ? '已有封面' : '未选择') + '</span><button class="btn btn-outline btn-sm" id="editor-remove-cover-btn"' + (post && post.cover_url ? '' : ' style="display:none;"') + '>✕ 移除</button></div></div>' +
+      '<div class="cover-preview" id="editor-cover-preview"' + (post && post.cover_url ? '' : ' style="display:none;"') + '>' + (post && post.cover_url ? '<img src="' + post.cover_url + '">' : '') + '</div>' +
+      '<div style="margin:24px 0 16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><h3 style="font-size:16px;font-weight:600;">📝 内容块</h3></div><div id="editor-blocks-list">' + self._renderEditorBlocks() + '</div><div class="add-block-bar"><button class="add-block-btn" data-type="text">➕ 文本</button><button class="add-block-btn" data-type="image">🖼 图片</button><button class="add-block-btn" data-type="video">🎬 视频</button><button class="add-block-btn" data-type="code">💻 代码</button><button class="add-block-btn" data-type="file">📎 附件</button></div></div>' +
+      '<div class="editor-actions"><button class="btn btn-primary" id="editor-save-btn">💾 ' + (isEdit ? '保存修改' : '发布') + '</button><button class="btn btn-outline" id="editor-cancel-btn">取消</button></div></div></div></div>';
     document.getElementById('app').innerHTML = editorHtml;
+    this._initEditorTags(post);
     this._bindEditorEvents(isEdit, post);
   },
 
@@ -29,13 +28,13 @@ var ComponentsPostEditor = {
     var h = '';
     for (var i = 0; i < this.editorBlocks.length; i++) {
       var b = this.editorBlocks[i];
-      h += '<div class="editor-block" data-index="' + i + '" style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;background:var(--bg-card);">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span class="editor-block-type" style="font-weight:600;font-size:13px;color:var(--text-secondary);">' +
-        (b.type === 'text' ? '📝 文本' : b.type === 'image' ? '🖼 图片' : b.type === 'video' ? '🎬 视频' : b.type === 'code' ? '💻 代码' : '📎 附件') +
-        '</span><div style="display:flex;gap:4px;">' +
-        '<button class="btn btn-sm btn-outline editor-move-up-btn" data-index="' + i + '"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
-        '<button class="btn btn-sm btn-outline editor-move-down-btn" data-index="' + i + '"' + (i === this.editorBlocks.length - 1 ? ' disabled' : '') + '>↓</button>' +
-        '<button class="btn btn-sm btn-outline editor-remove-block-btn" data-index="' + i + '" style="color:var(--error);">✕</button></div></div>' +
+      var typeName = b.type === 'text' ? '📝 文本' : b.type === 'image' ? '🖼 图片' : b.type === 'video' ? '🎬 视频' : b.type === 'code' ? '💻 代码' : '📎 附件';
+      h += '<div class="editor-block-wrap" data-index="' + i + '">' +
+        '<div class="editor-block-header"><span class="block-type-badge ' + b.type + '">' + typeName + '</span>' +
+        '<div class="block-actions">' +
+        '<button class="editor-move-up-btn" data-index="' + i + '"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+        '<button class="editor-move-down-btn" data-index="' + i + '"' + (i === this.editorBlocks.length - 1 ? ' disabled' : '') + '>↓</button>' +
+        '<button class="delete-btn editor-remove-block-btn" data-index="' + i + '">✕</button></div></div>' +
         this._renderEditorBlockContent(b, i) + '</div>';
     }
     return h;
@@ -57,25 +56,63 @@ var ComponentsPostEditor = {
       var fileName = b.attachment_name || '';
       var fileSize = b.attachment_size ? formatFileSize(b.attachment_size) : '';
       var hasFile = !!b.attachment_file_id;
-      var fileInfo = hasFile ? '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;padding:8px;background:var(--bg);border-radius:6px;display:flex;align-items:center;gap:8px;"><span>📎 ' + escapeHtml(fileName) + (fileSize ? ' (' + fileSize + ')' : '') + '</span><button class="btn btn-sm btn-outline editor-remove-attach-btn" data-index="' + i + '" style="color:var(--error);font-size:12px;padding:2px 8px;" title="移除附件">✕</button></div>' : '';
+      var fileInfo = hasFile ? '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;padding:8px;background:rgba(0,0,0,0.2);border-radius:6px;display:flex;align-items:center;gap:8px;"><span>📎 ' + escapeHtml(fileName) + (fileSize ? ' (' + fileSize + ')' : '') + '</span><button class="btn btn-sm btn-outline editor-remove-attach-btn" data-index="' + i + '" style="color:var(--error);font-size:12px;padding:2px 8px;" title="移除附件">✕</button></div>' : '';
       return '<div>' + fileInfo +
         '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">' +
         '<button class="btn btn-sm btn-outline editor-attach-btn" data-index="' + i + '">' + (hasFile ? '🔄 替换附件' : '📁 上传附件') + '</button>' +
         '<input type="file" class="editor-attach-input" data-index="' + i + '" style="display:none;">' +
         '<span class="editor-attach-name" data-index="' + i + '" style="font-size:13px;color:var(--text-secondary);">' + (hasFile ? fileName : '未选择文件') + '</span></div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px;">' +
-        '<div style="flex:1;min-width:100px;"><label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:2px;">最低查看等级</label>' +
-        '<input type="number" class="form-input editor-min-level" data-index="' + i + '" value="' + (b.min_level_view || 0) + '" min="0" style="width:100%;font-size:13px;"></div>' +
-        '<div style="flex:1;min-width:100px;"><label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:2px;">积分解锁</label>' +
-        '<input type="number" class="form-input editor-unlock-points" data-index="' + i + '" value="' + (b.unlock_points || 0) + '" min="0" style="width:100%;font-size:13px;"></div>' +
-        '<div style="flex:1;min-width:100px;"><label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:2px;">积分下载</label>' +
-        '<input type="number" class="form-input editor-download-points" data-index="' + i + '" value="' + (b.download_points || 0) + '" min="0" style="width:100%;font-size:13px;"></div></div>' + previewCb + '</div>';
+        '<div class="editor-attach-settings"><div class="editor-attach-row">' +
+        '<div class="editor-attach-field"><label>最低等级</label>' +
+        '<input type="number" class="editor-min-level" data-index="' + i + '" value="' + (b.min_level_view || 0) + '" min="0"></div>' +
+        '<div class="editor-attach-field"><label>积分解锁</label>' +
+        '<input type="number" class="editor-unlock-points" data-index="' + i + '" value="' + (b.unlock_points || 0) + '" min="0"></div>' +
+        '<div class="editor-attach-field"><label>积分下载</label>' +
+        '<input type="number" class="editor-download-points" data-index="' + i + '" value="' + (b.download_points || 0) + '" min="0"></div></div></div>' + previewCb + '</div>';
     }
     return '';
   },
 
+  _initEditorTags: function(post) {
+    this._editorTags = [];
+    if (post && post.tags) {
+      this._editorTags = post.tags.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+    }
+    this._renderTagChips();
+  },
+
+  _renderTagChips: function() {
+    var container = document.getElementById('editor-tag-chips');
+    if (!container) return;
+    var self = this;
+    container.innerHTML = this._editorTags.map(function(t) {
+      return '<span class="tag-chip-item">' + escapeHtml(t) + '<button class="tag-chip-remove" data-tag="' + escapeHtml(t) + '">×</button></span>';
+    }).join('');
+    container.querySelectorAll('.tag-chip-remove').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var tag = this.dataset.tag;
+        self._editorTags = self._editorTags.filter(function(t) { return t !== tag; });
+        self._renderTagChips();
+      });
+    });
+  },
+
   _bindEditorEvents: function(isEdit, post) {
     var self = this, coverFileId = post ? (post.cover_file_id || null) : null;
+
+    // Tag add
+    document.getElementById('editor-add-tag-btn').addEventListener('click', function() {
+      var input = document.getElementById('editor-tag-input');
+      var tag = input.value.trim();
+      if (!tag) { showToast('请输入标签名', 'warning'); return; }
+      if (self._editorTags.indexOf(tag) !== -1) { showToast('标签已存在', 'warning'); return; }
+      self._editorTags.push(tag);
+      input.value = '';
+      self._renderTagChips();
+    });
+    document.getElementById('editor-tag-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); document.getElementById('editor-add-tag-btn').click(); }
+    });
     document.getElementById('editor-cancel-btn').addEventListener('click', function() { Router.navigate(isEdit ? '#/posts/' + post.id : '#/works'); });
     document.querySelectorAll('.add-block-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -116,7 +153,7 @@ var ComponentsPostEditor = {
       var title = document.getElementById('editor-title').value.trim();
       if (!title) { showToast('请输入标题', 'warning'); document.getElementById('editor-title').focus(); return; }
       var desc = document.getElementById('editor-desc').value.trim();
-      var tags = document.getElementById('editor-tags').value.trim();
+      var tags = self._editorTags.join(',');
       var category = document.getElementById('editor-category') ? document.getElementById('editor-category').value : (post ? post.category : 'work');
       self._syncEditorBlocks();
       if (self.editorBlocks.length === 0) { showToast('请至少添加一个内容块', 'warning'); return; }

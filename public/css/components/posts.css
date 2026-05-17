@@ -613,6 +613,168 @@
 }
 
 
+/* ===== Editor Page Header ===== */
+
+.editor-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-top: 20px;
+}
+.editor-page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* ===== Editor Actions ===== */
+
+.editor-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ===== Tag Input UI (Editor) ===== */
+
+.tag-input-wrap {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tag-input-wrap .form-input {
+  flex: 1;
+}
+.tag-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.tag-chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: rgba(163,230,53,0.06);
+  border: 1px solid rgba(163,230,53,0.08);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.tag-chip-remove {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.3);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.tag-chip-remove:hover {
+  background: rgba(239,68,68,0.3);
+  color: #fff;
+}
+
+/* ===== Cover Upload ===== */
+
+.cover-upload-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cover-upload-row .cover-name {
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+}
+.cover-preview {
+  margin-top: 12px;
+}
+.cover-preview img {
+  max-width: 200px;
+  max-height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+/* ===== Editor Block ===== */
+
+.editor-block-wrap {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+.editor-block-wrap:hover {
+  border-color: rgba(163,230,53,0.06);
+}
+.editor-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+.editor-block-type {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+/* Attachment settings inline in editor */
+.editor-attach-settings {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 10px;
+}
+.editor-attach-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.editor-attach-field {
+  flex: 1;
+  min-width: 100px;
+}
+.editor-attach-field label {
+  display: block;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.editor-attach-field input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  color: #e4e4ec;
+  font-size: 12px;
+  outline: none;
+}
+.editor-attach-field input:focus {
+  border-color: rgba(163,230,53,0.12);
+}
+
+
 /* ===== Attachment Styles ===== */
 
 .attach-settings {
