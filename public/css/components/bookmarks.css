@@ -1,0 +1,297 @@
+/* ===== Bookmarks Page ===== */
+
+.bm-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ===== Page Header ===== */
+
+.bm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-top: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.bm-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ===== Create Collection Bar ===== */
+
+.bm-create-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  align-items: center;
+}
+.bm-create-bar .form-input {
+  flex: 1;
+  max-width: 320px;
+}
+
+/* ===== Collection List ===== */
+
+.bm-collections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ===== Collection Card ===== */
+
+.bm-card {
+  background: linear-gradient(135deg, rgba(23,23,23,0.9), rgba(41,37,36,0.85));
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+.bm-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(163,230,53,0.06);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+}
+.bm-card.active {
+  border-color: rgba(163,230,53,0.1);
+  cursor: default;
+}
+.bm-card.active:hover {
+  transform: none;
+}
+
+/* ===== Collection Card Header ===== */
+
+.bm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  gap: 12px;
+}
+.bm-card-name {
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bm-card-count {
+  font-size: 13px;
+  color: rgba(255,255,255,0.35);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bm-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.bm-card-action {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.15);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.bm-card-action:hover {
+  color: rgba(239,68,68,0.6);
+  background: rgba(239,68,68,0.06);
+}
+
+/* ===== Collection Description ===== */
+
+.bm-card-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+/* ===== Preview Thumbnails ===== */
+
+.bm-preview {
+  display: flex;
+  gap: 8px;
+}
+.bm-preview-item {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: border-color 0.2s;
+}
+.bm-preview-item.more {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.25);
+}
+
+/* ===== Items List (inside active card) ===== */
+
+.bm-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 16px;
+  border: 1px solid rgba(255,255,255,0.02);
+}
+.bm-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.bm-item:not(:last-child) {
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+.bm-item:hover {
+  background: rgba(163,230,53,0.03);
+}
+.bm-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: rgba(163,230,53,0.04);
+  flex-shrink: 0;
+}
+.bm-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.bm-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e4e4ec;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bm-item-meta {
+  font-size: 12px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 2px;
+}
+.bm-item-del {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.15);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+.bm-item:hover .bm-item-del {
+  opacity: 1;
+}
+.bm-item-del:hover {
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+}
+
+/* ===== Batch Delete Bar ===== */
+
+.bm-batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(23,23,23,0.5);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 10px;
+  margin-top: 12px;
+}
+
+/* ===== Items Area (outside card, for pagination) ===== */
+
+.bm-items-area {
+  margin-top: 20px;
+}
+
+/* ===== Pagination ===== */
+
+.bm-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 0 4px;
+}
+.bm-pagination .page-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.04);
+  background: transparent;
+  color: rgba(255,255,255,0.3);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.bm-pagination .page-btn:hover:not(:disabled) {
+  border-color: rgba(163,230,53,0.08);
+  color: var(--primary);
+}
+.bm-pagination .page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.bm-pagination .page-info {
+  font-size: 13px;
+  color: rgba(255,255,255,0.2);
+}
+
+/* ===== Empty State ===== */
+
+.bm-empty {
+  text-align: center;
+  padding: 80px 20px;
+}
+.bm-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.3;
+}
+.bm-empty-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.2);
+}
+
+/* ===== No Collections ===== */
+
+.bm-no-cols {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(255,255,255,0.2);
+  font-size: 14px;
+}

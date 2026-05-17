@@ -522,7 +522,10 @@
       "Bash(curl -s http://localhost:3000/css/components/footer.css)",
       "Bash(curl -s http://localhost:3000/css/components/admin.css)",
       "Bash(bash scripts/snapshot.sh \"CSS重构完成：暗色动效主题实施\")",
-      "Bash(bash scripts/snapshot.sh \"收藏夹优化前：bookmarks 重构前状态\")"
+      "Bash(bash scripts/snapshot.sh \"收藏夹优化前：bookmarks 重构前状态\")",
+      "Bash(curl -s http://localhost:3000/css/components/bookmarks.css)",
+      "Bash(curl -s http://localhost:3000/js/components/bookmarks.js)",
+      "Bash(bash scripts/snapshot.sh \"收藏夹优化完成：卡片+项列表样式\")"
     ]
   }
 }
