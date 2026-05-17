@@ -535,7 +535,10 @@
       "Bash(curl -s http://localhost:3000/js/components/postList.js)",
       "Bash(grep -o \"span class='\\\\\\\\\\\\\\\\\\\\\"tag\\\\\\\\\\\\\\\\\\\\\"'\")",
       "Bash(grep -o \"class=\\\\\\\\\\\\\\\\\".stat\\\\\\\\\\\\\\\\\"\")",
-      "Bash(bash scripts/snapshot.sh \"作品区优化：tag/stats/stat类+overlay+我的作品\")"
+      "Bash(bash scripts/snapshot.sh \"作品区优化：tag/stats/stat类+overlay+我的作品\")",
+      "Bash(curl -s http://localhost:3000/css/components/chat.css)",
+      "Bash(curl -s http://localhost:3000/js/components/chat.js)",
+      "Bash(bash scripts/snapshot.sh \"聊天界面优化：CSS class替代inline style\")"
     ]
   }
 }

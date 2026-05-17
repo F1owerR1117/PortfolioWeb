@@ -133,6 +133,93 @@
   align-self: flex-end;
 }
 
+/* ===== Send Button ===== */
+
+.chat-send-btn {
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  align-self: flex-end;
+  flex-shrink: 0;
+}
+.chat-send-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(163,230,53,0.1);
+}
+.chat-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ===== Chat Avatar ===== */
+
+.chat-avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  object-fit: cover;
+  cursor: pointer;
+}
+.chat-avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #a3e635, #65a30d);
+  color: #0a0a0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ===== Online Dot ===== */
+
+.chat-online-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex-shrink: 0;
+}
+.chat-online-dot.online {
+  background: #22c55e;
+}
+.chat-online-dot.banned {
+  background: #ef4444;
+}
+
+/* ===== Back Button ===== */
+
+.chat-back-btn {
+  padding: 7px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.chat-back-btn:hover {
+  border-color: rgba(163,230,53,0.08);
+  color: var(--primary);
+}
+
 @media (max-width: 600px) {
   .friend-actions { flex-direction: column; gap: 4px; }
   .chat-page { height: calc(100vh - 140px); border-radius: 0; border: none; }
