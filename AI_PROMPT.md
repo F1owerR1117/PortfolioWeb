@@ -1,13 +1,15 @@
 
 # AI Prompt: 复现个人作品集网站 (Portfolio)
 
-> 使用以下提示词可让 AI 完整复刻本项目——一个基于 Node.js + Express + SQL.js (SQLite) 的个人作品集管理系统，前后端分离的 SPA 应用。
+> ⚠️ **编码前必读**：本项目有严格的编码规范，请先阅读 `CONVENTIONS.md`。所有 require 必须在文件顶部、路由禁止直接写 SQL、迁移必须版本化。
+
+> 使用以下提示词可让 AI 完整复刻本项目——一个基于 Node.js + Express + better-sqlite3 (SQLite) 的个人作品集管理系统，前后端分离的 SPA 应用。
 
 ---
 
 ## 项目概述
 
-你是一个全栈工程师，需要创建一个完整的个人作品集网站。项目使用 **Node.js + Express** 作为后端，**sql.js（浏览器版 SQLite）** 作为数据库，前端为 **纯 JavaScript SPA（无框架）**。项目包含用户系统（管理员/普通用户）、作品（帖子）管理、评论/通知/好友/私信、音乐播放器、等级系统、收藏夹、举报系统等功能。
+你是一个全栈工程师，需要创建一个完整的个人作品集网站。项目使用 **Node.js + Express** 作为后端，**better-sqlite3（原生 SQLite 驱动）** 作为数据库，前端为 **纯 JavaScript SPA（无框架）**。项目包含用户系统（管理员/普通用户）、作品（帖子）管理、评论/通知/好友/私信、音乐播放器、等级系统、收藏夹、举报系统等功能。
 
 ## 目录结构
 
@@ -84,7 +86,7 @@ portfolio/
     "dotenv": "^16.3.1",
     "uuid": "^9.0.0",
     "mime-types": "^2.1.35",
-    "sql.js": "^1.10.0"
+    "better-sqlite3": "^12.0.0"
   }
 }
 ```
@@ -108,7 +110,7 @@ DB_PATH=./database.db
 
 ## 第三步：数据库层 — `db/init.js`
 
-使用 sql.js 的内存数据库，周期性持久化到磁盘。
+使用 better-sqlite3 原生驱动，WAL 模式实时写盘。
 
 **关键数据结构：**
 - **users**: id, username, password(bcrypt), role('user'|'admin'), created_at, is_banned, banned_until, ban_reason, level, xp, points, coins
@@ -137,7 +139,7 @@ DB_PATH=./database.db
 
 **实现要点：**
 
-1. 使用 `initSqlJs()` 初始化 sql.js
+1. 使用 `new Database(dbPath)` 打开或创建数据库文件
 2. 如果 `database.db` 存在则加载，否则新建
 3. 启用 WAL 模式和外键约束
 4. 创建所有表，含兼容性迁移（ALTER TABLE ADD COLUMN 用 try-catch 包裹）
@@ -148,8 +150,8 @@ DB_PATH=./database.db
    - `get(sql, params)` / `getFirst(sql, params)` — 查单行
    - `all(sql, params)` — 查多行
    - `forceSave()` — 立即持久化
-   - `addXP(userId, amount)` — 增加经验值并处理升级
-8. 每 2 秒自动保存一次，进程退出时也保存
+   - XP/等级升级逻辑已独立到 `services/LevelService.js` → `addXP(userId, amount)`
+8. better-sqlite3 每次写入实时落盘（WAL 模式），无需手动保存
 
 ---
 

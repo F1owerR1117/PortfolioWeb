@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { run, get, all, getFirst, addXP } = require('../db/init');
+const { run, get, all, getFirst } = require('../db/init');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const logger = require('../logger');
 
@@ -51,7 +51,7 @@ router.put('/admin/levels/config', requireAdmin, (req, res) => {
       const name = cfg.name || '';
       const title_icon = cfg.title_icon || '';
       const bg_image = cfg.bg_image || '';
-      const zones = cfg.zones || '["work","chat"]';
+      const zones = cfg.zones || '["work","chat","music","job"]';
       if (isNaN(level) || isNaN(xp_required)) continue;
       // Validate zones JSON
       try { JSON.parse(typeof zones === 'string' ? zones : JSON.stringify(zones)); } catch (e) { continue; }
@@ -125,7 +125,7 @@ router.put('/admin/levels/users/:id', requireAdmin, (req, res) => {
     const user = getFirst('SELECT id, username FROM users WHERE id = ?', [userId]);
     if (!user) return res.status(404).json({ error: '用户不存在' });
 
-    const { level, xp, points } = req.body;
+    const { level, xp, points, job_role, job_role_approved } = req.body;
     const updates = [];
     const params = [];
 
@@ -146,6 +146,15 @@ router.put('/admin/levels/users/:id', requireAdmin, (req, res) => {
       if (isNaN(p) || p < 0) return res.status(400).json({ error: '无效的积分' });
       updates.push('points = ?');
       params.push(p);
+    }
+    if (job_role !== undefined) {
+      if (job_role && !['employer', 'seeker'].includes(job_role)) return res.status(400).json({ error: '无效的身份类型' });
+      updates.push('job_role = ?');
+      params.push(job_role || null);
+    }
+    if (job_role_approved !== undefined) {
+      updates.push('job_role_approved = ?');
+      params.push(job_role_approved ? 1 : 0);
     }
 
     if (updates.length === 0) {
@@ -169,12 +178,6 @@ router.put('/admin/levels/users/:id', requireAdmin, (req, res) => {
     }
 
     const updated = getFirst('SELECT level, xp, points FROM users WHERE id = ?', [userId]);
-    // Sync session if admin edited their own level
-    if (userId === req.session.userId) {
-      req.session.level = updated.level;
-      req.session.xp = updated.xp;
-      req.session.points = updated.points;
-    }
     res.json({ message: '用户等级已更新', user: { id: userId, username: user.username, ...updated } });
   } catch (err) {
     logger.error('[Levels] User update error:', err);
@@ -186,16 +189,17 @@ router.put('/admin/levels/users/:id', requireAdmin, (req, res) => {
 router.get('/zone-access/:zone', requireAuth, (req, res) => {
   try {
     const zone = req.params.zone;
-    if (!zone || !['work', 'chat', 'music'].includes(zone)) {
+    if (!zone || !['work', 'chat', 'music', 'job'].includes(zone)) {
       return res.status(400).json({ error: '无效的分区' });
     }
     if (req.session.role === 'admin') {
       return res.json({ zone, accessible: true });
     }
-    const user = require('../db/init').getFirst('SELECT level FROM users WHERE id = ?', [req.session.userId]);
+    const user = getFirst('SELECT level, job_role, job_role_approved FROM users WHERE id = ?', [req.session.userId]);
     if (!user) return res.json({ zone, accessible: false });
 
-    const configs = require('../db/init').all(
+    // Level-based zone check
+    const configs = all(
       'SELECT zones FROM level_config WHERE level <= ? ORDER BY level DESC LIMIT 1',
       [user.level || 1]
     );
@@ -207,7 +211,8 @@ router.get('/zone-access/:zone', requireAuth, (req, res) => {
         accessible = Array.isArray(zones) && zones.includes(zone);
       } catch (e) {}
     }
-    res.json({ zone, accessible });
+
+    res.json({ zone, accessible, reason: accessible ? '' : '等级不足' });
   } catch (err) {
     logger.error('[Zone] Check error:', err);
     res.status(500).json({ error: '检查分区访问失败' });

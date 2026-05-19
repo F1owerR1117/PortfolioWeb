@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { run, get, addXP } = require('../db/init');
+const { run, get } = require('../db/init');
+const LevelService = require('../services/LevelService');
 const { requireAuth, requireNotBanned } = require('../middleware/auth');
 const logger = require('../logger');
 
@@ -85,7 +86,7 @@ router.post('/posts/:postId/reaction', requireAuth, requireNotBanned, async (req
             [postAuthor.created_by, userId, type, postId]
           );
           // XP reward for receiving a like
-          if (type === 'like') addXP(postAuthor.created_by, 2);
+          if (type === 'like') LevelService.addXP(postAuthor.created_by, 2);
         }
       }
     }

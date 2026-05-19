@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { run, get, all, addXP } = require('../db/init');
+const { run, get, all } = require('../db/init');
+const LevelService = require('../services/LevelService');
 const { requireAuth, requireNotBanned } = require('../middleware/auth');
 const { requireJobRole } = require('../middleware/zoneAccess');
 const logger = require('../logger');
@@ -93,14 +94,13 @@ router.post('/posts/:postId/comments', requireAuth, requireNotBanned, async (req
       }
     }
 
-    const xpResult = addXP(req.session.userId, 10);
-    if (xpResult) { req.session.level = xpResult.level; req.session.xp = xpResult.xp; req.session.points = xpResult.points; }
+    LevelService.addXP(req.session.userId, 10);
     if (parent_id) {
       const parentComment = get('SELECT user_id FROM comments WHERE id = ?', [parent_id]);
-      if (parentComment && parentComment.user_id !== req.session.userId) addXP(parentComment.user_id, 5);
+      if (parentComment && parentComment.user_id !== req.session.userId) LevelService.addXP(parentComment.user_id, 5);
     } else {
       const postAuthor = get('SELECT created_by FROM posts WHERE id = ?', [postId]);
-      if (postAuthor && postAuthor.created_by !== req.session.userId) addXP(postAuthor.created_by, 5);
+      if (postAuthor && postAuthor.created_by !== req.session.userId) LevelService.addXP(postAuthor.created_by, 5);
     }
 
     res.status(201).json({ message: '评论发布成功', comment });

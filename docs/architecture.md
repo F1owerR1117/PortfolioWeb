@@ -8,29 +8,31 @@
 │   SPA: index.html → utils.js → api.js →         │
 │         music.js → components/*.js → router.js  │
 │         → app.js                               │
+│  主题: 默认深色 :root / 终端 ⌨️ [data-theme="terminal"]
 └──────────────────────┬──────────────────────────┘
          │  fetch('/api/...')  │ 哈希路由 #/xxx
          ▼                   ▲
 ┌─────────────────────────────────────────────────┐
 │            Express 服务器 (Node.js)              │
 │  ┌───────────┐  ┌────────────────────────────┐  │
-│  │ Middleware │  │      Routes (20 files)     │  │
+│  │ Middleware │  │      Routes (20+ files)    │  │
 │  │ auth.js    │  │  auth  posts  comments     │  │
 │  │ upload.js  │  │  users  friends  music     │  │
 │  │ zoneAccess │  │  bookmarks  reports  ads   │  │
-│  │ helmet     │  │  loginNotices  site  ...   │  │
+│  │ requireJob │  │  loginNotices  site        │  │
+│  │ helmet     │  │  applications  upload      │  │
 │  │ rateLimit  │  └──────────┬─────────────────┘  │
 │  └───────────┘             │                     │
 │                 ┌──────────▼─────────────────┐  │
-│                 │      Services (5 files)      │  │
+│                 │      Services (6 files)      │  │
 │                 │  Auth  Post  Notification    │  │
-│                 │  File  LoginNotice           │  │
+│                 │  File  LoginNotice  App      │  │
 │                 └──────────┬─────────────────┘  │
 │                            │                     │
 │  ┌─────────────────────────▼──────────────────┐  │
-│  │        db/init.js (sql.js - SQLite)         │  │
-│  │  同步 API: run() / get() / all() / addXP() │  │
-│  │  每 2 秒持久化到 database.db                │  │
+│  │        db/init.js (better-sqlite3)          │  │
+│  │  run() / get() / getFirst() / all()         │  │
+│  │  WAL 模式实时写盘，零数据丢失                │  │
 │  └────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────┘
 ```
@@ -74,10 +76,10 @@
 
 ## 技术要点
 
-### 数据库 (sql.js)
-- **同步 API**: `run(sql, params)` / `get(sql, params)` / `all(sql, params)`
-- **内存运行**，每 2 秒写入 `database.db`
-- **迁移策略**: ALTER TABLE 用 try-catch 包裹，幂等执行
+### 数据库 (better-sqlite3)
+- **同步 API**: `run(sql, params)` / `get(sql, params)` / `getFirst(sql, params)` / `all(sql, params)`
+- **原生 C 扩展**，WAL 模式实时写盘，零数据丢失风险
+- **迁移策略**: `schema_version` 版本追踪，仅执行未运行迁移，ALTER TABLE 幂等
 - **种子数据**: 仅在表为空时写入
 
 ### 会话管理
@@ -212,23 +214,24 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 - 日志文件最大 5MB，保留 3 个
 
 ### db/init.js
-- 初始化 sql.js（启用 WAL 模式、外键）
+- 初始化 better-sqlite3（启用 WAL 模式、外键，同步 API）
 - 创建全部 20+ 张表
 - 执行兼容性迁移（ALTER TABLE + try-catch）
 - 写入种子数据
-- 导出: `run()`, `get()`, `getFirst()`, `all()`, `addXP()`
+- 导出: `run()`, `get()`, `getFirst()`, `all()`, `forceSave()`
+- XP/等级升级逻辑已独立到 `services/LevelService.js` → `addXP(userId, amount)`
 
 ### public/js/ 模块加载顺序
 
 ```
-1. utils.js                — 工具函数 (toast/模态框/日期/音频)
+1. utils.js                — 工具函数 (toast/escapeHtml/confirm/prompt/裁剪/音频)
 2. api.js                  — API 封装 (70+ 方法)
-3. music.js                — 音乐播放器
-4. components/shared.js    — 共享工具方法
-5. components/*.js          — 13 个功能组件
-6. components/index.js     — 聚合所有组件
+3. music.js                — 音乐播放器 (局部 DOM 更新)
+4. components/shared.js    — 共享工具方法 + 等级缓存
+5. components/index.js     — 聚合所有组件 (Object.assign)
+6. components/*.js          — 15 个功能组件
 7. router.js               — 哈希路由
-8. app.js                  — 初始化/导航/主题/轮询
+8. app.js                  — 初始化/认证/导航/主题/通知轮询
 ```
 
 ### 数据库表清单

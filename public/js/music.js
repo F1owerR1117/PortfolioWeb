@@ -297,89 +297,128 @@ const MusicPlayer = {
   },
 
   // ===== Player UI Rendering (called into footer) =====
+  _playerRendered: false,
+
   _renderPlayer() {
-    const container = document.getElementById('music-player-container');
+    var container = document.getElementById('music-player-container');
     if (!container) return;
 
-    const song = this.currentSong;
-    const modeLabels = { sequential: '顺序', loop: '循环', single: '单曲' };
-    const modeLabel = modeLabels[this.mode] || '顺序';
+    var song = this.currentSong;
+    var modeLabels = { sequential: '顺序', loop: '循环', single: '单曲' };
+    var modeLabel = modeLabels[this.mode] || '顺序';
 
-    var playingClass = this.playing ? ' playing' : '';
-    var modeCls = 'mode-' + this.mode;
-    container.innerHTML = [
-      '<div class="now-playing' + playingClass + '" id="music-player">',
-      '  <div class="now-inner">',
-      '    <div class="np-cover">',
-      song && song.cover_url
-        ? '<img src="' + escapeHtml(song.cover_url) + '" alt="">'
-        : '<span style="opacity:0.5;">&#9835;</span>',
-      '      <div class="music-equalizer"><span></span><span></span><span></span><span></span></div>',
-      '    </div>',
-      '    <div class="np-info">',
-      '      <div class="np-title" title="' + (song ? escapeHtml(song.name) + (song.artist ? ' - ' + escapeHtml(song.artist) : '') : '') + '">',
-      (song ? escapeHtml(song.name) : '未选择歌曲'),
-      '      </div>',
-      (song && song.artist ? '<div class="np-artist">' + escapeHtml(song.artist) + '</div>' : ''),
-      (!song ? '<div class="np-artist">从音乐库中选择歌曲播放</div>' : ''),
-      '    </div>',
-      '    <span class="np-time" id="np-current-time">0:00</span>',
-      '    <div class="np-progress"><div class="np-progress-bar" id="np-progress-bar" style="width:0%;"></div></div>',
-      '    <span class="np-time" id="np-total-time">--:--</span>',
-      '    <div class="np-controls">',
-      '      <button class="np-btn np-mode ' + modeCls + '" id="music-mode-btn" title="播放模式：' + modeLabel + '">' + modeLabel + '</button>',
-      '      <button class="np-btn" id="music-prev-btn" title="上一首"' + (this.queue.length <= 1 ? ' disabled' : '') + '>⏮</button>',
-      '      <button class="np-play" id="music-play-btn" title="' + (this.playing ? '暂停' : '播放') + '">',
-      (this.playing ? '⏸' : '▶'),
-      '      </button>',
-      '      <button class="np-btn" id="music-next-btn" title="下一首"' + (this.queue.length <= 1 ? ' disabled' : '') + '>⏭</button>',
-      '    </div>',
-      '    <div class="np-volume">',
-      '      <span style="font-size:14px;color:rgba(255,255,255,0.3);">🔊</span>',
-      '      <input type="range" id="music-volume" min="0" max="100" value="' + Math.round(this.volume * 100) + '" title="音量">',
-      '    </div>',
-      '  </div>',
-      '</div>'
-    ].join('');
+    // First render: build full DOM
+    if (!this._playerRendered) {
+      this._playerRendered = true;
+      var html = '<div class="now-playing' + (this.playing ? ' playing' : '') + '" id="music-player">' +
+        '<div class="now-inner">' +
+          '<div class="np-cover" id="np-cover">' +
+            (song && song.cover_url ? '<img src="' + escapeHtml(song.cover_url) + '" alt="">' : '<span style="opacity:0.5;">&#9835;</span>') +
+            '<div class="music-equalizer"><span></span><span></span><span></span><span></span></div>' +
+          '</div>' +
+          '<div class="np-info">' +
+            '<div class="np-title" id="np-title">' + (song ? escapeHtml(song.name) : '未选择歌曲') + '</div>' +
+            '<div class="np-artist" id="np-artist">' + (song && song.artist ? escapeHtml(song.artist) : '从音乐库中选择歌曲播放') + '</div>' +
+          '</div>' +
+          '<span class="np-time" id="np-current-time">0:00</span>' +
+          '<div class="np-progress" id="np-progress-wrap"><div class="np-progress-bar" id="np-progress-bar" style="width:0%;"></div></div>' +
+          '<span class="np-time" id="np-total-time">--:--</span>' +
+          '<div class="np-controls">' +
+            '<button class="np-btn np-mode" id="music-mode-btn">' + modeLabel + '</button>' +
+            '<button class="np-btn" id="music-prev-btn" title="上一首">⏮</button>' +
+            '<button class="np-play" id="music-play-btn">▶</button>' +
+            '<button class="np-btn" id="music-next-btn" title="下一首">⏭</button>' +
+          '</div>' +
+          '<div class="np-volume">' +
+            '<span style="font-size:14px;color:rgba(255,255,255,0.3);">🔊</span>' +
+            '<input type="range" id="music-volume" min="0" max="100" value="' + Math.round(this.volume * 100) + '" title="音量">' +
+          '</div>' +
+        '</div></div>';
+      container.innerHTML = html;
+      this._bindPlayerEvents();
+    }
 
-    this._bindPlayerEvents();
+    // Update dynamic parts (every render call)
+    var player = document.getElementById('music-player');
+    if (!player) return;
+
+    // Playing class
+    player.classList.toggle('playing', this.playing);
+
+    // Cover
+    var cover = document.getElementById('np-cover');
+    if (cover) {
+      if (song && song.cover_url) {
+        var img = cover.querySelector('img');
+        if (!img) { img = document.createElement('img'); cover.innerHTML = ''; cover.appendChild(img); }
+        img.src = song.cover_url;
+      } else if (!song) {
+        if (!cover.querySelector('span')) cover.innerHTML = '<span style="opacity:0.5;">&#9835;</span>';
+      }
+    }
+
+    // Title
+    var titleEl = document.getElementById('np-title');
+    if (titleEl) {
+      titleEl.textContent = song ? song.name : '未选择歌曲';
+      titleEl.title = song ? (song.name + (song.artist ? ' - ' + song.artist : '')) : '';
+    }
+
+    // Artist
+    var artistEl = document.getElementById('np-artist');
+    if (artistEl) {
+      artistEl.textContent = song && song.artist ? song.artist : (song ? '' : '从音乐库中选择歌曲播放');
+    }
+
+    // Play button
+    var playBtn = document.getElementById('music-play-btn');
+    if (playBtn) {
+      playBtn.textContent = this.playing ? '⏸' : '▶';
+      playBtn.title = this.playing ? '暂停' : '播放';
+    }
+
+    // Mode button
+    var modeBtn = document.getElementById('music-mode-btn');
+    if (modeBtn) {
+      modeBtn.textContent = modeLabel;
+      modeBtn.title = '播放模式：' + modeLabel;
+      modeBtn.className = 'np-btn np-mode mode-' + this.mode;
+    }
+
+    // Prev/next disabled state
+    var hasQueue = this.queue.length > 1;
+    var prevBtn = document.getElementById('music-prev-btn');
+    var nextBtn = document.getElementById('music-next-btn');
+    if (prevBtn) prevBtn.disabled = !hasQueue;
+    if (nextBtn) nextBtn.disabled = !hasQueue;
+
+    // Volume slider (only on first render since volume doesn't change externally)
   },
 
   _bindPlayerEvents() {
-    const playBtn = document.getElementById('music-play-btn');
-    const prevBtn = document.getElementById('music-prev-btn');
-    const nextBtn = document.getElementById('music-next-btn');
-    const modeBtn = document.getElementById('music-mode-btn');
-    const volumeSlider = document.getElementById('music-volume');
+    var playBtn = document.getElementById('music-play-btn');
+    var prevBtn = document.getElementById('music-prev-btn');
+    var nextBtn = document.getElementById('music-next-btn');
+    var modeBtn = document.getElementById('music-mode-btn');
+    var volumeSlider = document.getElementById('music-volume');
+    var progressWrap = document.getElementById('np-progress-wrap');
 
-    if (playBtn) {
-      playBtn.addEventListener('click', () => this.togglePlay());
-    }
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => this.prev());
-    }
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => this.next());
-    }
-    if (modeBtn) {
-      modeBtn.addEventListener('click', () => this.cycleMode());
-    }
+    if (playBtn) playBtn.addEventListener('click', function() { MusicPlayer.togglePlay(); });
+    if (prevBtn) prevBtn.addEventListener('click', function() { MusicPlayer.prev(); });
+    if (nextBtn) nextBtn.addEventListener('click', function() { MusicPlayer.next(); });
+    if (modeBtn) modeBtn.addEventListener('click', function() { MusicPlayer.cycleMode(); });
     if (volumeSlider) {
-      volumeSlider.addEventListener('input', (e) => {
-        this.setVolume(parseInt(e.target.value) / 100);
+      volumeSlider.addEventListener('input', function(e) {
+        MusicPlayer.setVolume(parseInt(e.target.value) / 100);
       });
     }
-    // Click on progress bar to seek
-    const progressWrap = document.querySelector('.np-progress');
     if (progressWrap) {
-      progressWrap.addEventListener('click', (e) => {
-        const rect = progressWrap.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const pct = Math.max(0, Math.min(1, x / rect.width));
-        const duration = this.audio.duration || this.currentSong?.duration || 0;
-        if (duration > 0) {
-          this.seekTo(pct * 100);
-        }
+      progressWrap.addEventListener('click', function(e) {
+        var rect = progressWrap.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var pct = Math.max(0, Math.min(1, x / rect.width));
+        var duration = MusicPlayer.audio.duration || (MusicPlayer.currentSong && MusicPlayer.currentSong.duration) || 0;
+        if (duration > 0) MusicPlayer.seekTo(pct * 100);
       });
     }
   }

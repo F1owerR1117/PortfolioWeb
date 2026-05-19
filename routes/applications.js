@@ -1,8 +1,9 @@
 // Job Applications route — manage employer/seeker identity applications
 const express = require('express');
 const router = express.Router();
-const { run, get, all } = require('../db/init');
+const { run, get, getFirst, all } = require('../db/init');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const Notification = require('../models/Notification');
 const logger = require('../logger');
 
 // POST /api/applications — submit a job role application
@@ -20,6 +21,16 @@ router.post('/', requireAuth, (req, res) => {
     if (approved && approved.job_role_approved) return res.status(409).json({ error: '你已经拥有身份' });
 
     run('INSERT INTO job_applications (user_id, role, reason) VALUES (?, ?, ?)', [userId, role, reason || '']);
+
+    // Notify all admins
+    const admins = all("SELECT id FROM users WHERE role = 'admin'");
+    const applicant = getFirst('SELECT username FROM users WHERE id = ?', [userId]);
+    const roleLabel = role === 'employer' ? '招聘者' : '求职者';
+    const msg = '📋 新身份申请：用户「' + (applicant ? applicant.username : '?') + '」申请「' + roleLabel + '」身份';
+    for (const admin of admins) {
+      Notification.create(admin.id, userId, 'admin_application', null, null, msg, '#/admin/applications');
+    }
+
     res.json({ message: '申请已提交，等待管理员审核' });
   } catch (err) {
     logger.error('[Applications] Submit error:', err);
@@ -71,11 +82,10 @@ router.put('/:id', requireAdmin, (req, res) => {
     }
 
     // Notify the applicant
-    const { Notification } = require('./notifications');
     if (status === 'approved') {
-      Notification.create(app.user_id, req.session.userId, 'job_approved', null, '你的' + (app.role === 'employer' ? '招聘者' : '求职者') + '身份申请已通过');
+      Notification.create(app.user_id, req.session.userId, 'job_approved', null, null, '你的' + (app.role === 'employer' ? '招聘者' : '求职者') + '身份申请已通过', '#/jobs');
     } else {
-      Notification.create(app.user_id, req.session.userId, 'job_rejected', null, '你的' + (app.role === 'employer' ? '招聘者' : '求职者') + '身份申请未通过');
+      Notification.create(app.user_id, req.session.userId, 'job_rejected', null, null, '你的' + (app.role === 'employer' ? '招聘者' : '求职者') + '身份申请未通过', '#/profile');
     }
 
     res.json({ message: status === 'approved' ? '已批准' : '已拒绝' });

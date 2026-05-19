@@ -86,10 +86,10 @@ var postsHtml = '<h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">
           notifHtml += '<div class="empty-state" style="padding:20px 0;"><p>暂无通知</p></div>';
         } else {
           notifHtml += '<div class="notif-list" id="dashboard-notif-list">';
-          var notifLabels = { reply: '回复了你', comment: '评论了你的帖子', sticky: '帖子被置顶', featured: '帖子被设为精华', locked: '帖子被锁定', post_deleted: '帖子被删除', friend_request: '请求添加好友', friend_approved: '通过了你的好友申请', message: '给你发了私信', bookmark: '收藏了你的帖子', playlist_collect: '收藏了你的歌单', banned: '你已被禁言' };
+          var notifLabels = { reply: '回复了你', comment: '评论了你的帖子', sticky: '帖子被置顶', featured: '帖子被设为精华', locked: '帖子被锁定', post_deleted: '帖子被删除', friend_request: '请求添加好友', friend_approved: '通过了你的好友申请', message: '给你发了私信', bookmark: '收藏了你的帖子', playlist_collect: '收藏了你的歌单', banned: '你已被禁言', job_approved: '身份申请已通过', job_rejected: '身份申请未通过' };
           for (var ni = 0; ni < recentNotifs.length; ni++) {
             var n = recentNotifs[ni];
-            var notifIcon = n.type === 'reply' ? '💬' : n.type === 'comment' ? '💬' : n.type === 'like' ? '👍' : n.type === 'sticky' ? '📌' : n.type === 'featured' ? '⭐' : n.type === 'post_deleted' ? '🗑️' : n.type === 'locked' ? '🔒' : n.type === 'message' ? '✉️' : n.type === 'friend_request' ? '👥' : n.type === 'friend_approved' ? '✅' : n.type === 'bookmark' ? '🔖' : n.type === 'playlist_collect' ? '📋' : n.type === 'banned' ? '🚫' : '🔔';
+            var notifIcon = n.type === 'reply' ? '💬' : n.type === 'comment' ? '💬' : n.type === 'like' ? '👍' : n.type === 'sticky' ? '📌' : n.type === 'featured' ? '⭐' : n.type === 'post_deleted' ? '🗑️' : n.type === 'locked' ? '🔒' : n.type === 'message' ? '✉️' : n.type === 'friend_request' ? '👥' : n.type === 'friend_approved' ? '✅' : n.type === 'bookmark' ? '🔖' : n.type === 'playlist_collect' ? '📋' : n.type === 'banned' ? '🚫' : n.type === 'job_approved' ? '✅' : n.type === 'job_rejected' ? '❌' : '🔔';
             var notifText = (n.actor_name ? escapeHtml(n.actor_name) + ' ' : '') + (notifLabels[n.type] || n.type);
             notifHtml += '<div class="notif-item" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">' +
               '<span>' + notifIcon + '</span>' +
@@ -233,7 +233,7 @@ var postsHtml = '<h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">
           this._checkAndRenderFriendButton(userId);
         }
       }
-    } catch (err) { showToast(err.message, 'error'); this.renderPostList(); }
+    } catch (err) { console.error('PROFILE_BUG — renderUserProfile failed:', err); showToast(err.message, 'error'); this.renderPostList(); }
   },
 
   _checkAndRenderFriendButton: async function(userId) {

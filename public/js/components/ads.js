@@ -8,6 +8,7 @@ var ComponentsAds = {
   _routeToPage: function(path) {
     if (path === '/works') return 'works';
     if (path === '/chats') return 'chats';
+    if (path === '/jobs') return 'jobs';
     return null;
   },
 

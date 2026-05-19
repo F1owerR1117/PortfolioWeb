@@ -13,7 +13,7 @@ var ComponentsPostEditor = {
     var coverName = coverUrl ? '已有封面' : '未选择';
     var coverStyle = coverUrl ? '' : ' style="display:none;"';
     var coverImg = coverUrl ? '<img src="' + post.cover_url + '">' : '';
-    var catGroupStyle = cat === 'chat' ? '' : ' style="display:none;"';
+    var catGroupStyle = (cat === 'chat' || cat === 'job') ? '' : ' style="display:none;"';
     var editorHtml = '<div class="page-fade-in"><div class="editor-page"><div class="editor-page-header"><h1>' + escapeHtml(title) + '</h1></div><div class="editor-card"><div class="edit-layout"><div class="edit-main">' +
       '<div class="form-group"><label class="form-label">标题 <span style="color:var(--error);">*</span></label><input class="form-input" id="editor-title" value="' + escapeHtml(post ? post.title : '') + '" placeholder="输入作品标题..."></div>' +
       '<div class="form-group"><label class="form-label">简介</label><textarea class="form-textarea" id="editor-desc" rows="2" placeholder="简要描述">' + escapeHtml(post ? (post.description || '') : '') + '</textarea></div>' +
@@ -23,7 +23,31 @@ var ComponentsPostEditor = {
       '<div class="editor-footer" style="display:flex;gap:10px;justify-content:flex-end;margin-top:28px;padding-top:24px;border-top:1px solid var(--border);"><button class="btn btn-primary" id="editor-save-btn">💾 ' + (isEdit ? '保存修改' : '发布') + '</button><button class="btn btn-outline" id="editor-cancel-btn">取消</button></div></div><div class="edit-sidebar">' +
       '<div class="edit-sidebar-card"><h4>🖼 封面</h4><div id="editor-cover-preview" class="cover-preview-box" style="width:100%;height:80px;margin-bottom:8px;' + (coverUrl ? '' : 'display:flex;') + '">' + coverImg + (coverUrl ? '' : '📄') + '</div><div class="cover-actions" style="margin-top:0;"><button class="btn btn-sm btn-outline" id="editor-upload-cover-btn" style="width:100%;justify-content:center;">📁 选择图片</button><input type="file" id="editor-cover-file" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;"><button class="btn btn-sm btn-outline" id="editor-remove-cover-btn"' + coverStyle + ' style="width:100%;justify-content:center;color:var(--error);">✕ 移除</button></div></div>' +
       '<div class="edit-sidebar-card"><h4>🏷️ 标签</h4><div class="tag-input-wrap" style="display:flex;gap:6px;margin-bottom:8px;"><input class="form-input form-input-sm" id="editor-tag-input" type="text" placeholder="添加标签..." value="" style="flex:1;"><button class="btn btn-sm btn-outline" id="editor-add-tag-btn" style="padding:7px 12px;">➕</button></div><div class="tag-chips" id="editor-tag-chips"></div></div>' +
-      '<div class="edit-sidebar-card"' + catGroupStyle + '><h4>📂 分类</h4><select class="form-input" id="editor-category" style="font-size:13px;"><option value="work"' + (cat === 'work' ? ' selected' : '') + '>📂 作品区</option><option value="job">💼 求职招聘</option><option value="chat"' + (cat === 'chat' ? ' selected' : '') + '>💬 聊天区</option></select></div>' +
+      '<div class="edit-sidebar-card" id="editor-job-panel" style="display:' + (cat === 'job' ? 'block' : 'none') + ';"><h4>📍 职位信息</h4>' +
+      // Card-based location type selector
+      '<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">工作方式</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+      '<div class="job-loc-option' + (post && post.job_location_type === 'remote' ? ' active' : '') + '" data-loc="remote" style="padding:10px 12px;border:1px solid ' + (post && post.job_location_type === 'remote' ? 'var(--primary)' : 'var(--border)') + ';border-radius:8px;background:' + (post && post.job_location_type === 'remote' ? 'var(--bg-active)' : 'var(--bg-input)') + ';cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;"><span style="font-size:16px;">🏠</span><div><div style="font-weight:600;">远程</div><div style="font-size:10px;color:var(--text-muted);">完全远程办公</div></div></div>' +
+      '<div class="job-loc-option' + (post && post.job_location_type === 'office' ? ' active' : '') + '" data-loc="office" style="padding:10px 12px;border:1px solid ' + (post && post.job_location_type === 'office' ? 'var(--primary)' : 'var(--border)') + ';border-radius:8px;background:' + (post && post.job_location_type === 'office' ? 'var(--bg-active)' : 'var(--bg-input)') + ';cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;"><span style="font-size:16px;">🏢</span><div><div style="font-weight:600;">坐班</div><div style="font-size:10px;color:var(--text-muted);">公司现场办公</div></div></div>' +
+      '<div class="job-loc-option' + (post && post.job_location_type === 'hybrid' ? ' active' : '') + '" data-loc="hybrid" style="padding:10px 12px;border:1px solid ' + (post && post.job_location_type === 'hybrid' ? 'var(--primary)' : 'var(--border)') + ';border-radius:8px;background:' + (post && post.job_location_type === 'hybrid' ? 'var(--bg-active)' : 'var(--bg-input)') + ';cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;"><span style="font-size:16px;">🔄</span><div><div style="font-weight:600;">混合</div><div style="font-size:10px;color:var(--text-muted);">远程+坐班结合</div></div></div>' +
+      '<div class="job-loc-option' + (!post || !post.job_location_type ? ' active' : '') + '" data-loc="" style="padding:10px 12px;border:1px solid ' + (!post || !post.job_location_type ? 'var(--primary)' : 'var(--border)') + ';border-radius:8px;background:' + (!post || !post.job_location_type ? 'var(--bg-active)' : 'var(--bg-input)') + ';cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;"><span style="font-size:16px;">🌍</span><div><div style="font-weight:600;">不限</div><div style="font-size:10px;color:var(--text-muted);">地点不限</div></div></div>' +
+      '</div></div>' +
+      // Hidden select for actual value storage
+      '<input type="hidden" id="editor-job-type" value="' + (post && post.job_location_type ? post.job_location_type : '') + '">' +
+      // City + detail
+      '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
+      '<input id="editor-job-city" class="form-input" type="text" placeholder="城市" value="' + escapeHtml(post && post.job_location_city ? post.job_location_city : '') + '" style="flex:1;">' +
+      '<input id="editor-job-detail" class="form-input" type="text" placeholder="详细地址（可选）" value="' + escapeHtml(post && post.job_location_detail ? post.job_location_detail : '') + '" style="flex:1.5;"></div>' +
+      // Work type + salary
+      '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
+      '<select id="editor-job-worktype" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text);font-size:12px;outline:none;">' +
+      '<option value="">工作性质</option><option value="fulltime"' + (post && post.job_type === 'fulltime' ? ' selected' : '') + '>全职</option><option value="parttime"' + (post && post.job_type === 'parttime' ? ' selected' : '') + '>兼职</option><option value="intern"' + (post && post.job_type === 'intern' ? ' selected' : '') + '>实习</option><option value="project"' + (post && post.job_type === 'project' ? ' selected' : '') + '>项目</option></select></div>' +
+      '<div style="display:flex;gap:6px;align-items:center;">' +
+      '<input id="editor-job-salary-min" class="form-input" type="number" placeholder="薪资下限" value="' + (post && post.job_salary_min ? post.job_salary_min : '') + '" style="flex:1;">' +
+      '<span style="color:var(--text-muted);font-size:12px;">-</span>' +
+      '<input id="editor-job-salary-max" class="form-input" type="number" placeholder="薪资上限" value="' + (post && post.job_salary_max ? post.job_salary_max : '') + '" style="flex:1;">' +
+      '<span style="color:var(--text-muted);font-size:12px;">元/月</span></div></div>' +
+      '<div class="edit-sidebar-card"' + catGroupStyle + '><h4>📂 分类</h4><select class="form-input" id="editor-category" style="font-size:13px;"><option value="work"' + (cat === 'work' ? ' selected' : '') + '>📂 作品区</option><option value="job"' + (cat === 'job' ? ' selected' : '') + '>💼 求职招聘</option><option value="chat"' + (cat === 'chat' ? ' selected' : '') + '>💬 聊天区</option></select></div>' +
       '</div></div></div></div></div>';
     document.getElementById('app').innerHTML = editorHtml;
     this._initEditorTags(post);
@@ -123,7 +147,28 @@ var ComponentsPostEditor = {
     document.getElementById('editor-tag-input').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') { e.preventDefault(); document.getElementById('editor-add-tag-btn').click(); }
     });
-    document.getElementById('editor-cancel-btn').addEventListener('click', function() { Router.navigate(isEdit ? '#/posts/' + post.id : '#/works'); });
+    document.getElementById('editor-cancel-btn').addEventListener('click', function() { if (isEdit) { Router.navigate('#/posts/' + post.id); } else { var dest = '#/works'; var ecat = self._editorCategory; if (ecat === 'chat') dest = '#/chats'; else if (ecat === 'job') dest = '#/jobs'; Router.navigate(dest); } });
+    // Toggle job panel when category changes
+    var catSelect = document.getElementById('editor-category');
+    if (catSelect) {
+      catSelect.addEventListener('change', function() {
+        var panel = document.getElementById('editor-job-panel');
+        if (panel) panel.style.display = this.value === 'job' ? 'block' : 'none';
+      });
+    }
+    // Card-based location type selector
+    document.querySelectorAll('.job-loc-option').forEach(function(card) {
+      card.addEventListener('click', function() {
+        document.querySelectorAll('.job-loc-option').forEach(function(c) {
+          c.style.border = '1px solid var(--border)';
+          c.style.background = 'var(--bg-input)';
+        });
+        this.style.border = '1px solid var(--primary)';
+        this.style.background = 'var(--bg-active)';
+        var hidden = document.getElementById('editor-job-type');
+        if (hidden) hidden.value = this.dataset.loc;
+      });
+    });
     document.querySelectorAll('.add-block-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         playClickSound();
@@ -172,7 +217,7 @@ var ComponentsPostEditor = {
           showToast('请为附件块上传文件', 'warning'); return;
         }
       }
-      var jobType = document.getElementById('editor-job-type'); var jobWorkType = document.getElementById('editor-job-worktype'); var jobCity = document.getElementById('editor-job-city'); var jobDetail = document.getElementById('editor-job-detail'); var jobSalMin = document.getElementById('editor-job-salary-min'); var jobSalMax = document.getElementById('editor-job-salary-max'); if (jobType) data.job_location_type = jobType.value || null; if (jobWorkType) data.job_type = jobWorkType.value || null; if (jobCity) data.job_location_city = jobCity.value.trim() || null; if (jobDetail) data.job_location_detail = jobDetail.value.trim() || null; if (jobSalMin) data.job_salary_min = jobSalMin.value || null; if (jobSalMax) data.job_salary_max = jobSalMax.value || null; var blocks = self.editorBlocks.map(function(b) {
+      var blocks = self.editorBlocks.map(function(b) {
         var ob = { type: b.type, value: b.value || '', file_id: b.file_id || null, allow_preview: !!b.allow_preview,
           label: b.label || b.type, show_in_toc: !!b.show_in_toc, attachment_file_id: b.attachment_file_id || null, attachment_name: b.attachment_name || '',
           attachment_size: b.attachment_size || 0, min_level_view: b.min_level_view || 0,
@@ -183,6 +228,19 @@ var ComponentsPostEditor = {
       try {
         var data = { title: title, description: desc, tags: tags, category: category, blocks: blocks };
         if (coverFileId) data.cover_file_id = coverFileId;
+        // Collect job-specific fields (safe fallback if panel is hidden)
+        var jt = document.getElementById('editor-job-type');
+        var jwt = document.getElementById('editor-job-worktype');
+        var jc = document.getElementById('editor-job-city');
+        var jd = document.getElementById('editor-job-detail');
+        var jsmn = document.getElementById('editor-job-salary-min');
+        var jsmx = document.getElementById('editor-job-salary-max');
+        if (jt) data.job_location_type = jt.value || null;
+        if (jwt) data.job_type = jwt.value || null;
+        if (jc) data.job_location_city = jc.value.trim() || null;
+        if (jd) data.job_location_detail = jd.value.trim() || null;
+        if (jsmn) data.job_salary_min = jsmn.value ? parseInt(jsmn.value) || null : null;
+        if (jsmx) data.job_salary_max = jsmx.value ? parseInt(jsmx.value) || null : null;
         if (isEdit) { data.deleted_block_ids = self._deletedBlockIds; await API.updatePost(post.id, data); showToast('已更新', 'success'); Router.navigate('#/posts/' + post.id); }
         else { var result = await API.createPost(data); showToast('已发布', 'success'); App.refreshLevel(); Router.navigate('#/posts/' + (result.postId || result.id || result.post?.id)); }
       } catch (err) { showToast(err.message, 'error'); }

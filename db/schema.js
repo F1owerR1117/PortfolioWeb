@@ -152,7 +152,7 @@ function createTables(run) {
   run(`CREATE TABLE IF NOT EXISTS level_config (
     level INTEGER PRIMARY KEY,
     xp_required INTEGER NOT NULL,
-    zones TEXT NOT NULL DEFAULT '["work","chat"]',
+    zones TEXT NOT NULL DEFAULT '["work","chat","music","job"]',
     name TEXT DEFAULT '',
     title_icon TEXT DEFAULT '',
     bg_image TEXT DEFAULT ''
@@ -297,7 +297,7 @@ function createTables(run) {
     sort_order INTEGER DEFAULT 0,
     is_active INTEGER DEFAULT 1,
     click_count INTEGER DEFAULT 0,
-    display_pages TEXT DEFAULT 'works,chats',
+    display_pages TEXT DEFAULT 'works,chats,jobs',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (image_file_id) REFERENCES files(id)
@@ -322,6 +322,18 @@ function createTables(run) {
   try { run("CREATE UNIQUE INDEX IF NOT EXISTS idx_post_views_user_post ON post_views(user_id, post_id)"); } catch (e) {}
   try { run("CREATE UNIQUE INDEX IF NOT EXISTS idx_playlist_collections ON playlist_collections(user_id, playlist_id)"); } catch (e) {}
   try { run("CREATE UNIQUE INDEX IF NOT EXISTS idx_post_bookmarks ON post_bookmarks(user_id, post_id, collection_id)"); } catch (e) {}
+
+  // Performance indexes for scaling
+  try { run("CREATE INDEX IF NOT EXISTS idx_posts_category_deleted ON posts(category, deleted_at)"); } catch (e) {}
+  try { run("CREATE INDEX IF NOT EXISTS idx_posts_created_by ON posts(created_by)"); } catch (e) {}
+  try { run("CREATE INDEX IF NOT EXISTS idx_posts_updated ON posts(updated_at)"); } catch (e) {}
+  try { run("CREATE INDEX IF NOT EXISTS idx_posts_job_city ON posts(job_location_city)"); } catch (e) {}
+  try { run("CREATE INDEX IF NOT EXISTS idx_posts_job_salary ON posts(job_salary_min)"); } catch (e) {}
+  try { run("CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read)"); } catch (e) {}
+  try { run("CREATE INDEX IF NOT EXISTS idx_comments_post_deleted ON comments(post_id, deleted_at)"); } catch (e) {}
+  try { run("CREATE INDEX IF NOT EXISTS idx_job_applications_status ON job_applications(status)"); } catch (e) {}
+  try { run("CREATE INDEX IF NOT EXISTS idx_post_tags_tag ON post_tags(tag_id)"); } catch (e) {}
+  try { run("CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)"); } catch (e) {}
 }
 
 module.exports = { createTables };

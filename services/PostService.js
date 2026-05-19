@@ -1,13 +1,14 @@
 // PostService — post business logic
 const fs = require('fs');
-const { addXP } = require('../db/init');
+const { run, get, getFirst } = require('../db/init');
+const LevelService = require('./LevelService');
 const Post = require('../models/Post');
 const File = require('../models/File');
 const Notification = require('../models/Notification');
 
 const PostService = {
-  getList(category, page, limit) {
-    const { posts, total } = Post.list(category, page, limit);
+  getList(category, page, limit, filters) {
+    const { posts, total } = Post.list(category, page, limit, filters || {});
     return {
       posts: posts.map(p => ({
         ...p,
@@ -21,13 +22,11 @@ const PostService = {
     const post = Post.findById(postId);
     if (!post) throw { status: 404, message: '作品不存在' };
 
-    const { get, getFirst } = require('../db/init');
     const reaction = get('SELECT type FROM post_reactions WHERE user_id = ? AND post_id = ?', [userId, postId]);
 
     // View tracking
     const existingView = get('SELECT id FROM post_views WHERE user_id = ? AND post_id = ?', [userId, postId]);
     if (!existingView) {
-      const { run } = require('../db/init');
       run('INSERT INTO post_views (user_id, post_id) VALUES (?, ?)', [userId, postId]);
       Post.incrementViews(postId);
       post.views = (post.views || 0) + 1;
@@ -131,12 +130,23 @@ const PostService = {
     const postCategory = category === 'chat' ? 'chat' : category === 'job' ? 'job' : 'work';
 
     if (postCategory === 'work') {
-      const { get } = require('../db/init');
       const user = get('SELECT role FROM users WHERE id = ?', [userId]);
       if (!user || user.role !== 'admin') throw { status: 403, message: '权限不足，只有管理员可以发布作品' };
     }
 
+    if (postCategory === 'job') {
+      const user = get('SELECT job_role, job_role_approved FROM users WHERE id = ?', [userId]);
+      if (!user || !user.job_role_approved) throw { status: 403, message: '请先申请并通过招聘者/求职者身份审核' };
+    }
+
     if (!title || title.trim().length === 0) throw { status: 400, message: '标题不能为空' };
+
+    // Validate job-specific fields
+    const validJobTypes = ['fulltime', 'parttime', 'intern', 'project'];
+    const validLocTypes = ['remote', 'office', 'hybrid'];
+    if (job_type && !validJobTypes.includes(job_type)) throw { status: 400, message: '无效的工作性质' };
+    if (job_location_type && !validLocTypes.includes(job_location_type)) throw { status: 400, message: '无效的工作方式' };
+    if (job_salary_min && job_salary_max && parseInt(job_salary_min) > parseInt(job_salary_max)) throw { status: 400, message: '薪资下限不能高于上限' };
 
     const result = Post.create({ title, description, cover_url, cover_file_id, tags, category: postCategory, created_by: userId, job_location_type, job_location_city, job_location_detail, job_salary_min, job_salary_max, job_type });
     const postId = result.lastID;
@@ -149,18 +159,24 @@ const PostService = {
 
     Post.syncTags(postId, tags);
 
-    const xpResult = addXP(userId, 20);
+    const xpResult = LevelService.addXP(userId, 20);
     return { postId, xpResult, category: postCategory };
   },
 
   update(postId, data, isAdmin) {
-    const { get } = require('../db/init');
     const existing = get('SELECT * FROM posts WHERE id = ?', [postId]);
     if (!existing) throw { status: 404, message: '作品不存在' };
 
     const { title, description, cover_url, cover_file_id, blocks, deleted_block_ids, tags,
       job_location_type, job_location_city, job_location_detail, job_salary_min, job_salary_max, job_type } = data;
     if (!title || title.trim().length === 0) throw { status: 400, message: '标题不能为空' };
+
+    // Validate job-specific fields
+    const validJobTypes = ['fulltime', 'parttime', 'intern', 'project'];
+    const validLocTypes = ['remote', 'office', 'hybrid'];
+    if (job_type && !validJobTypes.includes(job_type)) throw { status: 400, message: '无效的工作性质' };
+    if (job_location_type && !validLocTypes.includes(job_location_type)) throw { status: 400, message: '无效的工作方式' };
+    if (job_salary_min && job_salary_max && parseInt(job_salary_min) > parseInt(job_salary_max)) throw { status: 400, message: '薪资下限不能高于上限' };
 
     // Handle old cover file deletion
     if (cover_file_id && cover_file_id !== existing.cover_file_id && existing.cover_file_id) {
@@ -226,7 +242,6 @@ const PostService = {
   },
 
   softDelete(postId, adminId) {
-    const { get } = require('../db/init');
     const existing = get('SELECT * FROM posts WHERE id = ? AND deleted_at IS NULL', [postId]);
     if (!existing) throw { status: 404, message: '作品不存在' };
 
@@ -238,7 +253,6 @@ const PostService = {
   },
 
   setStatus(postId, updates, adminId) {
-    const { get } = require('../db/init');
     const existing = get('SELECT * FROM posts WHERE id = ?', [postId]);
     if (!existing) throw { status: 404, message: '帖子不存在' };
 
@@ -250,7 +264,7 @@ const PostService = {
     }
     if (updates.featured && updated.created_by !== adminId) {
       Notification.create(updated.created_by, adminId, 'featured', postId);
-      addXP(updated.created_by, 50);
+      LevelService.addXP(updated.created_by, 50);
     }
 
     return { is_sticky: !!updated.is_sticky, is_featured: !!updated.is_featured };
@@ -258,7 +272,6 @@ const PostService = {
 
   // Purchase an attachment (unlock or download)
   purchaseBlock(userId, blockId, postId, purchaseType) {
-    const { get, run, getFirst } = require('../db/init');
     const block = get('SELECT * FROM content_blocks WHERE id = ? AND post_id = ?', [blockId, postId]);
     if (!block || !block.attachment_file_id) throw { status: 404, message: '附件不存在' };
 
@@ -289,7 +302,6 @@ const PostService = {
   },
 
   setLock(postId, isLocked, adminId) {
-    const { get } = require('../db/init');
     const existing = get('SELECT id, title, created_by, is_locked FROM posts WHERE id = ? AND deleted_at IS NULL', [postId]);
     if (!existing) throw { status: 404, message: '帖子不存在' };
 

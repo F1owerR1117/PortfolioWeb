@@ -42,20 +42,6 @@ const App = {
   },
 
   _initTheme() {
-    const saved = localStorage.getItem('portfolio_theme');
-    if (saved === 'dark') {
-      this._theme = 'dark';
-      document.documentElement.dataset.theme = 'dark';
-    }
-  },
-
-  _toggleTheme() {
-    this._theme = this._theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = this._theme;
-    localStorage.setItem('portfolio_theme', this._theme);
-    // Update toggle button icon
-    const btn = document.getElementById('theme-toggle');
-    if (btn) btn.textContent = this._theme === 'dark' ? '☀️' : '🌙';
   },
 
   async checkAuth() {
@@ -193,8 +179,8 @@ const App = {
           ? '<img class="lvl-badge-img" src="' + data.title_icon + '" alt="">'
           : lvl;
         var bgStyle = data.bg_image ? ' style="background-image:url(\'' + data.bg_image + '\')"' : '';
-        var progress = data.next_xp_required
-          ? Math.min(100, ((data.xp || 0) / data.next_xp_required) * 100) : 100;
+        var nextXP = data.next_xp_required || 1;
+        var progress = Math.min(100, Math.round(((data.xp || 0) / nextXP) * 100));
         var progressHtml = data.next_xp_required
           ? '<span class="lvl-progress-row">' +
               '<span class="lvl-progress"><span class="lvl-progress-fill" style="width:' + progress + '%"></span></span>' +
@@ -230,7 +216,7 @@ const App = {
           👥 好友
           <span class="unread-badge" id="friend-request-badge" style="display:none;">0</span>
         </button>
-        <button class="nav-btn" id="theme-toggle">${this._theme === 'dark' ? '☀️' : '🌙'}</button>
+        <button class="nav-btn" id="nav-jobs">💼 求职招聘</button>
         <span class="nav-user" id="nav-user-profile" style="cursor:pointer;">
           👤 ${escapeHtml(this.user.username)}
           <span class="role-badge ${isAdmin ? 'admin' : ''}">${isAdmin ? '管理员' : '用户'}</span>
@@ -309,7 +295,23 @@ const App = {
               if (sub) sub.classList.toggle('open');
               return;
             }
-            if (item.dataset.locked === 'true') { showToast('等级不足，无法访问该分区', 'error'); return; }
+            if (item.dataset.locked === 'true') {
+              var zone = item.dataset.zone;
+              API.checkZoneAccess(zone).then(function(d) {
+                if (d.accessible) {
+                  document.body.classList.remove('side-menu-open');
+                  Router.navigate(item.dataset.route);
+                } else if (d.reason === '身份未审核') {
+                  document.body.classList.remove('side-menu-open');
+                  Router.navigate('#/jobs');
+                } else {
+                  showToast('等级不足，无法访问该分区', 'error');
+                }
+              }).catch(function() {
+                showToast('等级不足，无法访问该分区', 'error');
+              });
+              return;
+            }
             document.body.classList.remove('side-menu-open');
             Router.navigate(item.dataset.route);
           }
@@ -324,15 +326,21 @@ const App = {
         Router.navigate('#/friends');
       });
 
+      document.getElementById('nav-jobs').addEventListener('click', () => {
+        playClickSound();
+        API.checkZoneAccess('job').then(function(d) {
+          if (d.accessible) { Router.navigate('#/jobs'); }
+          else if (d.reason === '身份未审核') { Router.navigate('#/jobs'); }
+          else { showToast('等级不足，无法访问该分区', 'error'); }
+        }).catch(function() { Router.navigate('#/jobs'); });
+      });
+
       document.getElementById('nav-user-profile').addEventListener('click', () => {
         playClickSound();
         Router.navigate('#/profile');
       });
 
-      document.getElementById('theme-toggle').addEventListener('click', () => {
-        playClickSound();
-        this._toggleTheme();
-      });
+
 
       document.getElementById('nav-logout').addEventListener('click', async () => {
         playClickSound();
@@ -485,7 +493,7 @@ const App = {
 
   _checkZoneLocks() {
     var self = this;
-    var zones = ['work', 'chat', 'music'];
+    var zones = ['work', 'chat', 'music', 'job'];
     zones.forEach(function(zone) {
       API.checkZoneAccess(zone).then(function(data) {
         var item = document.querySelector('.side-menu-item[data-zone="' + zone + '"]');

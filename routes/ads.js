@@ -18,7 +18,7 @@ router.get('/ads', requireAuth, (req, res) => {
         title: ad.title || '',
         image_url: ad.image_file_id ? `/api/file/${ad.image_file_id}` : null,
         link_url: ad.link_url || '',
-        display_pages: ad.display_pages || 'works,chats'
+        display_pages: ad.display_pages || 'works,chats,jobs'
       };
       if (ad.position === 'left') result.left.push(entry);
       else result.right.push(entry);
@@ -74,7 +74,7 @@ router.post('/admin/ads', requireAdmin, (req, res) => {
     const { title, image_file_id, link_url, position, sort_order, display_pages } = req.body;
     if (!title || !title.trim()) return res.status(400).json({ error: '标题不能为空' });
     if (position && !['left', 'right'].includes(position)) return res.status(400).json({ error: '无效的位置' });
-    const pages = display_pages ? (Array.isArray(display_pages) ? display_pages.join(',') : display_pages) : 'works,chats';
+    const pages = display_pages ? (Array.isArray(display_pages) ? display_pages.join(',') : display_pages) : 'works,chats,jobs';
     const result = run(
       `INSERT INTO ads (title, image_file_id, link_url, position, sort_order, display_pages)
        VALUES (?, ?, ?, ?, ?, ?)`,

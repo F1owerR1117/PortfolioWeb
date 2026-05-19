@@ -40,13 +40,15 @@
 .comment:last-child {
   border-bottom: none;
 }
-.comment:hover {
-  padding-left: 8px;
+.comment:hover,
+.comment-reply:hover {
+  transform: translateX(8px);
 }
 .comment-reply {
   border-left: 3px solid var(--border);
   border-radius: 0;
   position: relative;
+  transition: all 0.2s;
 }
 .comment[data-depth="1"] { padding-left: 36px; }
 .comment[data-depth="2"] { padding-left: 64px; }
@@ -205,4 +207,12 @@
   background: rgba(163,230,53,0.06);
   border-color: rgba(163,230,53,0.1);
   color: var(--primary);
+}
+
+/* ===== Highlight effect ===== */
+.comment[data-highlight="true"],
+.comment-reply[data-highlight="true"] {
+  background: rgba(37,99,235,0.08);
+  border-left: 3px solid #3b82f6;
+  transition: all 0.3s;
 }

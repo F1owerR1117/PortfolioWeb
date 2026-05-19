@@ -1,7 +1,13 @@
 // ===== API: Posts =====
-API.getPosts = function(page = 1, limit = 9, category = '') {
+API.getPosts = function(page = 1, limit = 9, category = '', filters = {}) {
   let url = `/posts?page=${page}&limit=${limit}`;
   if (category) url += `&category=${encodeURIComponent(category)}`;
+  if (filters.job_type) url += `&job_type=${encodeURIComponent(filters.job_type)}`;
+  if (filters.job_location_city) url += `&job_location_city=${encodeURIComponent(filters.job_location_city)}`;
+  if (filters.job_salary_min) url += `&job_salary_min=${encodeURIComponent(filters.job_salary_min)}`;
+  if (filters.job_location_type) url += `&job_location_type=${encodeURIComponent(filters.job_location_type)}`;
+  if (filters.job_role) url += `&job_role=${encodeURIComponent(filters.job_role)}`;
+  if (filters.featured) url += `&featured=1`;
   return API.request('GET', url);
 };
 

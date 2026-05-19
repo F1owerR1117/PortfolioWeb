@@ -2,7 +2,7 @@
 const { run, get, all } = require('../db/init');
 
 const Post = {
-  list(category, page = 1, limit = 9) {
+  list(category, page = 1, limit = 9, filters = {}) {
     const offset = (page - 1) * limit;
     let whereClause = 'WHERE p.deleted_at IS NULL';
     const params = [];
@@ -10,14 +10,46 @@ const Post = {
       whereClause += ' AND p.category = ?';
       params.push(category);
     }
-    const total = get(`SELECT COUNT(*) as count FROM posts p ${whereClause}`, params);
+    // Job-specific filters
+    if (filters.job_type) {
+      whereClause += ' AND p.job_type = ?';
+      params.push(filters.job_type);
+    }
+    if (filters.job_location_city) {
+      whereClause += ' AND p.job_location_city LIKE ?';
+      params.push('%' + filters.job_location_city + '%');
+    }
+    if (filters.job_salary_min) {
+      whereClause += ' AND CAST(p.job_salary_min AS INTEGER) >= ?';
+      params.push(parseInt(filters.job_salary_min));
+    }
+    if (filters.job_location_type) {
+      whereClause += ' AND p.job_location_type = ?';
+      params.push(filters.job_location_type);
+    }
+    if (filters.job_role) {
+      whereClause += ' AND u.job_role = ?';
+      params.push(filters.job_role);
+    }
+    if (filters.featured) {
+      whereClause += ' AND p.is_featured = 1';
+    }
+    const fromClause = filters.job_role ? 'FROM posts p JOIN users u ON p.created_by = u.id' : 'FROM posts p';
+    const total = get(`SELECT COUNT(*) as count ${fromClause} ${whereClause}`, params);
     const posts = all(
       `SELECT p.id, p.title, p.description, p.cover_url, p.cover_file_id,
               p.tags, p.views, p.category, p.like_count, p.dislike_count,
               p.is_sticky, p.is_featured, p.is_locked,
               p.created_by, p.created_at, p.updated_at,
-              u.username as author, COALESCE(u.level, 1) as author_level
-       FROM posts p JOIN users u ON p.created_by = u.id
+              p.job_location_type, p.job_location_city, p.job_location_detail,
+              p.job_salary_min, p.job_salary_max, p.job_type,
+              u.username as author, COALESCE(u.level, 1) as author_level,
+              u.job_role as author_job_role,
+              COALESCE(up.job_rating, 0) as author_job_rating,
+              COALESCE(up.job_completed, 0) as author_job_completed
+       FROM posts p
+       JOIN users u ON p.created_by = u.id
+       LEFT JOIN user_profiles up ON up.user_id = u.id
        ${whereClause} ORDER BY p.is_sticky DESC, p.updated_at DESC LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );

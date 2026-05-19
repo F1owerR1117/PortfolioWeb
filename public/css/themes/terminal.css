@@ -1,0 +1,186 @@
+/* ===== Terminal 组件样式（继承 :root 变量） ===== */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+* {
+  font-family: var(--font, 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace) !important;
+}
+
+.navbar {
+  border-bottom-color: #30363d;
+}
+
+.nav-btn,
+.btn,
+.sort-btn,
+.tag-chip,
+.tab-item,
+.auth-tab {
+  border-radius: 6px !important;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  background: var(--bg-active) !important;
+}
+
+.post-card {
+  border-radius: 8px !important;
+}
+
+.post-card:hover {
+  border-color: var(--primary) !important;
+  transform: translateY(-1px);
+}
+
+.sort-bar,
+.tab-bar {
+  background: #0d1117 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 6px !important;
+  padding: 3px !important;
+}
+
+.sort-btn.active,
+.tab-item.active {
+  background: #1c2333 !important;
+  color: var(--primary) !important;
+}
+
+.form-input,
+.form-textarea,
+select,
+input,
+textarea {
+  background: #0d1117 !important;
+  border-color: #30363d !important;
+  border-radius: 6px !important;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: #58a6ff !important;
+  box-shadow: 0 0 0 3px rgba(88,166,255,0.1) !important;
+}
+
+.btn-primary {
+  background: #238636 !important;
+  border-color: #2ea043 !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover {
+  background: #2ea043 !important;
+}
+
+.tag {
+  border-radius: 4px !important;
+}
+
+.admin-card {
+  border-radius: 8px !important;
+}
+
+.admin-table th {
+  color: #8b949e !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+}
+
+.category-badge {
+  border-radius: 4px !important;
+  font-size: 10px !important;
+  padding: 1px 7px !important;
+  line-height: 18px !important;
+}
+
+.side-menu-item {
+  border-left: 2px solid transparent !important;
+  transition: all 0.1s;
+}
+
+.side-menu-item.active {
+  border-left-color: var(--primary) !important;
+  background: var(--bg-active) !important;
+}
+
+.auth-card {
+  border-radius: 8px !important;
+}
+
+.lvl-badge {
+  border-radius: 6px !important;
+  border: 1px solid #30363d !important;
+}
+
+.profile-card {
+  border-radius: 8px !important;
+}
+
+.job-sidebar-card {
+  border-radius: 8px !important;
+}
+
+.notif-card {
+  border-radius: 0 8px 8px 0 !important;
+}
+
+.fr-tabs {
+  display: flex !important;
+  gap: 4px !important;
+  background: #0d1117 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 6px !important;
+  padding: 3px !important;
+  margin-bottom: 14px !important;
+}
+.fr-tab {
+  padding: 6px 14px !important;
+  border: none !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: #8b949e !important;
+  font-family: var(--font);
+  font-size: 12px !important;
+  cursor: pointer !important;
+}
+.fr-tab.active {
+  background: #1c2333 !important;
+  color: #a3e635 !important;
+}
+.friend-card {
+  background: #161b22 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  margin-bottom: 6px !important;
+}
+.request-card {
+  background: #161b22 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 8px !important;
+}
+.stat-card {
+  background: #161b22 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 8px !important;
+}
+.admin-stat-box {
+  background: #161b22 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 8px !important;
+}
+.admin-nav {
+  display: flex !important;
+  gap: 4px !important;
+  background: #0d1117 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 8px !important;
+  padding: 4px !important;
+}
+.admin-nav-item.active {
+  background: #1c2333 !important;
+  color: #a3e635 !important;
+}

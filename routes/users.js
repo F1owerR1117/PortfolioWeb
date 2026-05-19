@@ -8,12 +8,15 @@ const logger = require('../logger');
 router.get('/auth/profile', requireAuth, async (req, res) => {
   try {
     const profile = get('SELECT * FROM user_profiles WHERE user_id = ?', [req.session.userId]);
-    const user = get('SELECT id, username, role, created_at, level, xp, points FROM users WHERE id = ?', [req.session.userId]);
+    const user = get('SELECT id, username, role, created_at, level, xp, points, job_role, job_role_approved FROM users WHERE id = ?', [req.session.userId]);
     if (!user) return res.status(404).json({ error: '用户不存在' });
     res.json({
       profile: {
         user_id: user.id, username: user.username, role: user.role, created_at: user.created_at,
         level: user.level || 1, xp: user.xp || 0, points: user.points || 0,
+        job_role: user.job_role || null, job_role_approved: !!user.job_role_approved,
+        job_rating: profile ? (profile.job_rating || 0) : 0,
+        job_completed: profile ? (profile.job_completed || 0) : 0,
         nickname: profile ? (profile.nickname || '') : '', bio: profile ? profile.bio : '',
         avatar_url: profile ? profile.avatar_url : '',
         social: profile ? JSON.parse(profile.social || '{}') : {},
@@ -81,13 +84,16 @@ router.get('/users/:id/profile', requireAuth, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     if (isNaN(userId)) return res.status(400).json({ error: '无效的用户ID' });
-    const user = get('SELECT id, username, role, created_at, is_banned, level, xp, points FROM users WHERE id = ?', [userId]);
+    const user = get('SELECT id, username, role, created_at, is_banned, level, xp, points, job_role, job_role_approved FROM users WHERE id = ?', [userId]);
     if (!user) return res.status(404).json({ error: '用户不存在' });
     const profile = get('SELECT * FROM user_profiles WHERE user_id = ?', [userId]);
     res.json({
       profile: {
         user_id: user.id, username: user.username, role: user.role, created_at: user.created_at,
         is_banned: !!user.is_banned, level: user.level || 1, xp: user.xp || 0, points: user.points || 0,
+        job_role: user.job_role || null, job_role_approved: !!user.job_role_approved,
+        job_rating: profile ? (profile.job_rating || 0) : 0,
+        job_completed: profile ? (profile.job_completed || 0) : 0,
         nickname: profile ? (profile.nickname || '') : '', bio: profile ? profile.bio : '',
         avatar_url: profile ? profile.avatar_url : '',
         social: profile ? JSON.parse(profile.social || '{}') : {},

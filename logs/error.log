@@ -97,3 +97,32 @@
 2026-05-18 02:00:15 [ERROR] Uncaught Exception: listen EADDRINUSE: address already in use :::3000
 2026-05-18 03:25:27 [ERROR] [Auth] Login error:
 2026-05-18 03:25:32 [ERROR] [Auth] Register error:
+2026-05-18 04:19:39 [ERROR] [Auth] Register error:
+2026-05-18 04:42:13 [ERROR] [Auth] Register error:
+2026-05-18 04:43:58 [ERROR] [Posts] Delete error:
+2026-05-18 05:37:18 [ERROR] [Posts] Create error:
+2026-05-18 05:37:19 [ERROR] [Posts] Create error:
+2026-05-18 05:37:20 [ERROR] [Posts] Create error:
+2026-05-18 05:37:20 [ERROR] [Posts] Create error:
+2026-05-18 05:37:20 [ERROR] [Posts] Create error:
+2026-05-18 05:37:21 [ERROR] [Posts] Create error:
+2026-05-18 05:38:21 [ERROR] [Applications] Review error: Cannot read properties of undefined (reading 'create')
+TypeError: Cannot read properties of undefined (reading 'create')
+    at F:\code\portfolio\routes\applications.js:76:20
+    at Layer.handle [as handle_request] (F:\code\portfolio\node_modules\express\lib\router\layer.js:95:5)
+    at next (F:\code\portfolio\node_modules\express\lib\router\route.js:149:13)
+    at requireAdmin (F:\code\portfolio\middleware\auth.js:30:3)
+    at Layer.handle [as handle_request] (F:\code\portfolio\node_modules\express\lib\router\layer.js:95:5)
+    at next (F:\code\portfolio\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (F:\code\portfolio\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (F:\code\portfolio\node_modules\express\lib\router\layer.js:95:5)
+    at F:\code\portfolio\node_modules\express\lib\router\index.js:284:15
+    at param (F:\code\portfolio\node_modules\express\lib\router\index.js:365:14)
+2026-05-18 05:38:21 [ERROR] [API] PUT /1 500 2ms user=1
+2026-05-18 23:59:56 [ERROR] [Posts] Get error:
+2026-05-19 01:58:58 [ERROR] [Posts] Create error:
+2026-05-19 01:58:59 [ERROR] [Posts] Create error:
+2026-05-19 03:52:14 [ERROR] Uncaught Exception: listen EADDRINUSE: address already in use :::3000
+2026-05-19 19:51:14 [ERROR] [Posts] Create error:
+2026-05-19 19:51:19 [ERROR] [Posts] Create error:
+2026-05-19 22:20:12 [ERROR] [Posts] Create error:

@@ -1,4 +1,6 @@
-const initSqlJs = require('sql.js');
+// db/init.js — database initialization and query helpers
+// Driver: better-sqlite3 (synchronous, native, writes directly to disk)
+const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
@@ -9,51 +11,39 @@ const { seedData } = require('./seeds');
 const DB_PATH = path.resolve(process.env.DB_PATH || './database.db');
 
 let db = null;
-let SQL = null;
-let _needsSave = false;
 
-// Save database to disk
-function saveDB() {
-  try {
-    if (!db) return;
-    const data = db.export();
-    fs.writeFileSync(DB_PATH, Buffer.from(data));
-    _needsSave = false;
-  } catch (err) {
-    console.error('[DB] Save error:', err);
-  }
-}
+// ===== Initialize database =====
 
-// Periodic save
-setInterval(() => {
-  if (_needsSave) saveDB();
-}, 2000);
+function initDatabase() {
+  console.log('[DB] Initializing database with better-sqlite3...');
 
-// Save on exit
-process.on('exit', () => { if (_needsSave) saveDB(); });
-process.on('SIGINT', () => { if (_needsSave) saveDB(); process.exit(); });
-process.on('SIGTERM', () => { if (_needsSave) saveDB(); process.exit(); });
+  var exists = fs.existsSync(DB_PATH);
 
-async function initDatabase() {
-  console.log('[DB] Initializing database...');
-  SQL = await initSqlJs();
-
-  if (fs.existsSync(DB_PATH)) {
-    const buffer = fs.readFileSync(DB_PATH);
-    db = new SQL.Database(buffer);
-    console.log('[DB] Loaded existing database');
-  } else {
-    console.log('[DB] ⚠ WARNING: Database file not found at ' + DB_PATH);
-    console.log('[DB] ⚠ A new empty database will be created. All existing data will be LOST!');
-    console.log('[DB] ⚠ To use an existing database, set DB_PATH env var:');
-    console.log('[DB] ⚠   set DB_PATH=F:\\path\\to\\database.db && node server.js');
-    db = new SQL.Database();
-    console.log('[DB] Created new database');
+  if (!exists) {
+    if (process.env.ALLOW_NEW_DB) {
+      console.log('[DB] ALLOW_NEW_DB is set — creating new database.');
+    } else {
+      console.error('═══════════════════════════════════════════════════════');
+      console.error('  ❌ 数据库文件不存在: ' + DB_PATH);
+      console.error('  ⚠️  为避免数据丢失，服务器已停止启动');
+      console.error('  💡 首次运行请设置环境变量绕过检查:');
+      console.error('       set ALLOW_NEW_DB=1 && node server.js');
+      console.error('  📁 如需使用已有数据库，请设置 DB_PATH:');
+      console.error('       set DB_PATH=F:\\path\\to\\database.db && node server.js');
+      console.error('═══════════════════════════════════════════════════════');
+      process.exit(1);
+    }
   }
 
-  // Enable WAL mode and foreign keys
-  db.run('PRAGMA journal_mode = WAL');
-  db.run('PRAGMA foreign_keys = ON');
+  // Open (or create) the database file
+  db = new Database(DB_PATH);
+  console.log('[DB] ' + (exists ? 'Opened existing' : 'Created new') + ' database at ' + DB_PATH);
+
+  // Performance and safety pragmas
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+  db.pragma('synchronous = NORMAL');   // safe with WAL, much faster than FULL
+  db.pragma('cache_size = -8000');     // 8 MB cache
 
   // Create all tables
   createTables(run);
@@ -62,75 +52,55 @@ async function initDatabase() {
   runMigrations(run, get, all, forceSave);
 
   // Seed default data
-  seedData(run, get, getFirst, all, forceSave, saveDB);
+  seedData(run, get, getFirst, all, forceSave, forceSave);
 
-  saveDB();
   console.log('[DB] Database initialization complete.');
 }
 
-// ===== Query Helpers (synchronous, using sql.js) =====
+// ===== Query Helpers (synchronous, using better-sqlite3) =====
 
 function getDb() {
-  if (!db) throw new Error('Database not initialized');
+  if (!db) throw new Error('Database not initialized — call initDatabase() first');
   return db;
 }
 
-function run(sql, params = []) {
-  const d = getDb();
-  d.run(sql, params);
-  _needsSave = true;
-  const idResult = d.exec("SELECT last_insert_rowid() as id");
-  const lastID = idResult.length > 0 ? idResult[0].values[0][0] : null;
-  return { lastID, changes: d.getRowsModified() };
+/**
+ * Execute an INSERT/UPDATE/DELETE statement.
+ * @returns {{ lastID: number, changes: number }}
+ */
+function run(sql, params) {
+  var info = getDb().prepare(sql).run(params || []);
+  return { lastID: Number(info.lastInsertRowid), changes: info.changes };
 }
 
-function getFirst(sql, params = []) {
-  const rows = all(sql, params);
-  return rows.length > 0 ? rows[0] : null;
+/**
+ * Return the first row of a SELECT, or null.
+ */
+function getFirst(sql, params) {
+  var row = getDb().prepare(sql).get(params || []);
+  return row || null;
 }
 
-function all(sql, params = []) {
-  const d = getDb();
-  const stmt = d.prepare(sql);
-  if (params.length > 0) stmt.bind(params);
-  const rows = [];
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject());
-  }
-  stmt.free();
-  return rows;
-}
-
-// Convenience alias
-function get(sql, params = []) {
+/**
+ * Alias for getFirst — convenience for single-row gets.
+ */
+function get(sql, params) {
   return getFirst(sql, params);
 }
 
-// Export for immediate save
+/**
+ * Return all rows of a SELECT as an array.
+ */
+function all(sql, params) {
+  return getDb().prepare(sql).all(params || []);
+}
+
+/**
+ * No-op with better-sqlite3 — every write is immediately durable via WAL.
+ * Kept for API compatibility with migrations and seeds that call it.
+ */
 function forceSave() {
-  saveDB();
+  // better-sqlite3 writes synchronously; no manual save needed
 }
 
-// Add XP to a user, handle level-up, and return new state
-function addXP(userId, amount) {
-  if (amount <= 0) return null;
-  const user = getFirst('SELECT xp, level, points FROM users WHERE id = ?', [userId]);
-  if (!user) return null;
-  let newXP = (user.xp || 0) + amount;
-  let newLevel = user.level || 1;
-  let newPoints = (user.points || 0) + amount;
-  // Loop: check for level-up
-  while (true) {
-    const nextConfig = getFirst('SELECT xp_required FROM level_config WHERE level = ?', [newLevel + 1]);
-    if (nextConfig && newXP >= nextConfig.xp_required) {
-      newXP -= nextConfig.xp_required;
-      newLevel++;
-    } else {
-      break;
-    }
-  }
-  run('UPDATE users SET xp = ?, level = ?, points = ? WHERE id = ?', [newXP, newLevel, newPoints, userId]);
-  return { xp: newXP, level: newLevel, points: newPoints };
-}
-
-module.exports = { initDatabase, getDb, run, get, getFirst, all, forceSave, addXP };
+module.exports = { initDatabase, getDb, run, get, getFirst, all, forceSave };

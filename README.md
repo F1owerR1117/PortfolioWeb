@@ -1,15 +1,20 @@
 # 📂 个人作品集网站
 
-基于 Node.js + Express + SQLite 的个人作品集管理系统，支持管理员发布作品和普通用户浏览。
+基于 Node.js + Express + better-sqlite3 (SQLite) 的全栈个人作品集管理系统。
 
 ## 功能特性
 
-- **用户系统**：注册/登录，支持普通用户和管理员两种身份
-- **作品管理**（管理员）：发布、编辑、删除作品，支持多类型内容块
-- **内容块**：文本、图片、视频、代码，支持拖拽排序和预览权限控制
-- **文件上传**：图片/视频/代码文件上传，权限校验的文件访问
-- **声音管理**：自定义按钮提示音，音量调节
-- **响应式设计**：适配手机/平板/桌面
+- **用户系统**：注册/登录，管理员/普通用户，等级和积分
+- **作品管理**：发布/编辑/删除帖子，多类型内容块（文本/图片/视频/代码/附件）
+- **附件系统**：等级锁定、积分解锁、积分下载三级权限控制
+- **评论系统**：嵌套回复、编辑/删除
+- **好友/私信**：好友申请、在线状态、即时消息
+- **音乐播放器**：上传歌曲、创建歌单、公开分享、底部播放栏
+- **收藏夹**：创建收藏夹、收藏帖子
+- **举报系统**：举报帖子/用户、管理员处理
+- **等级系统**：XP 经验值、等级分区权限
+- **管理面板**：用户管理、禁言、数据统计、等级配置
+- **响应式设计**：适配手机/平板/桌面，暗色主题
 
 ## 环境变量配置
 
@@ -21,10 +26,11 @@ cp .env.example .env
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
+| `SESSION_SECRET` | Session 密钥（⚠️ 必须修改） | 无默认值，未设置则拒绝启动 |
 | `ADMIN_SECRET` | 管理员注册秘钥 | `AdminKey123` |
-| `SESSION_SECRET` | Session 密钥 | 修改为随机字符串 |
 | `PORT` | 服务端口 | `3000` |
 | `DB_PATH` | 数据库路径 | `./database.db` |
+| `ALLOW_NEW_DB` | 允许创建新数据库 | 未设置则数据库不存在时拒绝启动 |
 
 ## 安装与启动
 
@@ -54,62 +60,50 @@ npm start
 ## 项目结构
 
 ```
-├── server.js              # 服务入口
-├── .env.example           # 环境变量示例
-├── package.json
+├── server.js              # Express 入口 + session 存储
+├── config.js              # 统一配置管理
+├── CONVENTIONS.md         # 编码规范（AI 辅助开发必读）
 ├── db/
-│   └── init.js            # 数据库初始化
+│   ├── init.js            # better-sqlite3 初始化 + 查询辅助
+│   ├── schema.js          # CREATE TABLE 语句
+│   ├── migrations.js      # 版本化迁移 (v1-v20)
+│   └── seeds.js           # 种子数据
 ├── middleware/
-│   ├── auth.js            # 认证中间件
-│   └── upload.js          # 文件上传中间件 (multer)
-├── routes/
-│   ├── auth.js            # 认证路由
-│   ├── posts.js           # 作品路由
-│   ├── file.js            # 文件访问路由
-│   ├── settings.js        # 设置路由
-│   └── upload.js          # 上传路由
-├── uploads/               # 上传文件存储
-│   └── sounds/            # 提示音文件
-└── public/
-    ├── index.html          # SPA 入口
-    ├── css/
-    │   └── style.css       # 样式文件
-    └── js/
-        ├── app.js          # 主应用
-        ├── api.js          # API 请求封装
-        ├── components.js   # 视图渲染组件
-        ├── router.js       # 前端路由
-        └── utils.js        # 工具函数
+│   ├── auth.js            # 认证中间件 (含 requireAuthorOrAdmin)
+│   ├── upload.js          # 文件上传 (multer)
+│   ├── zoneAccess.js      # 分区访问控制
+│   └── errorHandler.js    # 全局错误处理
+├── services/
+│   ├── AuthService.js     # 认证业务
+│   ├── PostService.js     # 帖子业务
+│   └── LevelService.js    # XP/升级/积分
+├── routes/                # 20 个路由文件
+├── public/
+│   ├── index.html         # SPA 入口
+│   ├── css/               # 20+ 组件化样式文件
+│   └── js/
+│       ├── app.js         # 主应用
+│       ├── api.js         # API 封装
+│       ├── router.js      # 哈希路由
+│       ├── music.js       # 音乐播放器
+│       ├── utils.js       # 工具函数
+│       └── components/    # 15 个页面组件
 ```
 
-## API 接口
+## API 接口（精简）
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/auth/register` | 注册 |
-| POST | `/api/auth/login` | 登录 |
-| POST | `/api/auth/logout` | 退出 |
-| GET | `/api/auth/me` | 获取当前用户 |
-| GET | `/api/posts` | 作品列表（分页） |
-| GET | `/api/posts/:id` | 作品详情 |
-| POST | `/api/posts` | 创建作品（管理员） |
-| PUT | `/api/posts/:id` | 更新作品（管理员） |
-| DELETE | `/api/posts/:id` | 删除作品（管理员） |
-| POST | `/api/upload` | 文件上传（管理员） |
-| GET | `/api/file/:fileId` | 文件访问（权限校验） |
-| GET | `/api/settings/sound` | 获取声音设置 |
-| PUT | `/api/settings/sound` | 更新音量（管理员） |
-| POST | `/api/settings/sound/upload` | 上传提示音（管理员） |
-| GET | `/api/site/about` | 获取关于页面信息 |
-| PUT | `/api/site/about` | 更新关于页面信息（管理员） |
-| GET | `/api/posts/:postId/comments` | 获取评论列表 |
-| POST | `/api/posts/:postId/comments` | 发布评论 |
-| PUT | `/api/comments/:id` | 编辑评论（作者或管理员） |
-| DELETE | `/api/comments/:id` | 删除评论（作者或管理员） |
-| GET | `/api/notifications` | 获取通知列表 |
-| GET | `/api/notifications/unread-count` | 获取未读通知数 |
-| PUT | `/api/notifications/:id/read` | 标记通知已读 |
-| PUT | `/api/notifications/read-all` | 全部标记已读 |
+完整文档见 [`docs/api-reference.md`](docs/api-reference.md)。
+
+| 模块 | 路由前缀 | 主要端点 |
+|------|---------|---------|
+| 认证 | `/api/auth` | register, login, logout, me, password, profile |
+| 帖子 | `/api/posts` | CRUD、置顶/精华、附件购买/下载 |
+| 评论 | `/api/posts/:id/comments` | 列表、创建、编辑、删除 |
+| 好友 | `/api` | 好友请求、好友列表、私信 |
+| 音乐 | `/api/music` | 上传、歌单、公开分享、收藏 |
+| 管理 | `/api/admin` | 用户管理、禁言、批量删除、数据统计 |
+| 等级 | `/api/levels` | 等级信息、配置、分区访问 |
+| 其他 | `/api` | 通知、标签、收藏、举报、广告、公告 |
 
 ## 内网穿透临时部署
 

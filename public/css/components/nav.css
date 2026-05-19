@@ -234,9 +234,9 @@
   gap: 6px;
 }
 .level-display .lvl-progress {
-  width: 64px;
-  height: 3px;
-  background: var(--border);
+  width: 68px;
+  height: 4px;
+  background: rgba(255,255,255,0.12);
   border-radius: 2px;
   overflow: hidden;
   flex-shrink: 0;
@@ -248,7 +248,7 @@
   transition: width 0.4s ease;
 }
 .level-display .lvl-progress-label {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--primary);
   white-space: nowrap;
   font-weight: 500;

@@ -152,8 +152,16 @@ app.use(session({
   cookie: config.session
 }));
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from public directory (disable caching for JS/CSS during development)
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // CSRF protection: validate Origin/Referer for state-changing requests
 app.use('/api', (req, res, next) => {
@@ -235,41 +243,24 @@ app.get('*', apiNotFound, (req, res) => {
 app.use(errorHandler);
 
 // Start server
-async function start() {
+function start() {
   try {
     // Ensure uploads directories exist
-    const dirs = [
+    var dirs = [
       config.uploadDir,
       path.join(config.uploadDir, 'sounds'),
       path.join(config.uploadDir, 'music'),
       path.join(config.uploadDir, 'music_covers')
     ];
-    dirs.forEach(d => {
+    dirs.forEach(function(d) {
       if (!fs.existsSync(d)) {
         fs.mkdirSync(d, { recursive: true });
         logger.info('Created directory: ' + d);
       }
     });
 
-    // Database file existence check
-    var dbPath = path.resolve(process.env.DB_PATH || './database.db');
-    if (!fs.existsSync(dbPath)) {
-      if (process.env.ALLOW_NEW_DB) {
-        logger.warn('⚠️  ALLOW_NEW_DB 已设置，将创建新数据库');
-      } else {
-        logger.error('═══════════════════════════════════════════════════════');
-        logger.error('  ❌ 数据库文件不存在: ' + dbPath);
-        logger.error('  ⚠️  为避免数据丢失，服务器已停止启动');
-        logger.error('  💡 首次运行请设置环境变量绕过检查:');
-        logger.error('       set ALLOW_NEW_DB=1 && node server.js');
-        logger.error('  📁 如需使用已有数据库，请设置 DB_PATH:');
-        logger.error('       set DB_PATH=F:\\path\\to\\database.db && node server.js');
-        logger.error('═══════════════════════════════════════════════════════');
-        process.exit(1);
-      }
-    }
-    // Initialize database
-    await initDatabase();
+    // Initialize database (handles file-existence check internally)
+    initDatabase();
 
     app.listen(config.port, () => {
       logger.info('Portfolio app running at http://localhost:' + config.port);

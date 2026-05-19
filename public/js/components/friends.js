@@ -81,6 +81,19 @@ var ComponentsFriends = {
       document.querySelectorAll('.friend-card .chat-btn').forEach(function(btn) {
         btn.addEventListener('click', function() { Router.navigate('#/chat/' + this.dataset.id); });
       });
+      document.querySelectorAll('.delete-friend-btn').forEach(function(btn) {
+        btn.addEventListener('click', async function(e) {
+          e.stopPropagation();
+          var name = this.dataset.name;
+          var id = parseInt(this.dataset.id);
+          if (!(await showConfirm('确定删除好友「' + name + '」？'))) return;
+          try {
+            await API.removeFriend(id);
+            showToast('已删除好友', 'success');
+            Components.renderFriends();
+          } catch(err) { showToast(err.message, 'error'); }
+        });
+      });
       document.querySelectorAll('.request-card .accept-btn').forEach(function(btn) {
         btn.addEventListener('click', async function() {
           try { await API.approveFriendRequest(parseInt(this.dataset.id)); showToast('已添加', 'success'); Components.renderFriends(); }
@@ -133,6 +146,7 @@ var ComponentsFriends = {
           '<div class="fm">' +
           '<span class="friend-status' + (online ? ' online' : '') + '">' + (online ? '🟢' : '⚪') + ' ' + (online ? '在线' : '离线') + '</span>' +
           '<button class="btn btn-sm btn-outline chat-btn" data-id="' + f.friend_id + '">💬 私信</button>' +
+          '<button class="btn btn-sm btn-outline delete-friend-btn" data-id="' + f.friend_id + '" data-name="' + escapeHtml(f.nickname || f.username) + '" style="color:var(--error);">🗑 删除</button>' +
           '</div></div>';
       }).join('');
     } else if (tab === 'requests') {

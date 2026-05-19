@@ -1,6 +1,6 @@
 # Portfolio — 个人作品集网站
 
-基于 Node.js + Express + SQL.js (SQLite in-memory) 的 SPA 个人作品集管理系统。
+基于 Node.js + Express + better-sqlite3 (SQLite) 的 SPA 个人作品集管理系统。
 
 ## 启动
 
@@ -18,7 +18,10 @@ npm start              # 启动，访问 http://localhost:3000
 server.js              # Express 入口 + SQLite Session Store
 config.js              # 统一配置管理（从 .env 读取）
 logger.js              # Winston 日志系统（console + 文件双输出）
-db/init.js             # sql.js 初始化 + 表结构 + 迁移 + XP 系统
+db/init.js             # better-sqlite3 初始化 + 查询辅助函数
+db/schema.js           # CREATE TABLE 语句
+db/migrations.js       # 版本化迁移 (v1-v20)
+db/seeds.js            # 种子数据
 middleware/
   auth.js              # requireAuth / requireAdmin / requireNotBanned
   upload.js            # multer 配置（通用上传/声音上传）
@@ -30,6 +33,7 @@ models/                # 数据访问层（封装 SQL 查询）
 services/              # 业务逻辑层（封装复杂业务）
   AuthService.js       # 注册、登录、修改密码
   PostService.js       # 帖子 CRUD、内容块管理（含附件购买）
+  LevelService.js      # XP/升级/积分（从 db/init 独立）
   NotificationService.js / FileService.js / LoginNoticeService.js
 routes/                # 20 个路由文件，按功能拆分
   auth.js / posts.js / comments.js / notifications.js / ...
@@ -62,11 +66,12 @@ scripts/               # 工具脚本
 
 ## 技术要点
 
-### 数据库 (sql.js)
-- 在内存中运行，每 2 秒持久化到 `database.db`
-- `run(sql, params)` / `get(sql, params)` / `all(sql, params)` 同步查询
-- 所有 ALTER TABLE 迁移使用 try-catch 包裹避免重复执行
+### 数据库 (better-sqlite3)
+- 原生 C 扩展，WAL 模式实时写盘，零数据丢失
+- `run(sql, params)` / `get(sql, params)` / `getFirst(sql, params)` / `all(sql, params)` 同步查询
+- 迁移使用 `schema_version` 版本追踪，仅执行未运行块，ALTER TABLE 幂等
 - 种子数据仅在表为空时写入
+- XP/升级逻辑在 `services/LevelService.js`
 
 ### 路由挂载规则
 ```js

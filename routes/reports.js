@@ -108,29 +108,52 @@ router.put('/admin/reports/:id', requireAdmin, (req, res) => {
 
 // ===== Admin Zone Stats =====
 
-// GET /api/admin/stats — zone statistics
+// GET /api/admin/stats — zone statistics (optimized: 2 queries instead of 10)
 router.get('/admin/stats', requireAdmin, (req, res) => {
   try {
-    // Count posts by category
-    const workPosts = get("SELECT COUNT(*) as count FROM posts WHERE category = 'work' AND deleted_at IS NULL");
-    const chatPosts = get("SELECT COUNT(*) as count FROM posts WHERE category = 'chat' AND deleted_at IS NULL");
-    const workReplies = get("SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.category = 'work' AND p.deleted_at IS NULL");
-    const chatReplies = get("SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.category = 'chat' AND p.deleted_at IS NULL");
-    const musicPosts = get("SELECT COUNT(*) as count FROM posts WHERE category = 'music' AND deleted_at IS NULL");
-    const jobPosts = get("SELECT COUNT(*) as count FROM posts WHERE category = 'job' AND deleted_at IS NULL");
-    const musicReplies = get("SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.category = 'music' AND p.deleted_at IS NULL");
-    const jobReplies = get("SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.category = 'job' AND p.deleted_at IS NULL");
-    const totalUsers = get('SELECT COUNT(*) as count FROM users');
-    const totalReports = get("SELECT COUNT(*) as count FROM reports WHERE status = 'pending'");
+    // Query 1: zone stats in one GROUP BY pass
+    var zoneRows = all(
+      "SELECT p.category, " +
+      "COUNT(DISTINCT p.id) as posts, " +
+      "COUNT(DISTINCT c.id) as replies " +
+      "FROM posts p " +
+      "LEFT JOIN comments c ON c.post_id = p.id AND p.deleted_at IS NULL " +
+      "WHERE p.deleted_at IS NULL " +
+      "GROUP BY p.category"
+    );
 
-    const zones = [
-      { zone: 'works', label: '作品区', posts: workPosts.count, replies: workReplies.count },
-      { zone: 'chat', label: '聊天区', posts: chatPosts.count, replies: chatReplies.count },
-      { zone: 'music', label: '音乐区', posts: musicPosts.count, replies: musicReplies.count },
-      { zone: 'jobs', label: '求职招聘', posts: jobPosts.count, replies: jobReplies.count },
-    ];
+    // Normalize into ordered zone map
+    var zoneOrder = ['work', 'chat', 'music', 'job'];
+    var zoneLabels = { work: '作品区', chat: '聊天区', music: '音乐区', job: '求职招聘' };
+    var zoneMap = {};
+    for (var i = 0; i < zoneRows.length; i++) {
+      zoneMap[zoneRows[i].category] = zoneRows[i];
+    }
+    var zones = zoneOrder.map(function(z) {
+      var row = zoneMap[z];
+      return { zone: z, label: zoneLabels[z], posts: row ? row.posts : 0, replies: row ? row.replies : 0 };
+    });
 
-    res.json({ zones, total_users: totalUsers.count, pending_reports: totalReports.count });
+    // Query 2: totals + today's metrics in one pass
+    var totals = get(
+      "SELECT " +
+      "(SELECT COUNT(*) FROM users) as total_users, " +
+      "(SELECT COUNT(*) FROM reports WHERE status = 'pending') as pending_reports, " +
+      "(SELECT COUNT(*) FROM posts WHERE deleted_at IS NULL AND created_at > datetime('now', '-1 day')) as posts_today, " +
+      "(SELECT COUNT(*) FROM users WHERE created_at > datetime('now', '-1 day')) as users_today, " +
+      "(SELECT COUNT(*) FROM posts WHERE deleted_at IS NULL) as total_posts, " +
+      "(SELECT COUNT(*) FROM comments) as total_comments"
+    );
+
+    res.json({
+      zones: zones,
+      total_users: totals.total_users,
+      total_posts: totals.total_posts,
+      total_comments: totals.total_comments,
+      pending_reports: totals.pending_reports,
+      posts_today: totals.posts_today,
+      users_today: totals.users_today
+    });
   } catch (err) {
     logger.error('[Admin Stats] Error:', err);
     res.status(500).json({ error: '获取统计数据失败' });

@@ -1,7 +1,7 @@
 /**
  * Zone access middleware — check if user's level has access to a zone
  */
-const { getFirst } = require('../db/init');
+const { run, get, getFirst, all } = require('../db/init');
 
 function requireZoneAccess(zone) {
   return (req, res, next) => {
@@ -15,7 +15,7 @@ function requireZoneAccess(zone) {
     if (!user) return res.status(403).json({ error: '用户不存在' });
 
     // Get the highest level config the user meets
-    const configs = require('../db/init').all(
+    const configs = all(
       'SELECT zones FROM level_config WHERE level <= ? ORDER BY level DESC LIMIT 1',
       [user.level || 1]
     );
@@ -39,7 +39,7 @@ function requireJobRole(role) {
       return res.status(401).json({ error: '请先登录' });
     }
     if (req.session.role === 'admin') return next();
-    const user = require('../db/init').get('SELECT job_role, job_role_approved FROM users WHERE id = ?', [req.session.userId]);
+    const user = get('SELECT job_role, job_role_approved FROM users WHERE id = ?', [req.session.userId]);
     if (!user || !user.job_role_approved) {
       return res.status(403).json({ error: '请先申请招聘者/求职者身份' });
     }

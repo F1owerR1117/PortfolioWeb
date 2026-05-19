@@ -2,7 +2,7 @@
 
 ## 项目概述
 
-基于 **Node.js + Express + SQL.js (SQLite in-memory)** 的全栈单页面应用（SPA），
+基于 **Node.js + Express + better-sqlite3 (SQLite)** 的全栈单页面应用（SPA），
 集作品展示、博客文章、社交互动、音乐播放于一体的个人作品集管理系统。
 
 - **启动**: `npm start` → 访问 `http://localhost:3000`
@@ -30,7 +30,7 @@ npm start              # 启动开发服务器
 | 层级 | 技术 |
 |------|------|
 | 后端框架 | Express 4.21 |
-| 数据库 | sql.js 1.10 (SQLite WASM, 同步 API) |
+| 数据库 | better-sqlite3 12.x (SQLite 原生 C 扩展, WAL 实时写盘) |
 | 会话管理 | express-session + 自定义 SQLite 存储 |
 | 认证 | bcryptjs 密码哈希 + session |
 | 文件上传 | multer 1.4 (50MB 限制) |
@@ -62,7 +62,10 @@ npm start              # 启动开发服务器
 server.js              # Express 入口 + 会话存储
 config.js              # 统一配置管理（从 .env 读取）
 logger.js              # Winston 日志系统
-db/init.js             # sql.js 初始化 + 表结构
+db/init.js             # better-sqlite3 初始化 + 查询辅助函数
+db/schema.js           # CREATE TABLE 语句
+db/migrations.js       # 版本化迁移 (v1-v20, schema_version 追踪)
+db/seeds.js            # 种子数据
 middleware/
   auth.js              # 认证中间件
   upload.js            # 文件上传配置
@@ -72,8 +75,8 @@ middleware/
 models/                # 数据访问层
   User.js / Post.js / Comment.js / Notification.js / File.js
 services/              # 业务逻辑层
-  AuthService.js / PostService.js / NotificationService.js
-  FileService.js / LoginNoticeService.js
+  AuthService.js / PostService.js / LevelService.js
+  NotificationService.js / FileService.js / LoginNoticeService.js
 routes/                # 20 个路由文件
   auth.js, posts.js, comments.js, notifications.js, ...
   friends.js, music.js, bookmarks.js, reports.js, ...
@@ -107,4 +110,13 @@ scripts/
   snapshot.sh          # 快照备份
   rollback.sh          # 回滚脚本
 ```
+
+## 开发工具
+
+| 文件 | 用途 |
+|------|------|
+| `CONVENTIONS.md` | 编码规范——每次给 AI 发 prompt 时引用 |
+| `.reasonix/skills/audit.md` | `/audit` 一键代码审计（5 类自动检查） |
+| `AI_PROMPT.md` | AI 辅助开发参考（项目架构全貌） |
+| `previews/` | HTML 预览文件（音乐优化建议、登录粒子动画等） |
 	

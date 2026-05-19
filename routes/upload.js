@@ -66,7 +66,6 @@ router.post('/', requireAuth, (req, res) => {
       );
 
       // Get last insert ID
-      const { getFirst } = require('../db/init');
       const fileRecord = getFirst('SELECT MAX(id) as id FROM files');
       const fileId = fileRecord ? fileRecord.id : null;
 
@@ -129,7 +128,6 @@ router.post('/attachment', requireAuth, (req, res) => {
         [req.file.filename, req.file.originalname, mimeType, filepath, req.file.size]
       );
 
-      const { getFirst } = require('../db/init');
       const fileRecord = getFirst('SELECT MAX(id) as id FROM files');
       const fileId = fileRecord ? fileRecord.id : null;
 

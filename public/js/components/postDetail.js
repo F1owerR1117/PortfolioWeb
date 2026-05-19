@@ -5,10 +5,11 @@ var ComponentsPostDetail = {
     try {
       var d = await API.getPost(postId), post = d.post, blocks = d.blocks, isAdmin = App.user && App.user.role === 'admin';
       this._currentPostAuthorId = post.created_by;
+      var isAuthor = App.user && App.user.id === post.created_by;
       var tags = (post.tags || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
       var tagsHtml = tags.length ? ' · ' + tags.map(function(t) { return '<span class="meta-tag">' + escapeHtml(t) + '</span>'; }).join(' ') : '';
       var tagNames = tags.length ? tags.map(function(t) { return '<span class="detail-tag">' + escapeHtml(t) + '</span>'; }).join(' ') : '';
-      var adminHtml = isAdmin ? '<div class="admin-actions" style="margin-top:12px;"><button class="admin-btn" id="edit-post-btn">✏️ 编辑</button><button class="admin-btn danger" id="delete-post-btn">🗑️ 删除</button><button class="admin-btn ' + (post.is_sticky ? 'active' : '') + '" id="sticky-toggle-btn">📌 ' + (post.is_sticky ? '已置顶' : '置顶') + '</button><button class="admin-btn ' + (post.is_featured ? 'active' : '') + '" id="featured-toggle-btn">⭐ ' + (post.is_featured ? '已精华' : '精华') + '</button><button class="admin-btn ' + (post.is_locked ? 'active' : '') + '" id="lock-toggle-btn">🔒 ' + (post.is_locked ? '已锁定' : '锁定') + '</button></div>' : '';
+      var adminHtml = (isAdmin || isAuthor) ? '<div class="admin-actions" style="margin-top:12px;"><button class="admin-btn" id="edit-post-btn">✏️ 编辑</button><button class="admin-btn danger" id="delete-post-btn">🗑️ 删除</button>' + (isAdmin ? '<button class="admin-btn ' + (post.is_sticky ? 'active' : '') + '" id="sticky-toggle-btn">📌 ' + (post.is_sticky ? '已置顶' : '置顶') + '</button><button class="admin-btn ' + (post.is_featured ? 'active' : '') + '" id="featured-toggle-btn">⭐ ' + (post.is_featured ? '已精华' : '精华') + '</button><button class="admin-btn ' + (post.is_locked ? 'active' : '') + '" id="lock-toggle-btn">🔒 ' + (post.is_locked ? '已锁定' : '锁定') + '</button>' : '') + '</div>' : '';
       var metaHtml = '<div class="post-detail-meta"><a href="#/users/' + post.created_by + '" class="user-link">' + escapeHtml(post.author) + '</a>' + this._renderLevelBadge((post.author_level || 1)) + ' · ' + formatDate(post.created_at) + (post.updated_at !== post.created_at ? '（编辑于 ' + formatDate(post.updated_at) + '）' : '') + ' · 👁 ' + (post.views || 0) + '</div>';
       var coverHtml = post.cover_url ? 'background-image:url(' + post.cover_url + ');background-size:cover;background-position:center;' : '';
       var coverIcon = post.cover_url ? '' : '📄';
@@ -48,7 +49,11 @@ var ComponentsPostDetail = {
 
       var tagSideHtml = tagNames ? '<div class="detail-sidebar-card"><h4>🏷️ 标签</h4><div>' + tagNames + '</div></div>' : '';
 
-      var sidebarHtml = authorHtml + locHtml + tocHtml + reactHtml + tagSideHtml;
+      var contactHtml = '';
+      if (post.category === 'job' && post.created_by !== (App.user && App.user.id)) {
+        contactHtml = '<div class="detail-sidebar-card"><h4>🤝 联系</h4><button class="btn btn-outline btn-sm" id="contact-author-btn" style="width:100%;justify-content:center;">💬 私信' + (post.author_job_role === 'employer' ? '招聘者' : '求职者') + '</button></div>';
+      }
+      var sidebarHtml = '<div class="detail-sidebar-sticky">' + authorHtml + locHtml + tocHtml + reactHtml + contactHtml + tagSideHtml + '</div>';
       var heroHtml = '<div class="back-link" id="back-link">← 返回列表</div>' +
         '<div class="post-detail-cover" style="' + coverHtml + '">' + coverIcon + '</div>' +
         '<h1 class="post-detail-title">' + escapeHtml(post.title) + '</h1>' + metaHtml + adminHtml + mainContent;
@@ -130,10 +135,14 @@ var ComponentsPostDetail = {
       });
 
       if (blocks.some(function(b) { return b.type === 'code'; })) loadHighlightJs().then(function() { document.querySelectorAll('pre code').forEach(function(el) { if (window.hljs) hljs.highlightElement(el); }); Components._applyCollapse(); }); else this._applyCollapse();
-      document.getElementById('back-link').addEventListener('click', function() { Router.navigate(post.category === 'chat' ? '#/chats' : '#/works'); });
-      if (isAdmin) {
+      document.getElementById('back-link').addEventListener('click', function() { var back = '#/works'; if (post.category === 'chat') back = '#/chats'; else if (post.category === 'job') back = '#/jobs'; Router.navigate(back); });
+      // Edit + Delete: admin or post author
+      if (isAdmin || isAuthor) {
         document.getElementById('edit-post-btn').addEventListener('click', function() { Router.navigate('#/edit/' + post.id); });
-        document.getElementById('delete-post-btn').addEventListener('click', async function() { if (!(await showConfirm('确定删除？'))) return; var b = document.getElementById('delete-post-btn'); b.disabled = true; b.textContent = '删除中...'; try { await API.deletePost(post.id); showToast('已删除', 'success'); var navTo = post.category === 'chat' ? '#/chats' : '#/works'; Router.navigate(navTo); } catch (err) { showToast(err.message, 'error'); b.disabled = false; b.textContent = '🗑 删除'; } });
+        document.getElementById('delete-post-btn').addEventListener('click', async function() { if (!(await showConfirm('确定删除？'))) return; var b = document.getElementById('delete-post-btn'); b.disabled = true; b.textContent = '删除中...'; try { await API.deletePost(post.id); showToast('已删除', 'success'); var navTo = '#/works'; if (post.category === 'chat') navTo = '#/chats'; else if (post.category === 'job') navTo = '#/jobs'; Router.navigate(navTo); } catch (err) { showToast(err.message, 'error'); b.disabled = false; b.textContent = '🗑 删除'; } });
+      }
+      // Sticky / featured / lock: admin only
+      if (isAdmin) {
       }
       this._bindReactionBar(postId);
       if (isAdmin) this._bindStatusToggles(postId);
@@ -143,6 +152,10 @@ var ComponentsPostDetail = {
       };
       API.checkBookmark(post.id).then(function(c) { _updateBmBtn((c.collection_ids||[]).length > 0); }).catch(function(){});
       document.getElementById('bookmark-btn')?.addEventListener('click', async function() { try { playClickSound(); var cols = (await API.getBookmarkCollections()).collections || []; var check = await API.checkBookmark(post.id); var sel = new Set((check.collection_ids || []).map(Number)); var ov = document.createElement('div'); ov.className = 'custom-modal-overlay'; ov.innerHTML = '<div class="custom-modal-dialog" style="max-width:420px;padding:20px 0;"><div style="padding:0 24px 16px;border-bottom:1px solid var(--border);"><div style="font-size:17px;font-weight:700;">📌 管理收藏</div></div><div style="padding:8px 0;max-height:320px;overflow-y:auto;">' + (cols.length ? cols.map(function(c) { var s = sel.has(c.id); return '<div class="picker-col-item" data-id="' + c.id + '" data-selected="' + (s ? '1' : '0') + '" style="padding:12px 24px;cursor:pointer;display:flex;align-items:center;gap:12px;"><span style="font-size:18px;width:24px;text-align:center;">' + (s ? '☑' : '☐') + '</span><div><div style="font-weight:600;font-size:14px;">' + escapeHtml(c.name) + '</div><div style="font-size:12px;color:var(--text-secondary);">' + (c.count || 0) + ' 个收藏</div></div></div>'; }).join('') : '<div style="padding:20px;text-align:center;color:var(--text-secondary);">暂无收藏夹，点击下方新建</div>') + '</div><div style="padding:12px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:space-between;"><button class="btn btn-sm btn-outline" id="picker-new-col-btn">✚ 新建</button><div><button class="btn btn-sm btn-outline" id="picker-cancel-btn">取消</button><button class="btn btn-sm btn-primary" id="picker-confirm-btn" style="margin-left:8px;">保存</button></div></div></div>'; document.body.appendChild(ov); requestAnimationFrame(function(){ ov.classList.add('visible'); }); var cp = function(){ ov.classList.remove('visible'); ov.classList.add('closing'); setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 200); }; ov.querySelectorAll('.picker-col-item').forEach(function(it) { it.addEventListener('click', function() { var s = it.dataset.selected === '1'; it.dataset.selected = s ? '0' : '1'; it.style.borderLeft = s ? '' : '3px solid var(--primary)'; it.querySelector('span:first-child').textContent = s ? '☐' : '☑'; }); }); document.getElementById('picker-confirm-btn').addEventListener('click', async function() { var changed = 0, errors = 0; this.disabled = true; for (var i = 0; i < cols.length; i++) { var c = cols[i], el = ov.querySelector('.picker-col-item[data-id="' + c.id + '"]'); if (!el) continue; if ((el.dataset.selected === '1') !== sel.has(c.id)) { try { await API.toggleBookmark(post.id, c.id); changed++; } catch(e) { errors++; } } } cp(); if (errors > 0) showToast('部分操作失败（' + errors + ' 项），请重试', 'error'); else showToast(changed > 0 ? '已更新' : '未修改', 'success'); try { var c2 = await API.checkBookmark(post.id); _updateBmBtn((c2.collection_ids||[]).length > 0); } catch(e){} }); document.getElementById('picker-new-col-btn').addEventListener('click', async function() { var n = await showPrompt('新建收藏夹名称：', '', '我的收藏'); if (!n || !n.trim()) return; try { await API.createBookmarkCollection(n.trim()); showToast('已创建', 'success'); cp(); setTimeout(function() { document.getElementById('bookmark-btn').click(); }, 250); } catch(err) { showToast(err.message, 'error'); } }); document.getElementById('picker-cancel-btn').addEventListener('click', cp); ov.addEventListener('click', function(e) { if (e.target === ov) cp(); }); } catch(err) { showToast(err.message, 'error'); } });
+      document.getElementById('contact-author-btn')?.addEventListener('click', function() {
+        playClickSound();
+        Router.navigate('#/chat/' + post.created_by);
+      });
       document.getElementById('report-post-btn')?.addEventListener('click', async function() { var r = await showPrompt('举报原因：', '', '违规内容'); if (!r || !r.trim()) return; try { await API.createReport('post', post.id, r.trim()); showToast('已提交', 'success'); } catch (err) { showToast(err.message, 'error'); } });
       document.querySelectorAll('.detail-toc-item').forEach(function(el) { el.addEventListener('click', function() { var blockId = this.dataset.blockId; var target = document.getElementById('block-' + blockId); if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.querySelectorAll('.detail-toc-item').forEach(function(x) { x.classList.remove('active'); }); this.classList.add('active'); playClickSound(); } }); });
       await this._loadComments(postId); this._bindCommentForm(postId); this._bindCommentActions(postId);
@@ -234,6 +247,6 @@ var ComponentsPostDetail = {
     if (!el) return false;
     var p = el.parentElement;
     while (p) { if (p.classList.contains('comment-nested')) { p.style.display = ''; var pid = p.dataset.parent; var toggle = document.querySelector('.toggle-nested-btn[data-parent="' + pid + '"]'); if (toggle) { var count = p.querySelectorAll('.comment').length; toggle.textContent = '🐾 收起 ' + count + ' 条回复'; } } p = p.parentElement; }
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.background = 'rgba(37,99,235,0.08)'; setTimeout(function() { if (el) el.style.background = ''; }, 2000); return true;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.setAttribute('data-highlight', 'true'); setTimeout(function() { if (el) el.removeAttribute('data-highlight'); }, 2000); return true;
   }
 };

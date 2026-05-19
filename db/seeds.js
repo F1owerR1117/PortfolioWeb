@@ -9,26 +9,26 @@ function seedData(run, get, getFirst, all, forceSave, saveDB) {
   if (!levelCount || levelCount.count === 0) {
     const names = ['', '新手', '学徒', '工匠', '专家', '大师', '宗师', '传说', '神话', '史诗', '不朽', '星辰', '银河', '宇宙', '创世', '超越', '无限', '永恒', '至尊', '巅峰'];
     const defaultLevels = [
-      [1, 0, '["work","chat","music"]'],
-      [2, 100, '["work","chat","music"]'],
-      [3, 300, '["work","chat","music"]'],
-      [4, 600, '["work","chat","music"]'],
-      [5, 1000, '["work","chat","music"]'],
-      [6, 1500, '["work","chat","music"]'],
-      [7, 2100, '["work","chat","music"]'],
-      [8, 2800, '["work","chat","music"]'],
-      [9, 3600, '["work","chat","music"]'],
-      [10, 5000, '["work","chat","music"]'],
-      [11, 6500, '["work","chat","music"]'],
-      [12, 8000, '["work","chat","music"]'],
-      [13, 10000, '["work","chat","music"]'],
-      [14, 12000, '["work","chat","music"]'],
-      [15, 15000, '["work","chat","music"]'],
-      [16, 18000, '["work","chat","music"]'],
-      [17, 22000, '["work","chat","music"]'],
-      [18, 26000, '["work","chat","music"]'],
-      [19, 30000, '["work","chat","music"]'],
-      [20, 40000, '["work","chat","music"]']
+      [1, 0, '["work","chat","music","job"]'],
+      [2, 100, '["work","chat","music","job"]'],
+      [3, 300, '["work","chat","music","job"]'],
+      [4, 600, '["work","chat","music","job"]'],
+      [5, 1000, '["work","chat","music","job"]'],
+      [6, 1500, '["work","chat","music","job"]'],
+      [7, 2100, '["work","chat","music","job"]'],
+      [8, 2800, '["work","chat","music","job"]'],
+      [9, 3600, '["work","chat","music","job"]'],
+      [10, 5000, '["work","chat","music","job"]'],
+      [11, 6500, '["work","chat","music","job"]'],
+      [12, 8000, '["work","chat","music","job"]'],
+      [13, 10000, '["work","chat","music","job"]'],
+      [14, 12000, '["work","chat","music","job"]'],
+      [15, 15000, '["work","chat","music","job"]'],
+      [16, 18000, '["work","chat","music","job"]'],
+      [17, 22000, '["work","chat","music","job"]'],
+      [18, 26000, '["work","chat","music","job"]'],
+      [19, 30000, '["work","chat","music","job"]'],
+      [20, 40000, '["work","chat","music","job"]']
     ];
     for (var i = 0; i < defaultLevels.length; i++) {
       var lvl = defaultLevels[i][0], xp = defaultLevels[i][1], z = defaultLevels[i][2];

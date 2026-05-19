@@ -4,12 +4,14 @@ var ComponentsNotifications = {
     this.renderLoading();
     try {
       var n = (await API.getNotifications()).notifications || [];
-      var labels = { reply: '回复了你的评论', comment: '评论了你的帖子', sticky: '帖子被置顶', featured: '帖子被设为精华', locked: '帖子被锁定', post_deleted: '帖子被删除', friend_request: '请求添加好友', friend_approved: '通过了你的好友申请', message: '发送了私信', bookmark: '收藏了你的帖子', playlist_collect: '收藏了你的歌单', banned: '你已被禁言' };
-      var icons = { reply: '💬', comment: '💬', sticky: '📌', featured: '⭐', locked: '🔒', post_deleted: '🗑️', friend_request: '👥', friend_approved: '✅', message: '✉️', bookmark: '🔖', playlist_collect: '📋', banned: '🚫' };
+      // Filter out admin-only notification types (shown on separate admin page)
+      n = n.filter(function(x) { return x.type !== 'admin_report' && x.type !== 'admin_application' && x.type !== 'admin_system'; });
+      var labels = { reply: '回复了你的评论', comment: '评论了你的帖子', sticky: '帖子被置顶', featured: '帖子被设为精华', locked: '帖子被锁定', post_deleted: '帖子被删除', friend_request: '请求添加好友', friend_approved: '通过了你的好友申请', message: '发送了私信', bookmark: '收藏了你的帖子', playlist_collect: '收藏了你的歌单', banned: '你已被禁言', job_approved: '身份申请已通过', job_rejected: '身份申请未通过' };
+      var icons = { reply: '💬', comment: '💬', sticky: '📌', featured: '⭐', locked: '🔒', post_deleted: '🗑️', friend_request: '👥', friend_approved: '✅', message: '✉️', bookmark: '🔖', playlist_collect: '📋', banned: '🚫', job_approved: '✅', job_rejected: '❌' };
       var unreadCount = n.filter(function(x) { return !x.is_read; }).length;
       var getNotifNav = function(x) {
         var nav = null, toastMsg = null; var postDeleted = x.post_deleted ? true : false; var navToPosts = postDeleted ? null : (x.post_id ? '#/posts/' + x.post_id : null);
-        switch (x.type) { case 'reply': if (postDeleted) { toastMsg = '原帖已被删除'; break; } nav = navToPosts; break; case 'comment': case 'sticky': case 'featured': case 'locked': case 'bookmark': if (postDeleted) { toastMsg = '原帖已被删除'; break; } nav = navToPosts; break; case 'post_deleted': toastMsg = '帖子已被删除'; break; case 'message': nav = '#/chat/' + x.actor_id; break; case 'friend_request': case 'friend_approved': nav = '#/friends'; break; case 'playlist_collect': toastMsg = '有人收藏了你的歌单'; break; case 'banned': toastMsg = '你已被禁言'; break; default: nav = '#/works'; }
+        switch (x.type) { case 'reply': if (postDeleted) { toastMsg = '原帖已被删除'; break; } nav = navToPosts; break; case 'comment': case 'sticky': case 'featured': case 'locked': case 'bookmark': if (postDeleted) { toastMsg = '原帖已被删除'; break; } nav = navToPosts; break; case 'post_deleted': toastMsg = '帖子已被删除'; break; case 'message': nav = '#/chat/' + x.actor_id; break; case 'friend_request': case 'friend_approved': nav = '#/friends'; break; case 'playlist_collect': toastMsg = '有人收藏了你的歌单'; break; case 'banned': toastMsg = '你已被禁言'; break; case 'job_approved': nav = '#/jobs'; break; case 'job_rejected': nav = '#/profile'; break; default: nav = '#/works'; }
         return { nav: nav, toast: toastMsg };
       };
       var groups = {};
@@ -34,16 +36,22 @@ var ComponentsNotifications = {
         for (var i = 0; i < list.length; i++) {
           var n = list[i];
           var borderColor = n.type === 'admin_report' ? 'var(--primary)' : (n.type === 'admin_application' ? '#f59e0b' : 'var(--text-muted)');
-          h += '<div class="notif-card" style="border-left:3px solid ' + borderColor + ';" data-id="' + n.id + '">' +
+          var actionLabel = n.type === 'admin_report' ? '点击处理 →' : (n.type === 'admin_application' ? '前往审核 →' : '查看详情 →');
+          h += '<div class="notif-card admin-notif-card" style="border-left:3px solid ' + borderColor + ';cursor:pointer;" data-id="' + n.id + '" data-url="' + (n.target_url || '') + '">' +
             '<span class="' + (n.is_read ? 'dot read' : 'dot unread') + '"></span>' +
             '<div class="content"><div class="text">' + escapeHtml(n.message) + '</div>' +
             '<div class="time">' + formatDate(n.created_at) +
-            (n.target_url ? ' · <span class="admin-notif-link" data-url="' + n.target_url + '" style="color:var(--primary);cursor:pointer;">查看详情 →</span>' : '') + '</div></div></div>';
+            (n.target_url ? ' · <span style="color:var(--primary);">' + actionLabel + '</span>' : '') + '</div></div></div>';
         }
       }
       h += '</div></div></div>';
       document.getElementById('app').innerHTML = h;
-      document.querySelectorAll('.admin-notif-link').forEach(function(el) { el.addEventListener('click', function() { Router.navigate(this.dataset.url); }); });
+      document.querySelectorAll('.admin-notif-card').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var url = this.dataset.url;
+          if (url) Router.navigate(url);
+        });
+      });
     } catch (err) { showToast(err.message, 'error'); Router.navigate('#/works'); }
   },
 

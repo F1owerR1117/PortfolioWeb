@@ -23,7 +23,7 @@ const NotificationService = {
   },
 
   getUnreadCount(userId) {
-    const result = get('SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0', [userId]);
+    const result = get("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0 AND type NOT IN ('admin_report','admin_application','admin_system')", [userId]);
     return result ? result.count : 0;
   },
 

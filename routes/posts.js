@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth, requireAdmin, requireNotBanned } = require('../middleware/auth');
-const { requireZoneAccess } = require('../middleware/zoneAccess');
+const fs = require('fs');
+const mime = require('mime-types');
+const { get, getFirst } = require('../db/init');
+const { requireAuth, requireAdmin, requireNotBanned, requireAuthorOrAdmin } = require('../middleware/auth');
+const { requireZoneAccess, requireJobRole } = require('../middleware/zoneAccess');
 const PostService = require('../services/PostService');
 const logger = require('../logger');
 
@@ -9,14 +12,21 @@ const logger = require('../logger');
 router.get('/', requireAuth, async (req, res) => {
   try {
     const category = req.query.category || null;
-    if (category && (category === 'work' || category === 'chat')) {
+    if (category && (category === 'work' || category === 'chat' || category === 'job')) {
       const zoneMw = requireZoneAccess(category);
       await new Promise((resolve) => zoneMw(req, res, (err) => resolve()));
       if (res.headersSent) return;
     }
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 9));
-    const { posts, total } = PostService.getList(category, page, limit);
+    const filters = {};
+    if (req.query.job_type) filters.job_type = req.query.job_type;
+    if (req.query.job_location_city) filters.job_location_city = req.query.job_location_city;
+    if (req.query.job_salary_min) filters.job_salary_min = req.query.job_salary_min;
+    if (req.query.job_location_type) filters.job_location_type = req.query.job_location_type;
+    if (req.query.job_role) filters.job_role = req.query.job_role;
+    if (req.query.featured === '1') filters.featured = true;
+    const { posts, total } = PostService.getList(category, page, limit, filters);
     res.json({
       posts,
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit), hasMore: (page - 1) * limit + limit < total }
@@ -44,13 +54,17 @@ router.get('/:id', requireAuth, async (req, res) => {
 // POST /api/posts
 router.post('/', requireAuth, requireNotBanned, async (req, res) => {
   try {
-    const result = PostService.create(req.body, req.session.userId);
-    if (result.xpResult) {
-      req.session.level = result.xpResult.level;
-      req.session.xp = result.xpResult.xp;
-      req.session.points = result.xpResult.points;
+    // Job zone posts require approved identity (checked again in service layer)
+    if (req.body.category === 'job') {
+      const jobMw = requireJobRole();
+      await new Promise((resolve) => jobMw(req, res, (err) => resolve()));
+      if (res.headersSent) return;
     }
-    res.json({ message: result.category === 'chat' ? '发帖成功' : '作品发布成功', postId: result.postId });
+    const result = PostService.create(req.body, req.session.userId);
+    var msg = '作品发布成功';
+    if (result.category === 'chat') msg = '发帖成功';
+    else if (result.category === 'job') msg = '职位发布成功';
+    res.json({ message: msg, postId: result.postId });
   } catch (err) {
     const status = err.status || 500;
     logger.error('[Posts] Create error:', err.message || err);
@@ -58,12 +72,11 @@ router.post('/', requireAuth, requireNotBanned, async (req, res) => {
   }
 });
 
-// PUT /api/posts/:id
-router.put('/:id', requireAdmin, async (req, res) => {
+// PUT /api/posts/:id — admin or post author
+router.put('/:id', requireAuth, requireAuthorOrAdmin('posts'), async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
-    if (isNaN(postId)) return res.status(400).json({ error: '无效的帖子ID' });
-    PostService.update(postId, req.body, true);
+    PostService.update(postId, req.body, req.session.role === 'admin');
     res.json({ message: '作品更新成功' });
   } catch (err) {
     const status = err.status || 500;
@@ -87,11 +100,10 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
   }
 });
 
-// DELETE /api/posts/:id
-router.delete('/:id', requireAdmin, async (req, res) => {
+// DELETE /api/posts/:id — admin or post author
+router.delete('/:id', requireAuth, requireAuthorOrAdmin('posts'), async (req, res) => {
   try {
     const postId = parseInt(req.params.id);
-    if (isNaN(postId)) return res.status(400).json({ error: '无效的帖子ID' });
     PostService.softDelete(postId, req.session.userId);
     res.json({ message: '作品已删除' });
   } catch (err) {
@@ -141,7 +153,6 @@ router.get('/:id/download/:blockId', requireAuth, async (req, res) => {
     const blockId = parseInt(req.params.blockId);
     if (isNaN(postId) || isNaN(blockId)) return res.status(400).json({ error: '无效的参数' });
 
-    const { get, getFirst } = require('../db/init');
     const isAdmin = req.session.role === 'admin';
     const post = getFirst('SELECT created_by FROM posts WHERE id = ?', [postId]);
     if (!post) return res.status(404).json({ error: '帖子不存在' });
@@ -177,9 +188,8 @@ router.get('/:id/download/:blockId', requireAuth, async (req, res) => {
     // Serve the file
     const fileRec = get('SELECT * FROM files WHERE id = ?', [block.attachment_file_id]);
     if (!fileRec) return res.status(404).json({ error: '文件不存在' });
-    if (!require('fs').existsSync(fileRec.filepath)) return res.status(404).json({ error: '文件已被删除' });
+    if (!fs.existsSync(fileRec.filepath)) return res.status(404).json({ error: '文件已被删除' });
 
-    const mime = require('mime-types');
     const contentType = mime.lookup(fileRec.original_name) || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileRec.original_name)}"`);

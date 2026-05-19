@@ -1,194 +1,173 @@
-// ===== Router Module =====
-const Router = {
+// ===== Router Module — config-driven route table =====
+var Router = {
   currentRoute: null,
-  _routes: {},
 
-  init() {
-    window.addEventListener('hashchange', () => this.handleRoute());
+  // ---- Route table: add new pages by appending one line ----
+  _table: {
+    // Exact-match routes
+    '/my-posts':       { render: function() { Components.renderMyPosts(); },                     auth: true },
+    '/works':          { render: function() { Components.renderPostList('work'); } },
+    '/chats':          { render: function() { Components.renderPostList('chat'); } },
+    '/tags':           { render: function() { Components.renderTagManager(); },                   auth: true, admin: true },
+    '/music':          { render: function() { Components.renderMusicLibrary(); } },
+    '/friends':        { render: function() { Components.renderFriends(); } },
+    '/notifications':  { render: function() { Components.renderNotifications(); } },
+    '/profile':        { render: function() { Components.renderMyProfile(); } },
+    '/login':          { render: function() { Components.renderAuth(); },                         guest: true },
+    '/register':       { render: function() { Components.renderAuth(); },                         guest: true },
+    '/posts':          { render: function() { Components.renderPostList(); } },
+    '/bookmarks':      { render: function() { Components.renderBookmarks(); } },
+    '/about':          { redirect: '/profile' },
+    '/settings':       { redirect: '/profile' },
+    '/create':         { render: function() { Components.renderCreatePost(); },                   admin: true },
+    '/create/chat':    { render: function() { Components.renderCreatePost('chat'); } },
+    '/create/job':     { render: function() { Components.renderCreatePost('job'); } },
+    '/admin/stats':    { render: function() { Components.renderAdminStats(); } },
+    '/admin/reports':  { render: function() { Components.renderAdminReports(); } },
+    '/admin/users':    { render: function() { Components.renderAdminUsers(); },                   admin: true },
+    '/admin/levels':   { render: function() { Components.renderAdminLevels(); },                  admin: true },
+    '/admin/login-notices': { render: function() { Components.renderLoginNotices(); },            admin: true },
+    '/admin/applications':  { render: function() { Components.renderAdminApplications(); },       admin: true },
+    '/admin/ads':      { render: function() { Components.renderAdminAds(); },                     admin: true },
+
+    // Parameterized routes — checked after exact matches
+    '/posts/:id':      { render: function(id) {
+                          Components._highlightCommentId = Components._extractCommentParam(window.location.hash);
+                          Components.renderPostDetail(parseInt(id));
+                        }},
+    '/edit/:id':       { render: function(id) { Components.renderEditPost(parseInt(id)); }},
+    '/users/:id':      { render: function(id) { Components.renderUserProfile(parseInt(id)); }},
+    '/chat/:id':       { render: function(id) { Components.renderChat(parseInt(id)); }},
+    '/music/playlist/:id': { render: function(id) { Components.renderPlaylistDetail(parseInt(id)); }},
+  },
+
+  // ---- Special handlers (require async logic) ----
+  _specials: {
+    '/jobs': function() {
+      var self = this;
+      API.checkZoneAccess('job').then(function(d) {
+        if (d.accessible) { Components.renderPostList('job'); }
+        else if (d.reason === '身份未审核') { Components.renderPostList('job'); }
+        else { showToast('等级不足，无法访问该分区', 'error'); self.navigate('#/profile'); }
+      }).catch(function() { Components.renderPostList('job'); });
+    }
+  },
+
+  // ---- Lifecycle ----
+  init: function() {
+    var self = this;
+    window.addEventListener('hashchange', function() { self.handleRoute(); });
     this.handleRoute();
   },
 
-  register(pattern, handler) {
-    this._routes[pattern] = handler;
-  },
-
-  navigate(hash) {
+  navigate: function(hash) {
     window.location.hash = hash;
-    // handleRoute will be called by hashchange event
   },
 
-  handleRoute() {
-    const hash = window.location.hash || '#/works';
-    const path = hash.split('#')[1] || '/posts';
+  handleRoute: function() {
+    var hash = window.location.hash || '#/works';
+    var path = hash.split('#')[1] || '/works';
 
-    // Check authentication
-    if (!App.user) {
-      // Only allow auth page
-      if (path !== '/login') {
-        // Wait for App to check auth
-        App.checkAuth().then(() => {
-          if (!App.user) {
-            Components.renderAuth();
-          } else {
-            this._handlePath(path);
-          }
-        });
-        return;
+    // Auth gate: redirect unauthenticated users
+    if (!App.user && path !== '/login' && path !== '/register') {
+      var self = this;
+      App.checkAuth().then(function() {
+        if (!App.user) { Components.renderAuth(); }
+        else { self._dispatch(path); }
+      });
+      return;
+    }
+
+    // Guest routes: redirect logged-in users
+    if (App.user && (path === '/login' || path === '/register')) {
+      this.navigate('#/works');
+      return;
+    }
+
+    this._dispatch(path);
+  },
+
+  // ---- Core dispatch ----
+  _dispatch: function(path) {
+    playClickSound();
+    this._cleanupTimers();
+
+    // 1. Exact match in route table
+    var entry = this._table[path];
+    if (entry) {
+      return this._execute(entry, path);
+    }
+
+    // 2. Special async handlers
+    if (this._specials[path]) {
+      this._specials[path].call(this);
+      this._afterRender(path);
+      return;
+    }
+
+    // 3. Parameterized routes — match '/prefix/:id' and '/prefix/:id/*'
+    for (var routePath in this._table) {
+      if (routePath.indexOf('/:id') === -1) continue;
+      var base = routePath.replace('/:id', '/');
+      if (path.indexOf(base) === 0) {
+        var remainder = path.substring(base.length);
+        // Extract the first segment as id (must be numeric)
+        var slashIdx = remainder.indexOf('/');
+        var id = slashIdx > -1 ? remainder.substring(0, slashIdx) : remainder;
+        if (id && /^\d+$/.test(id)) {
+          var pEntry = this._table[routePath];
+          return this._execute(pEntry, path, [id]);
+        }
       }
     }
 
-    this._handlePath(path);
+    // 4. Fallback
+    this.navigate('#/works');
   },
 
-  _handlePath(path) {
-    playClickSound();
-    // Clean up polling timers when navigating away from friends/chat pages
-    if (Components._onlinePollTimer) { clearInterval(Components._onlinePollTimer); Components._onlinePollTimer = null; }
-    if (Components._chatOnlineTimer) { clearInterval(Components._chatOnlineTimer); Components._chatOnlineTimer = null; }
-    if (Components._chatPollTimer) { clearInterval(Components._chatPollTimer); Components._chatPollTimer = null; }
+  // ---- Execute a route entry with guards ----
+  _execute: function(entry, path, args) {
+    // Redirect
+    if (entry.redirect) {
+      this.navigate('#' + entry.redirect);
+      return;
+    }
 
-    // Admin-only routes (standard create/edit)
-    // /create/chat bypasses admin check
-    const isCreateChat = path === '/create/chat';
-    const isCreateJob = path === '/create/job';
-    const adminRoutes = ['/create', '/edit'];
-    const isAdminRoute = adminRoutes.some(r => path.startsWith(r)) && !isCreateChat && !isCreateJob;
-    if (isAdminRoute && (!App.user || App.user.role !== 'admin')) {
+    // Admin guard
+    if (entry.admin && (!App.user || App.user.role !== 'admin')) {
       showToast('权限不足', 'error');
       this.navigate('#/works');
       return;
     }
 
-    // Match routes
-    if (path === '/my-posts') {
-      if (!App.user) { showToast('请先登录', 'error'); this.navigate('#/login'); return; }
-      Components.renderMyPosts();
-    } else if (path === '/works') {
-      Components.renderPostList('work');
-    } else if (path === '/chats') {
-      Components.renderPostList('chat');
-    } else if (path === '/tags') {
-      if (!App.user || App.user.role !== 'admin') { showToast('权限不足', 'error'); this.navigate('#/works'); return; }
-      Components.renderTagManager();
-    } else if (path === '/music') {
-      Components.renderMusicLibrary();
-    } else if (path.startsWith('/music/playlist/')) {
-      const playlistId = parseInt(path.split('/')[3]);
-      if (isNaN(playlistId)) {
-        showToast('无效的歌单ID', 'error');
-        this.navigate('#/music');
-        return;
-      }
-      Components.renderPlaylistDetail(playlistId);
-    } else if (path === '/friends') {
-      Components.renderFriends();
-    } else if (path.startsWith('/chat/')) {
-      const friendId = parseInt(path.split('/')[2]);
-      if (isNaN(friendId)) {
-        showToast('无效的好友ID', 'error');
-        this.navigate('#/friends');
-        return;
-      }
-      Components.renderChat(friendId);
-    } else if (path === '/notifications') {
-      Components.renderNotifications();
-    } else if (path === '/about') {
-      this.navigate('#/profile');
-    } else if (path === '/profile') {
-      Components.renderMyProfile();
-    } else if (path.startsWith('/users/')) {
-      const userId = parseInt(path.split('/')[2]);
-      if (isNaN(userId)) {
-        showToast('无效的用户ID', 'error');
-        this.navigate('#/works');
-        return;
-      }
-      Components.renderUserProfile(userId);
-    } else if (path === '/login' || path === '/register') {
-      if (App.user) {
-        this.navigate('#/works');
-        return;
-      }
-      Components.renderAuth();
-    } else if (path === '/jobs') {
-      Components.renderPostList('job');
-    } else if (path === '/posts') {
-      Components.renderPostList();
-    } else if (path.startsWith('/posts/')) {
-      const id = parseInt(path.split('/')[2]);
-      if (isNaN(id)) {
-        showToast('无效的作品ID', 'error');
-        this.navigate('#/works');
-        return;
-      }
-      Components._highlightCommentId = Components._extractCommentParam(path);
-      Components.renderPostDetail(id);
-    } else if (path === '/create/job') {
-      Components.renderCreatePost('job');
-    } else if (path === '/create/chat') {
-      Components.renderCreatePost('chat');
-    } else if (path === '/create') {
-      Components.renderCreatePost();
-    } else if (path.startsWith('/edit/')) {
-      const id = parseInt(path.split('/')[2]);
-      if (isNaN(id)) {
-        showToast('无效的作品ID', 'error');
-        this.navigate('#/works');
-        return;
-      }
-      Components.renderEditPost(id);
-    } else if (path === '/settings') {
-      this.navigate('#/profile');
-    } else if (path === '/bookmarks') {
-      Components.renderBookmarks();
-    } else if (path === '/admin/stats') {
-      Components.renderAdminStats();
-    } else if (path === '/admin/reports') {
-      Components.renderAdminReports();
-    } else if (path === '/admin/users') {
-      if (!App.user || App.user.role !== 'admin') {
-        showToast('权限不足', 'error');
-        this.navigate('#/works');
-        return;
-      }
-      Components.renderAdminUsers();
-    } else if (path === '/admin/levels') {
-      if (!App.user || App.user.role !== 'admin') {
-        showToast('权限不足', 'error');
-        this.navigate('#/works');
-        return;
-      }
-      Components.renderAdminLevels();
-    } else if (path === '/admin/login-notices') {
-      if (!App.user || App.user.role !== 'admin') {
-        showToast('权限不足', 'error');
-        this.navigate('#/works');
-        return;
-      }
-      Components.renderLoginNotices();
-    } else if (path === '/admin/applications') {
-      if (!App.user || App.user.role !== 'admin') {
-        showToast('权限不足', 'error');
-        this.navigate('#/works');
-        return;
-      }
-      Components.renderAdminApplications();
-    } else if (path === '/admin/ads') {
-      if (!App.user || App.user.role !== 'admin') {
-        showToast('权限不足', 'error');
-        this.navigate('#/works');
-        return;
-      }
-      Components.renderAdminAds();
-    } else {
-      this.navigate('#/works');
+    // Auth guard
+    if (entry.auth && !App.user) {
+      showToast('请先登录', 'error');
+      this.navigate('#/login');
+      return;
     }
 
-    // Update nav
+    // Call handler
+    if (args && args.length) {
+      entry.render.apply(null, args);
+    } else {
+      entry.render();
+    }
+
+    this._afterRender(path);
+  },
+
+  // ---- Post-render hooks (always run after any route) ----
+  _afterRender: function(path) {
     App.updateNav();
-    // Always refresh level display (fetch fresh XP/progress/level name from server)
     App.refreshLevel();
-    // Ad bar: show/hide based on route
-    ComponentsAds.onRouteChange(path);
+    if (typeof ComponentsAds !== 'undefined') ComponentsAds.onRouteChange(path);
+  },
+
+  // ---- Timer cleanup (prevent polling leaks) ----
+  _cleanupTimers: function() {
+    if (Components._onlinePollTimer)  { clearInterval(Components._onlinePollTimer);  Components._onlinePollTimer = null; }
+    if (Components._chatOnlineTimer)  { clearInterval(Components._chatOnlineTimer);  Components._chatOnlineTimer = null; }
+    if (Components._chatPollTimer)    { clearInterval(Components._chatPollTimer);    Components._chatPollTimer = null; }
   }
 };
