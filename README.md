@@ -75,7 +75,10 @@ npm start
 ├── services/
 │   ├── AuthService.js     # 认证业务
 │   ├── PostService.js     # 帖子业务
-│   └── LevelService.js    # XP/升级/积分
+│   ├── LevelService.js    # XP/升级/积分
+│   ├── FileService.js     # 文件业务
+│   ├── NotificationService.js  # 通知业务
+│   └── LoginNoticeService.js   # 登录公告
 ├── routes/                # 路由文件
 ├── models/                # 数据模型
 ├── public/
@@ -89,7 +92,6 @@ npm start
 │       ├── utils.js       # 工具函数
 │       └── components/    # 页面组件
 └── docs/                  # 文档
-    ├── index.md           # 文档索引
     ├── architecture.md    # 架构文档
     ├── api-reference.md   # API 参考
     └── user-guide.md      # 用户指南

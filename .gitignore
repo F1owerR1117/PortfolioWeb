@@ -2,9 +2,12 @@ node_modules/
 database.db
 database.db-wal
 database.db-shm
-server.log
 .env
 uploads/*
 !uploads/.gitkeep
+logs/
+*.log
 *.tmp
-test_avatar.png
+*.bak
+*.backup
+.claude/
