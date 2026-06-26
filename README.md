@@ -119,6 +119,7 @@ npm start
 | 认证 | bcryptjs |
 | 文件上传 | multer |
 | 安全 | helmet + express-rate-limit |
+| 日志 | winston |
 | 前端 | 原生 JS SPA |
 
 ## License
