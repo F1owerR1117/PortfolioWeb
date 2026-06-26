@@ -454,7 +454,7 @@
 | name | 歌曲名称 |
 | artist | 艺术家（可选） |
 
-支持格式: mp3/wav/ogg (最大 500KB)
+支持格式: mp3/wav/ogg (最大 20MB)
 
 ### GET /api/music/songs
 获取当前用户的歌曲列表。
@@ -676,7 +676,24 @@
 ```
 
 ### GET /api/admin/stats
-获取分区统计数据和待处理举报数。
+获取系统概览数据（GROUP BY 优化，2 次查询替代原 10 次）。返回 4 个分区的帖子/回复数、全局统计与今日新增数据。
+
+```json
+{
+  "zones": [
+    { "zone": "work", "label": "作品区", "posts": 10, "replies": 25 },
+    { "zone": "chat", "label": "聊天区", "posts": 5, "replies": 12 },
+    { "zone": "music", "label": "音乐区", "posts": 2, "replies": 3 },
+    { "zone": "job", "label": "求职招聘", "posts": 8, "replies": 15 }
+  ],
+  "total_users": 28,
+  "total_posts": 25,
+  "total_comments": 55,
+  "pending_reports": 3,
+  "posts_today": 2,
+  "users_today": 1
+}
+```
 
 ---
 

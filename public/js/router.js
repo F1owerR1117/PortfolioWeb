@@ -91,6 +91,9 @@ var Router = {
   _dispatch: function(path) {
     playClickSound();
     this._cleanupTimers();
+    // Strip query parameters (e.g. ?comment=123) for route matching
+    var qIdx = path.indexOf('?');
+    if (qIdx > -1) path = path.substring(0, qIdx);
 
     // 1. Exact match in route table
     var entry = this._table[path];

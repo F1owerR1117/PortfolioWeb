@@ -5,7 +5,7 @@ const mime = require('mime-types');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 const { generalUpload, attachmentUpload, uploadsDir } = require('../middleware/upload');
-const { run } = require('../db/init');
+const { run, getFirst } = require('../db/init');
 const logger = require('../logger');
 
 // Per-category size limits (bytes)

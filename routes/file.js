@@ -15,7 +15,9 @@ router.get('/avatar/:filename', async (req, res) => {
     }
     const filepath = require('path').resolve('./uploads', filename);
     if (!require('fs').existsSync(filepath)) {
-      return res.status(404).json({ error: '头像文件不存在' });
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.send('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="#333" rx="8"/><text x="20" y="28" text-anchor="middle" font-size="20" fill="#888">?</text></svg>');
     }
     const ext = require('path').extname(filename).toLowerCase();
     const mimeMap = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp' };
@@ -83,7 +85,10 @@ router.get('/:fileId', requireAuth, async (req, res) => {
 
     // Check file exists on disk
     if (!fs.existsSync(fileRecord.filepath)) {
-      return res.status(404).json({ error: '文件已在服务器上丢失' });
+      // Return transparent placeholder instead of 404 to suppress browser console errors
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      return res.send('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>');
     }
 
     const mimeType = fileRecord.mime_type || 'application/octet-stream';

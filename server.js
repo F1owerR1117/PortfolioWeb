@@ -171,8 +171,12 @@ app.use('/api', (req, res, next) => {
     if (origin) {
       try {
         const url = new URL(origin);
-        const allowed = ['localhost', '127.0.0.1', req.hostname];
-        if (!allowed.includes(url.hostname)) {
+        // Accept: localhost, loopback, LAN IPs, and any origin matching the Host header
+        const reqHost = req.headers.host ? req.headers.host.split(':')[0] : '';
+        const isLocal = ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(url.hostname);
+        const isLAN = /^\d{1,3}(\.\d{1,3}){3}$/.test(url.hostname) && !['127.0.0.1', '0.0.0.0'].includes(url.hostname);
+        const matchesHost = url.hostname === reqHost;
+        if (!isLocal && !isLAN && !matchesHost) {
           logger.warn(`[CSRF] Blocked request from origin: ${origin}`);
           return res.status(403).json({ error: '请求来源不允许' });
         }

@@ -61,45 +61,7 @@ function seedData(run, get, getFirst, all, forceSave, saveDB) {
     logger.log('[DB] Tags migration completed.');
   }
 
-  // ===== Create default admin if no users =====
-  const userCount = getFirst('SELECT COUNT(*) as count FROM users');
-  if (!userCount || userCount.count === 0) {
-    logger.log('[DB] Creating default admin account...');
-    const hashed = bcrypt.hashSync('admin123', 10);
-    run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['admin', hashed, 'admin']);
-    saveDB();
-    logger.log('[DB] Default admin created: admin / admin123');
-  }
-
-  // ===== Demo posts =====
-  const postCount = getFirst('SELECT COUNT(*) as count FROM posts');
-  if (!postCount || postCount.count === 0) {
-    const adminUser = getFirst('SELECT id FROM users WHERE username = ?', ['admin']);
-    const adminId = adminUser.id;
-    logger.log('[DB] Creating demo posts...');
-
-    run('INSERT INTO posts (title, description, tags, views, created_by) VALUES (?, ?, ?, ?, ?)',
-      ['演示作品1', '这是一个演示作品，包含多种内容类型。部分内容仅管理员可见。', '设计,前端,JavaScript', Math.floor(Math.random() * 200 + 50), adminId]);
-    const post1Id = getFirst('SELECT MAX(id) as id FROM posts').id;
-    run('INSERT INTO content_blocks (post_id, type, value, allow_preview, sort_order) VALUES (?, ?, ?, ?, ?)',
-      [post1Id, 'text', '这是第一段公开的文本内容。所有登录用户都可以看到这段文字。', 1, 0]);
-    run('INSERT INTO content_blocks (post_id, type, value, allow_preview, sort_order) VALUES (?, ?, ?, ?, ?)',
-      [post1Id, 'text', '这是一段非公开的文本内容。仅管理员可以看到。', 0, 1]);
-    run('INSERT INTO content_blocks (post_id, type, value, allow_preview, sort_order) VALUES (?, ?, ?, ?, ?)',
-      [post1Id, 'code', '// 公开的代码示例\nfunction hello() {\n  console.log("Hello World!");\n}\n\nhello();', 1, 2]);
-    run('INSERT INTO content_blocks (post_id, type, value, allow_preview, sort_order) VALUES (?, ?, ?, ?, ?)',
-      [post1Id, 'code', '// 非公开代码 - API密钥\nconst API_KEY = "sk-xxxxxxxxxxxx";', 0, 3]);
-
-    run('INSERT INTO posts (title, description, tags, views, created_by) VALUES (?, ?, ?, ?, ?)',
-      ['演示作品2', '这是一个简洁的演示作品，仅包含公开内容。', '插画,设计', Math.floor(Math.random() * 100 + 20), adminId]);
-    const post2Id = getFirst('SELECT MAX(id) as id FROM posts').id;
-    run('INSERT INTO content_blocks (post_id, type, value, allow_preview, sort_order) VALUES (?, ?, ?, ?, ?)',
-      [post2Id, 'text', '这是演示作品2的公开文本内容。欢迎大家查看！', 1, 0]);
-    run('INSERT INTO content_blocks (post_id, type, value, allow_preview, sort_order) VALUES (?, ?, ?, ?, ?)',
-      [post2Id, 'text', '这是第二段公开内容，展示多段文本的排版效果。', 1, 1]);
-    saveDB();
-    logger.log('[DB] Demo posts created.');
-  }
+  // No demo data - clean initialization
 
   // ===== Default sound settings =====
   const soundUrlExists = getFirst("SELECT value FROM settings WHERE key = 'sound_url'");
@@ -112,16 +74,15 @@ function seedData(run, get, getFirst, all, forceSave, saveDB) {
   }
   saveDB();
 
-  // ===== Default about content =====
+  // ===== Default about content (blank) =====
   const aboutExists = getFirst("SELECT value FROM site_info WHERE key = 'about'");
   if (!aboutExists) {
     run("INSERT OR IGNORE INTO site_info (key, value) VALUES ('about', ?)",
       [JSON.stringify({
-        bio: '你好！我是一名创作者，热爱设计和开发。这里展示我的部分作品。',
-        skills: ['UI/UX 设计', '前端开发', 'Node.js', '插画'],
+        bio: '',
+        skills: [],
         social: {
-          github: 'https://github.com',
-          weibo: 'https://weibo.com',
+          github: '',
           email: ''
         },
         avatar_url: ''

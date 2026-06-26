@@ -1,4 +1,4 @@
-# 📂 个人作品集网站
+# Portfolio 作品集网站
 
 基于 Node.js + Express + better-sqlite3 (SQLite) 的全栈个人作品集管理系统。
 
@@ -16,7 +16,15 @@
 - **管理面板**：用户管理、禁言、数据统计、等级配置
 - **响应式设计**：适配手机/平板/桌面，暗色主题
 
-## 环境变量配置
+## 快速开始
+
+### 1. 安装依赖
+
+```bash
+npm install
+```
+
+### 2. 配置环境变量
 
 复制 `.env.example` 为 `.env` 并修改配置：
 
@@ -26,34 +34,26 @@ cp .env.example .env
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
-| `SESSION_SECRET` | Session 密钥（⚠️ 必须修改） | 无默认值，未设置则拒绝启动 |
+| `SESSION_SECRET` | Session 密钥（必须修改） | 无默认值，未设置则拒绝启动 |
 | `ADMIN_SECRET` | 管理员注册秘钥 | `AdminKey123` |
-| `PORT` | 服务端口 | `3000` |
+| `PORT` | 服务端口 | `3001` |
 | `DB_PATH` | 数据库路径 | `./database.db` |
-| `ALLOW_NEW_DB` | 允许创建新数据库 | 未设置则数据库不存在时拒绝启动 |
+| `ALLOW_NEW_DB` | 允许创建新数据库 | `1`（首次运行时设置） |
 
-## 安装与启动
+### 3. 启动服务
 
 ```bash
-# 安装依赖
-npm install
-
-# 启动服务
 npm start
 ```
 
-访问 `http://localhost:3000`
+或双击 `start.bat`（Windows）
 
-## 默认管理员账号
+访问 `http://localhost:3001`
 
-- 用户名：`admin`
-- 密码：`admin123`
+## 注册账号
 
-> ⚠️ 首次启动时自动创建此账号，同时创建 2 个演示帖子以供测试。
+首次启动后需要自行注册账号：
 
-## 测试账号
-
-可在登录页面注册：
 - **普通用户**：直接注册，无需秘钥
 - **管理员**：勾选"注册为管理员"，需输入 `ADMIN_SECRET` 秘钥
 
@@ -62,14 +62,13 @@ npm start
 ```
 ├── server.js              # Express 入口 + session 存储
 ├── config.js              # 统一配置管理
-├── CONVENTIONS.md         # 编码规范（AI 辅助开发必读）
 ├── db/
 │   ├── init.js            # better-sqlite3 初始化 + 查询辅助
 │   ├── schema.js          # CREATE TABLE 语句
-│   ├── migrations.js      # 版本化迁移 (v1-v20)
-│   └── seeds.js           # 种子数据
+│   ├── migrations.js      # 版本化迁移
+│   └── seeds.js           # 种子数据（等级配置、默认设置）
 ├── middleware/
-│   ├── auth.js            # 认证中间件 (含 requireAuthorOrAdmin)
+│   ├── auth.js            # 认证中间件
 │   ├── upload.js          # 文件上传 (multer)
 │   ├── zoneAccess.js      # 分区访问控制
 │   └── errorHandler.js    # 全局错误处理
@@ -77,48 +76,49 @@ npm start
 │   ├── AuthService.js     # 认证业务
 │   ├── PostService.js     # 帖子业务
 │   └── LevelService.js    # XP/升级/积分
-├── routes/                # 20 个路由文件
+├── routes/                # 路由文件
+├── models/                # 数据模型
 ├── public/
 │   ├── index.html         # SPA 入口
-│   ├── css/               # 20+ 组件化样式文件
+│   ├── css/style.css      # 样式
 │   └── js/
 │       ├── app.js         # 主应用
 │       ├── api.js         # API 封装
 │       ├── router.js      # 哈希路由
 │       ├── music.js       # 音乐播放器
 │       ├── utils.js       # 工具函数
-│       └── components/    # 15 个页面组件
+│       └── components/    # 页面组件
+└── docs/                  # 文档
+    ├── index.md           # 文档索引
+    ├── architecture.md    # 架构文档
+    ├── api-reference.md   # API 参考
+    └── user-guide.md      # 用户指南
 ```
 
-## API 接口（精简）
+## API 文档
 
-完整文档见 [`docs/api-reference.md`](docs/api-reference.md)。
+完整 API 文档见 [`docs/api-reference.md`](docs/api-reference.md)
 
-| 模块 | 路由前缀 | 主要端点 |
-|------|---------|---------|
-| 认证 | `/api/auth` | register, login, logout, me, password, profile |
-| 帖子 | `/api/posts` | CRUD、置顶/精华、附件购买/下载 |
-| 评论 | `/api/posts/:id/comments` | 列表、创建、编辑、删除 |
-| 好友 | `/api` | 好友请求、好友列表、私信 |
-| 音乐 | `/api/music` | 上传、歌单、公开分享、收藏 |
-| 管理 | `/api/admin` | 用户管理、禁言、批量删除、数据统计 |
-| 等级 | `/api/levels` | 等级信息、配置、分区访问 |
-| 其他 | `/api` | 通知、标签、收藏、举报、广告、公告 |
+## 文档
 
-## 内网穿透临时部署
+详细文档请查看 [`docs/`](docs/) 目录：
 
-使用 ngrok 将本地服务暴露到公网：
+- [架构文档](docs/architecture.md) - 系统架构、技术栈、数据流
+- [API 参考](docs/api-reference.md) - 全部后端 API 端点
+- [用户指南](docs/user-guide.md) - 功能使用说明
 
-```bash
-# 启动本地服务
-npm start
+## 技术栈
 
-# 另开终端，启动 ngrok
-ngrok http 3000
-```
-
-访问 ngrok 提供的 URL 即可公网访问。注意免费版 ngrok 每次重启 URL 会变化。
+| 层级 | 技术 |
+|------|------|
+| 后端框架 | Express |
+| 数据库 | better-sqlite3 (SQLite) |
+| 会话管理 | express-session |
+| 认证 | bcryptjs |
+| 文件上传 | multer |
+| 安全 | helmet + express-rate-limit |
+| 前端 | 原生 JS SPA |
 
 ## License
 
-MIT
+[GPL-3.0](LICENSE)

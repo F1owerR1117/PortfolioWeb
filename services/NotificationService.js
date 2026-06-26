@@ -17,7 +17,7 @@ const NotificationService = {
        LEFT JOIN posts p ON n.post_id = p.id
        LEFT JOIN comments c ON n.comment_id = c.id
        WHERE n.user_id = ?
-       ORDER BY n.is_read ASC, n.created_at DESC LIMIT 50`,
+       ORDER BY n.created_at DESC LIMIT 50`,
       [userId]
     );
   },

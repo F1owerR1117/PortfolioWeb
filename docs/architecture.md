@@ -102,6 +102,9 @@
 | 文件上传 | 禁止 .html/.js 上传，防止 XSS |
 | 文件访问 | 默认拒绝，仅授权文件可访问 |
 | 路径遍历 | avatar_url 验证，阻止 `..` 和 `/` |
+| SQL 注入 | 参数化查询（`?` 占位符） |
+| XSS 防护 | 用户输入拼入 HTML 前必须 `escapeHtml()` |
+| 密码加密 | bcrypt 哈希存储 |
 
 ### 路由挂载规则
 
@@ -191,6 +194,53 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 用户管理、等级管理、弹窗管理、广告管理 7 个子项）。管理员子菜单在导航到
 管理页面时自动展开。
 
+## 数据库访问分层
+
+```
+routes/     →  只调用 services，不直接操作数据库
+services/   →  调用 models + db/init 的查询辅助函数
+models/     →  封装 SQL 语句，只被 services 调用
+db/init.js  →  只提供 run() / get() / getFirst() / all() / forceSave()
+```
+
+规则：
+- 路由文件禁止直接写 SQL，需要数据 → 调 service 或 model
+- 需要多条同类数据时用 GROUP BY 合并，禁止在循环中逐条 COUNT
+- 所有写操作后不需要手动 `forceSave()`（better-sqlite3 每次写入实时落盘）
+- 需要立即持久化时调用 `forceSave()`（如 migrations、seeds）
+
+## API 响应格式
+
+### 成功响应
+
+```json
+{ "message": "操作成功", "postId": 1 }
+{ "posts": [...], "pagination": { "page": 1, "total": 42 } }
+```
+
+### 失败响应
+
+```json
+{ "error": "错误描述" }
+```
+
+HTTP 状态码：400/403/404/409/500
+
+### 分页响应
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "totalPages": 5,
+    "hasMore": true
+  }
+}
+```
+
 ## 目录详细说明
 
 ### server.js
@@ -267,4 +317,5 @@ app.use('/api', commentsRoutes);       // 裸挂载 → 路由路径含完整路
 | ads | 广告管理 |
 | login_notices | 登录弹窗公告 |
 | login_notice_views | 公告已读记录 |
+| job_applications | 求职招聘身份申请 |
 | zone_stats | 分区数据统计 |
