@@ -268,7 +268,6 @@ function start() {
 
     app.listen(config.port, () => {
       logger.info('Portfolio app running at http://localhost:' + config.port);
-      logger.info('Default admin account: admin / admin123');
     });
   } catch (err) {
     logger.error('Startup error: ' + err.message);
